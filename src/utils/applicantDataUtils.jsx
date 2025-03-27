@@ -44,7 +44,7 @@ export const searchApplicant = async (searchValue, setApplicantData, positionFil
         status.forEach((statusItem) => {
             sql += `&status=${statusItem}`;
         });
-        if (moment(dateFilter).format("MMMM") !== "Invalid date") { //Only for Validation
+        if (moment(dateFilter).format("MMMM") !== "Invalid date") {
             if (dateFilterType === "month") {
                 sql += `&month=${moment(dateFilter).format("MMMM")}`;
             }
