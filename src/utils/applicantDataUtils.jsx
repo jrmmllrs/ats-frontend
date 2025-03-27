@@ -1,7 +1,6 @@
 import api from "../api/axios";
 import moment from "moment";
 import { filterCounter } from "./statusCounterFunctions";
-import { useApplicantData } from "../hooks/useApplicantData";
 
 export const fetchApplicants = async (setApplicantData) => {
     const { data } = await api.get(`/applicants`);
