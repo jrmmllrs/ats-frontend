@@ -1,7 +1,6 @@
 import api from "../api/axios";
 import moment from "moment";
 import { filterCounter } from "./statusCounterFunctions";
-import { useApplicantData } from "../hooks/useApplicantData";
 
 export const fetchApplicants = async (setApplicantData) => {
     const { data } = await api.get(`/applicants`);
@@ -44,7 +43,7 @@ export const searchApplicant = async (searchValue, setApplicantData, positionFil
         status.forEach((statusItem) => {
             sql += `&status=${statusItem}`;
         });
-        if (moment(dateFilter).format("MMMM") !== "Invalid date") { //Only for Validation
+        if (moment(dateFilter).format("MMMM") !== "Invalid date") {
             if (dateFilterType === "month") {
                 sql += `&month=${moment(dateFilter).format("MMMM")}`;
             }

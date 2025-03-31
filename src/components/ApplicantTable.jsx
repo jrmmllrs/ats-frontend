@@ -18,7 +18,6 @@ const ApplicantTable = ({ onSelectApplicant }) => {
   const { setStages } = useStages();
   const { status, setSearch, search } = applicantFilterStore();
   const { user } = useUserStore();
-  // console.log('user id .....', user.user_id);
   
   const { toasts, addToast, removeToast, undoStatusUpdate } = useToastManager();
 
@@ -71,7 +70,7 @@ const ApplicantTable = ({ onSelectApplicant }) => {
 
   return (
     <>
-      {applicantData.length === 0 && search != "" ? (
+      {applicantData.length === 0 && (search != "" || status.length != 0) ? (
         <div className="text-center text-lg font-semibold text-gray-600 mt-8">
           No applicants found.
         </div>
