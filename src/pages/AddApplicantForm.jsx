@@ -56,6 +56,7 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
 
   useEffect(() => {
     if (initialData) {
+      console.log("Initial data:", initialData)
       const mappedData = {
         firstName: initialData.first_name || "",
         middleName: initialData.middle_name || "",
@@ -69,8 +70,8 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
         source: initialData.discovered_at || "",
         referrer: initialData.referrer || "",
         testResult: initialData.test_result || "",
-        dateApplied: initialData.tracking_created_at
-          ? new Date(initialData.tracking_created_at).toISOString().split("T")[0]
+        dateApplied: initialData.applicant_created_at
+          ? new Date(initialData.applicant_created_at).toISOString().split("T")[0]
           : "",
         additionalEmails: [initialData.email_2 || "", initialData.email_3 || ""],
         additionalPhones: [initialData.mobile_number_2 || ""],

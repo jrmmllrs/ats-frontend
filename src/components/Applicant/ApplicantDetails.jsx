@@ -30,6 +30,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   useEffect(() => {
     if (applicant && applicant.status) {
       setStatus(statusMapping[applicant.status] || '');
+      console.log("applicant", applicant);
     } else {
       setStatus('');
     }
