@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import ApplicantDetails from "../components/Applicant/ApplicantDetails";
 import ApplicantDiscussionPage from "../components/Applicant/ApplicantDiscussionPage";
 import ApplicantSendMailPage from "../components/Applicant/ApplicantSendMailPage";
@@ -9,31 +9,51 @@ function ApplicantDetailsPage({ applicant }) {
   const [activeTab, setActiveTab] = useState("discussion");
   const [loading, setLoading] = useState(true);
   const [applicantInfo, setApplicantInfo] = useState({});
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  useEffect(() => {
+  // Create a reusable fetch function
+  const fetchApplicantData = useCallback(async () => {
+    if (!applicant?.applicant_id) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
-    setApplicantInfo({});
-
-    if (applicant && applicant.applicant_id) {
+    try {
       console.log("Fetching applicant data for ID:", applicant.applicant_id);
-      api.get(`/applicants/${applicant.applicant_id}`)
-        .then(({ data }) => {
-          if (data && data.length > 0) {
-            console.log("Fetched applicant data:", data);
-            setApplicantInfo(data[0]);
-          } else {
-            console.error("No applicant data returned");
-          }
-          setLoading(false);
-        })
-        .catch(error => {
-          console.error("Error fetching applicant data:", error);
-          setLoading(false);
-        });
-    } else {
+      const response = await api.get(`/applicants/${applicant.applicant_id}`);
+      
+      if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+        console.log("Fetched applicant data:", response.data);
+        const processedData = response.data[0] || {};
+        setApplicantInfo(processedData);
+      } else {
+        console.error("No applicant data returned");
+        setApplicantInfo({});
+      }
+    } catch (error) {
+      console.error("Error fetching applicant data:", error);
+      setApplicantInfo({});
+    } finally {
       setLoading(false);
     }
-  }, [applicant]);
+  }, [applicant?.applicant_id]);
+
+  // Fetch data when component mounts or when applicant changes
+  useEffect(() => {
+    setApplicantInfo({}); // Reset before fetching
+    fetchApplicantData();
+  }, [applicant, fetchApplicantData, refreshTrigger]);
+
+  // Function to trigger a refresh
+  const handleApplicantUpdate = (updatedInfo) => {
+    // You can either directly update the state if you have the full object
+    if (updatedInfo && Object.keys(updatedInfo).length > 0) {
+      setApplicantInfo(updatedInfo);
+    } 
+    // And also trigger a refresh to ensure latest data from backend
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   const renderActiveTab = () => {
     switch (activeTab) {
@@ -57,21 +77,21 @@ function ApplicantDetailsPage({ applicant }) {
   }
 
   // If no applicant is selected or data couldn't be fetched
-  if (!applicant || !applicantInfo.first_name) {
+  if (!applicant || Object.keys(applicantInfo || {}).length === 0) {
     return (
       <div className="border rounded-lg mx-auto text-center p-5">
         <p className="text-gray-500">Select an applicant to view details</p>
       </div>
     );
   }
-
+  
   return (
     <div className="">
       <ApplicantDetails
         applicant={applicantInfo}
         onTabChange={setActiveTab}
         activeTab={activeTab}
-        onApplicantUpdate={(updatedInfo) => setApplicantInfo(updatedInfo)}
+        onApplicantUpdate={handleApplicantUpdate}
       />
       <div className="mt-4 mb-10">{renderActiveTab()}</div>
     </div>

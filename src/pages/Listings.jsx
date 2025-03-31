@@ -129,11 +129,13 @@ export default function Listings() {
     if (activeTab !== null && selectedView === "listings") {
       const activeApplicant = tabs.find((tab) => tab.id === activeTab);
       if (activeApplicant) {
+        console.log("Active Applicant Data:", activeApplicant.data); // Debugging log
         return (
           <ApplicantDetailsPage
             applicant={activeApplicant.data}
             onBack={() => setActiveTab(null)}
           />
+       
         );
       }
     }
