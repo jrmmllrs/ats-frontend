@@ -84,7 +84,7 @@ export default function Sidebar({ isOpen, onToggleSidebar, onSelectView }) {
               active={currentView === "dashboard"}
             />
             <SidebarLink
-              text="Listings"
+              text="Applicants"
               icon={<FaUsers />}
               onClick={() => handleSelectView("listings")}
               active={currentView === "listings"}
