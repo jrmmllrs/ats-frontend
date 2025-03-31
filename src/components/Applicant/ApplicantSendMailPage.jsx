@@ -396,20 +396,6 @@ function ApplicantSendMailPage({ applicant }) {
       {/* Send Email Button */}
       <div className="flex items-center justify-between body-regular">
         <div className="flex items-center space-x-4">
-          <select
-            value={selectedTemplate}
-            onChange={handleTemplateSelect}
-            className="border border-teal text-teal bg-white p-2 rounded-lg hover:bg-gray-light cursor-pointer"
-          >
-            <option value="" disabled>
-              Select a Template
-            </option>
-            {templates.map((template) => (
-              <option key={template.template_id} value={template.title}>
-                {template.title}
-              </option>
-            ))}
-          </select>
 
           <button
             onClick={() => setShowTemplateModal(true)} // Open the modal
