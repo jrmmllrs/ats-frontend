@@ -18,7 +18,6 @@ const ApplicantTable = ({ onSelectApplicant }) => {
   const { setStages } = useStages();
   const { status, setSearch, search } = applicantFilterStore();
   const { user } = useUserStore();
-  // console.log('user id .....', user.user_id);
   
   const { toasts, addToast, removeToast, undoStatusUpdate } = useToastManager();
 

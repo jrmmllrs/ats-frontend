@@ -15,6 +15,7 @@ import applicantDataStore from "../context/applicantDataStore";
 import { searchApplicant } from "../utils/applicantDataUtils";
 import positionStore from "../context/positionStore";
 import applicantFilterStore from "../context/applicantFilterStore";
+import { clearFilter } from "../utils/applicantListUtils";
 
 export default function ApplicantList({
   onSelectApplicant,
@@ -23,7 +24,7 @@ export default function ApplicantList({
   const { search, setSearch, status, dateFilter, setDateFilter, dateFilterType, setDateFilterType } = applicantFilterStore();
   const [selectedDate, setSelectedDate] = useState(null);
   //const [dateFilterType, setDateFilterType] = useState("month");
-  const [sortOrder, setSortOrder] = useState("desc");
+  //const [sortOrder, setSortOrder] = useState("desc");
   const [isOpen, setIsOpen] = useState(false);
   const [exportValue, setExportValue] = useState("");
   const { setApplicantData } = applicantDataStore();
@@ -55,43 +56,6 @@ export default function ApplicantList({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  const handleRowClick = (id) => {
-    const applicant = applicants.find((applicant) => applicant.applicant_id === id);
-    onSelectApplicant(applicant);
-  };
-
-  const clearFilter = () => {
-    setSelectedDate(null);
-    setDateFilterType("month");
-    setSearch("");
-    setDateFilter("");
-    searchApplicant("", setApplicantData, positionFilter, status, dateFilterType, "Invalid date");
-  };
-
-  const toggleSortOrder = () => {
-    setSortOrder((prevOrder) => (prevOrder === "asc" ? "desc" : "asc"));
-  };
-
-  const filteredApplicants = applicants
-    .filter((applicant) => {
-      if (!selectedDate) return true;
-      const applicantDate = new Date(applicant.date);
-      if (dateFilterType === "month") {
-        return (
-          applicantDate.getMonth() === selectedDate.getMonth() &&
-          applicantDate.getFullYear() === selectedDate.getFullYear()
-        );
-      } else if (dateFilterType === "year") {
-        return applicantDate.getFullYear() === selectedDate.getFullYear();
-      }
-      return true;
-    })
-    .sort((a, b) => {
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
-    });
 
   return (
     <div className="relative mx-auto max-w-[1200px] rounded-3xl bg-white p-6 border border-gray-light">
@@ -176,7 +140,7 @@ export default function ApplicantList({
           />
           <button
             className="flex w-auto body-regular rounded-md bg-teal-600 px-4 py-2 text-white hover:bg-teal-700"
-            onClick={clearFilter}
+            onClick={() => clearFilter(setSelectedDate, setApplicantData, setDateFilterType, setDateFilter, setSearch, status, dateFilterType, positionFilter)}
           >
             Clear
           </button>
