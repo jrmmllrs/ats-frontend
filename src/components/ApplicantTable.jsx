@@ -18,7 +18,7 @@ const ApplicantTable = ({ onSelectApplicant }) => {
   const { setStages } = useStages();
   const { status, setSearch, search } = applicantFilterStore();
   const { user } = useUserStore();
-  
+
   const { toasts, addToast, removeToast, undoStatusUpdate } = useToastManager();
 
   const handleStatusChange = (id, progress_id, newStatus, status) => {
@@ -27,6 +27,8 @@ const ApplicantTable = ({ onSelectApplicant }) => {
   };
 
   const handleApplicantRowClick = (row) => {
+    // console.log(row);
+
     const applicant = applicantData.find((applicant) => applicant.applicant_id === row.applicant_id);
     if (applicant) {
       onSelectApplicant(applicant);
@@ -38,7 +40,7 @@ const ApplicantTable = ({ onSelectApplicant }) => {
   const columns = [
     {
       name: 'Date Applied',
-      selector: row => moment(row.date_created).format('MMMM DD, YYYY'),
+      selector: row => moment(row.created_at).format('MMMM DD, YYYY'),
       sortable: true,
     },
     {
@@ -105,7 +107,7 @@ const ApplicantTable = ({ onSelectApplicant }) => {
   );
 };
 
-function LoadingComponent () {
+function LoadingComponent() {
   return (
     <div className="flex flex-col w-full space-y-2">
       <div className=" h-10 animate-pulse rounded-sm bg-gray-light"></div>
