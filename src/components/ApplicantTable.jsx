@@ -72,7 +72,7 @@ const ApplicantTable = ({ onSelectApplicant }) => {
 
   return (
     <>
-      {applicantData.length === 0 && (search != "" || status.length != 0) ? (
+      {applicantData.length === 0 && (search != "" || status.length != 0 || positionFilter != "") ? (
         <div className="text-center text-lg font-semibold text-gray-600 mt-8">
           No applicants found.
         </div>
