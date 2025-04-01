@@ -11,6 +11,7 @@ import useUserStore from '../context/userStore';
 import { useToastManager } from '../utils/toastManager';
 import { updateStatus } from '../utils/applicantDataUtils';
 import { statusMapping } from '../hooks/statusMapping';
+import api from '../api/axios';
 
 const ApplicantTable = ({ onSelectApplicant }) => {
   const { applicantData, setApplicantData, statuses } = useApplicantData();
@@ -18,17 +19,84 @@ const ApplicantTable = ({ onSelectApplicant }) => {
   const { setStages } = useStages();
   const { status, setSearch, search } = applicantFilterStore();
   const { user } = useUserStore();
-
   const { toasts, addToast, removeToast, undoStatusUpdate } = useToastManager();
+  
+  // New state variables for the date picker modal
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedDate, setSelectedDate] = useState('');
+  const [isDateApplicable, setIsDateApplicable] = useState(true);
+  const [pendingStatusChange, setPendingStatusChange] = useState(null);
 
-  const handleStatusChange = (id, progress_id, newStatus, status) => {
-    addToast(applicantData.find(applicant => applicant.applicant_id === id), newStatus, statusMapping);
-    updateStatus(id, progress_id, newStatus, status, applicantData, setApplicantData, positionFilter, setStages, initialStages, setPositionFilter, user);
+  const handleStatusChange = (id, progress_id, newStatus, currentStatus) => {
+    // Store the pending status change
+    setPendingStatusChange({
+      id,
+      progress_id,
+      newStatus,
+      currentStatus
+    });
+    
+    // Show date picker
+    setShowDatePicker(true);
+    
+    // Set default date to today
+    const today = new Date();
+    const formattedDate = today.toISOString().split('T')[0];
+    setSelectedDate(formattedDate);
+    setIsDateApplicable(true);
+  };
+
+  const confirmStatusChange = async () => {
+    if (!pendingStatusChange) return;
+    
+    const { id, progress_id, newStatus, currentStatus } = pendingStatusChange;
+    
+    // Close date picker
+    setShowDatePicker(false);
+    
+    // Find applicant for toast notification
+    const applicant = applicantData.find(applicant => applicant.applicant_id === id);
+    
+    // Update status in backend with date information
+    try {
+      const data = {
+        "progress_id": progress_id,
+        "status": newStatus,
+        "user_id": user.user_id,
+        "change_date": isDateApplicable ? selectedDate : "N/A"
+      };
+      
+      await api.put(`/applicant/update/status`, data);
+      
+      // Update local state and show toast notification
+      addToast(applicant, statusMapping[newStatus] || newStatus, statusMapping);
+      
+      // Update the applicant data in the state
+      updateStatus(id, progress_id, newStatus, currentStatus, applicantData, setApplicantData, 
+        positionFilter, setStages, initialStages, setPositionFilter, user);
+      
+    } catch (error) {
+      console.error("Error updating status:", error);
+    }
+    
+    // Clear pending status change
+    setPendingStatusChange(null);
+  };
+
+  const cancelStatusChange = () => {
+    setShowDatePicker(false);
+    setPendingStatusChange(null);
+  };
+
+  const handleDateChange = (e) => {
+    setSelectedDate(e.target.value);
+  };
+
+  const handleDateApplicableChange = (e) => {
+    setIsDateApplicable(e.target.checked);
   };
 
   const handleApplicantRowClick = (row) => {
-    // console.log(row);
-
     const applicant = applicantData.find((applicant) => applicant.applicant_id === row.applicant_id);
     if (applicant) {
       onSelectApplicant(applicant);
@@ -59,6 +127,7 @@ const ApplicantTable = ({ onSelectApplicant }) => {
           value={row.status}
           onChange={(e) => handleStatusChange(row.applicant_id, row.progress_id, e.target.value, status)}
           style={{ padding: '5px', borderRadius: '5px' }}
+          disabled={showDatePicker} // Disable when date picker is open
         >
           {statuses.map(status => (
             <option key={status} value={status}>
@@ -93,6 +162,53 @@ const ApplicantTable = ({ onSelectApplicant }) => {
           progressComponent={<LoadingComponent />}
         />
       )}
+      
+      {/* Date picker modal */}
+      {showDatePicker && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h3 className="text-lg font-medium mb-4">Change Status Date</h3>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                When did this status change occur?
+              </label>
+              <input
+                type="date"
+                className="w-full p-2 border rounded"
+                value={selectedDate}
+                onChange={handleDateChange}
+                disabled={!isDateApplicable}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  className="mr-2"
+                  checked={isDateApplicable}
+                  onChange={handleDateApplicableChange}
+                />
+                <span className="text-sm text-gray-700">Date is applicable</span>
+              </label>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={cancelStatusChange}
+                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmStatusChange}
+                className="px-4 py-2 bg-teal text-white rounded hover:bg-teal/80"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="fixed top-4 right-4 space-y-2">
         {toasts.map(toast => (
           <Toast
