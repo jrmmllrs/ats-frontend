@@ -170,9 +170,9 @@ export default function Listings() {
         );
       case "jobs":
         return (
-          <div className="flex h-full items-center justify-center">
-            <Jobs />
-          </div>
+
+          <Jobs />
+
         );
       case "config":
         return (
