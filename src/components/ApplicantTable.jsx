@@ -72,7 +72,7 @@ const ApplicantTable = ({ onSelectApplicant }) => {
 
   return (
     <>
-      {applicantData.length === 0 && (search != "" || status.length != 0) ? (
+      {applicantData.length === 0 && (search != "" || status.length != 0 || positionFilter != "") ? (
         <div className="text-center text-lg font-semibold text-gray-600 mt-8">
           No applicants found.
         </div>
@@ -85,8 +85,8 @@ const ApplicantTable = ({ onSelectApplicant }) => {
           responsive
           columns={columns}
           data={applicantData}
-          defaultSortAsc={false}
-          defaultSortFieldId={1}
+          // defaultSortAsc={false}
+          // defaultSortFieldId={1}
           onRowClicked={handleApplicantRowClick}
           pagination
           progressPending={applicantData.length === 0 || !statuses.length}

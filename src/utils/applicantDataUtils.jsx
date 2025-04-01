@@ -13,10 +13,10 @@ export const filterApplicants = async (position, setApplicantData, status, date,
     position != "All" ? sql += `position=${position}` : sql += "";
     date !== "Invalid date" ? sql += `&${dateType}=${date}` : sql += "";
     
-    if (status.length === 0 && position === "All" && date === "") {
+    if (status.length === 0 && position === "All" && date === "Invalid date") {
         fetchApplicants(setApplicantData);
     }
-    else {
+    else {   
         status.forEach((statusItem) => {
             sql += `&status=${statusItem}`;
           });
