@@ -43,6 +43,10 @@ export default function LoginPage() {
     setPassword(userPassword);
   };
 
+  const toggleTestCredentials = () => {
+    setShowTestCredentials(!showTestCredentials);
+  };
+
   useEffect(() => {
     const konamiCode = [
       "ArrowUp",
@@ -83,15 +87,14 @@ export default function LoginPage() {
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-teal-500 to-teal-600 p-6">
-            <div className="flex justify-center">
-              <div className="bg-white/20 p-3 rounded-full">
+            <div className="flex justify-center relative">
+              <div className="bg-white/20 p-3 rounded-full cursor-pointer" onClick={toggleTestCredentials}>
                 <FiUser className="text-white text-2xl" />
               </div>
             </div>
             <h2 className="text-2xl font-bold text-center text-white mt-3">Welcome Back</h2>
             <p className="text-center text-teal-100 text-sm mt-1">Sign in to your account</p>
           </div>
-
           {/* Form */}
           <div className="p-6">
             <form onSubmit={handleLogin} className="space-y-5">
