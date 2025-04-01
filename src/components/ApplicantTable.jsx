@@ -85,8 +85,8 @@ const ApplicantTable = ({ onSelectApplicant }) => {
           responsive
           columns={columns}
           data={applicantData}
-          defaultSortAsc={false}
-          defaultSortFieldId={1}
+          // defaultSortAsc={false}
+          // defaultSortFieldId={1}
           onRowClicked={handleApplicantRowClick}
           pagination
           progressPending={applicantData.length === 0 || !statuses.length}
