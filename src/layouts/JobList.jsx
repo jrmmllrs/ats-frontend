@@ -6,7 +6,7 @@ const JobList = () => {
         < div className="rounded-3xl bg-white p-4 mx-10 sm:p-6 border border-gray-light" >
 
             {/* Header Section */}
-            <div div className="mb-4 flex items-center justify-between gap-2" >
+            <div className="mb-4 flex items-center justify-between gap-2" >
                 <h1 className="headline font-semibold text-gray-dark">Job List</h1>
 
                 <div className="flex space-x-4 items-center">
@@ -36,7 +36,7 @@ const JobList = () => {
             </div>
 
             {/* Search Filter Section */}
-            <div div className="mb-4 flex flex-wrap items-center gap-2 bg-teal-600/10 p-2 rounded-lg" >
+            <div className="mb-4 flex flex-wrap items-center gap-2 bg-teal-600/10 p-2 rounded-lg" >
                 <input
                     type="text"
                     placeholder="Search jobs..."
@@ -45,7 +45,7 @@ const JobList = () => {
             </div>
 
             {/* Jobs Table Section */}
-            <div div className="rounded-lg bg-white overflow-hidden" >
+            <div className="rounded-lg bg-white overflow-hidden" >
                 <JobsTable />
             </div>
         </div >

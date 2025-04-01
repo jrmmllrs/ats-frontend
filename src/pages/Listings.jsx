@@ -170,9 +170,7 @@ export default function Listings() {
         );
       case "jobs":
         return (
-
           <Jobs />
-
         );
       case "config":
         return (
