@@ -4,6 +4,7 @@ import {
   FaTable,
   FaUsers,
   FaChartBar,
+  FaBriefcase
 } from "react-icons/fa";
 
 import { FaGear } from "react-icons/fa6";
@@ -94,6 +95,12 @@ export default function Sidebar({ isOpen, onToggleSidebar, onSelectView }) {
               icon={<FaChartBar />}
               onClick={() => handleSelectView("analytics")}
               active={currentView === "analytics"}
+            />
+            <SidebarLink
+              text="Jobs"
+              icon={<FaBriefcase />}
+              onClick={() => handleSelectView("jobs")}
+              active={currentView === "jobs"}
             />
             <SidebarLink
               text="Configurations"
