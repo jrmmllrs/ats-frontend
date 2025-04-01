@@ -176,7 +176,7 @@ export default function Listings() {
         );
       case "config":
         return (
-          <div className="flex h-full items-center justify-center">
+          <div className="flex h-full items-start justify-start">
             <Configurations />
           </div>
         );
