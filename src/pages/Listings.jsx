@@ -14,6 +14,7 @@ import Dashboard from "./Dashboard.jsx";
 import Configurations from "./Configurations.jsx";
 import api from "../api/axios.js";
 import Cookies from "js-cookie";
+import Jobs from "./Jobs.jsx";
 
 const MAX_TABS = 10;
 
@@ -135,7 +136,7 @@ export default function Listings() {
             applicant={activeApplicant.data}
             onBack={() => setActiveTab(null)}
           />
-       
+
         );
       }
     }
@@ -167,6 +168,12 @@ export default function Listings() {
             <Dashboard />
           </div>
         );
+      case "jobs":
+        return (
+          <div className="flex h-full items-center justify-center">
+            <Jobs />
+          </div>
+        );
       case "config":
         return (
           <div className="flex h-full items-center justify-center">
@@ -176,7 +183,7 @@ export default function Listings() {
       default:
         return (
           <div className="p-6 text-center text-lg font-semibold">
-            Welcome to the Applicant Tracking System
+            This is the default page. Configure it in the Listings.jsx
           </div>
         );
     }
