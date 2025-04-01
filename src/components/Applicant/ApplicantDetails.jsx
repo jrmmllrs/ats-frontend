@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaAddressCard, FaEnvelope, FaPen, FaPhone, FaUser } from 'react-icons/fa';
+import { FaAddressCard, FaEnvelope, FaPen, FaPhone, FaUser, FaHistory } from 'react-icons/fa';
 import useUserStore from '../../context/userStore';
 import api from '../../api/axios';
 import Toast from '../../assets/Toast';
@@ -15,6 +15,8 @@ const statuses = [
   "Third Interview",
   "Fourth Interview",
   "Follow Up Interview",
+  "For Job Offer",
+  "Job Offer Rejected",
   "Job Offer Accepted",
   "Withdrew Application",
   "Blacklisted",
@@ -25,23 +27,65 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   const [status, setStatus] = useState('');
   const [toasts, setToasts] = useState([]);
   const { user } = useUserStore();
-  const [isEditFormOpen, setIsEditFormOpen] = useState(false); // State to manage the visibility of the AddApplicantForm
+  const [isEditFormOpen, setIsEditFormOpen] = useState(false);
+  const [statusHistory, setStatusHistory] = useState([]);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedDate, setSelectedDate] = useState('');
+  const [isDateApplicable, setIsDateApplicable] = useState(true);
+  const [pendingStatus, setPendingStatus] = useState('');
+  const [showStatusHistoryModal, setShowStatusHistoryModal] = useState(false);
 
   useEffect(() => {
     if (applicant && applicant.status) {
       setStatus(statusMapping[applicant.status] || '');
-      console.log("applicant", applicant);
+
+      // Fetch status history when applicant changes
+      if (applicant.progress_id) {
+        fetchStatusHistory(applicant.progress_id);
+      }
     } else {
       setStatus('');
     }
   }, [applicant]);
 
-  const handleStatusChange = async (e) => {
+  const fetchStatusHistory = async (progressId) => {
+    try {
+      const response = await api.get(`/applicant/status-history/${progressId}`);
+      setStatusHistory(response.data);
+    } catch (error) {
+      console.error("Error fetching status history:", error);
+    }
+  };
+
+  const handleStatusChange = (e) => {
     const newStatus = e.target.value;
+    setPendingStatus(newStatus);
+
+    // Show date picker when status is changed
+    setShowDatePicker(true);
+
+    // Set default date to today
+    const today = new Date();
+    const formattedDate = today.toISOString().split('T')[0];
+    setSelectedDate(formattedDate);
+    setIsDateApplicable(true);
+  };
+
+  const handleDateChange = (e) => {
+    setSelectedDate(e.target.value);
+  };
+
+  const handleDateApplicableChange = (e) => {
+    setIsDateApplicable(e.target.checked);
+  };
+
+  const confirmStatusChange = async () => {
+    const newStatus = pendingStatus;
     const previousStatus = status; // Store previous status
     const previousBackendStatus = applicant.status; // Store previous backend status
 
     setStatus(newStatus);
+    setShowDatePicker(false);
 
     // Update the applicant status in the backend
     if (applicant && applicant.applicant_id) {
@@ -50,18 +94,23 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
         "progress_id": applicant.progress_id,
         "status": backendStatus,
         "user_id": user.user_id,
+        "change_date": isDateApplicable ? selectedDate : "N/A"
       };
+
       try {
         await api.put(`/applicant/update/status`, data);
-        
+
         // Create a copy of the applicant with updated status
         const updatedApplicant = { ...applicant, status: backendStatus };
-        
+
         // Notify parent component of the update
         if (onApplicantUpdate) {
           onApplicantUpdate(updatedApplicant);
         }
-        
+
+        // Refresh status history to show the new change
+        fetchStatusHistory(applicant.progress_id);
+
         console.log("Status updated successfully");
 
         // Add toast message with previous status information
@@ -80,6 +129,11 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
     }
   };
 
+  const cancelStatusChange = () => {
+    setShowDatePicker(false);
+    setPendingStatus('');
+  };
+
   const undoStatusUpdate = async (toast) => {
     // Use the previous status stored in the toast object
     const backendStatus = toast.previousBackendStatus;
@@ -92,15 +146,18 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
 
     try {
       await api.put(`/applicant/update/status`, data);
-      
+
       // Create a copy of the applicant with reverted status
       const updatedApplicant = { ...applicant, status: backendStatus };
-      
+
       // Notify parent component of the update
       if (onApplicantUpdate) {
         onApplicantUpdate(updatedApplicant);
       }
-      
+
+      // Refresh status history to show the reversal
+      fetchStatusHistory(applicant.progress_id);
+
       setStatus(toast.previousStatus);
       setToasts(toasts.filter(t => t.id !== toast.id));
       console.log("Status reverted successfully");
@@ -120,13 +177,34 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   const handleCloseEditForm = () => {
     setIsEditFormOpen(false);
   };
-  
+
   const handleEditSuccess = (updatedApplicant) => {
-    // Notify parent component of the update
     if (onApplicantUpdate) {
       onApplicantUpdate(updatedApplicant);
     }
     setIsEditFormOpen(false);
+    
+    // Add toast notification for successful edit
+    setToasts([...toasts, {
+      id: Date.now(),
+      applicant: updatedApplicant,
+      status: 'updated',
+      message: 'Applicant details updated successfully'
+    }]);
+  }
+
+  // Format status for display
+  const formatStatusForDisplay = (statusKey) => {
+    return statusMapping[statusKey] || statusKey;
+  };
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const toggleStatusHistoryModal = () => {
+    setShowStatusHistoryModal(!showStatusHistoryModal);
   };
 
   return (
@@ -201,7 +279,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                 className="border body-regular border-gray-light h-8 rounded-md cursor-pointer"
                 value={status}
                 onChange={handleStatusChange}
-                disabled={toasts.length > 0} // Disable when there are active toasts
+                disabled={toasts.length > 0 || showDatePicker} // Disable when there are active toasts or date picker is open
               >
                 <option value="" disabled>Select status</option>
                 {statuses.map((statusOption) => (
@@ -210,6 +288,15 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                   </option>
                 ))}
               </select>
+              {statusHistory.length > 0 && (
+                <button
+                  onClick={toggleStatusHistoryModal}
+                  className="ml-2 p-2.5 rounded-full bg-teal-soft hover:bg-teal/20 cursor-pointer"
+                  title="View Status History"
+                >
+                  <FaHistory className="w-4 h-4 text-teal" />
+                </button>
+              )}
               <button
                 onClick={handleEditClick}
                 className="ml-2 p-2.5 rounded-full bg-teal hover:bg-teal/70 cursor-pointer"
@@ -218,6 +305,89 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
               </button>
             </div>
           </div>
+
+          {/* Date picker modal */}
+          {showDatePicker && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                <h3 className="text-lg font-medium mb-4">Change Status Date</h3>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    When did this status change occur?
+                  </label>
+                  <input
+                    type="date"
+                    className="w-full p-2 border rounded"
+                    value={selectedDate}
+                    onChange={handleDateChange}
+                    disabled={!isDateApplicable}
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={cancelStatusChange}
+                    className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmStatusChange}
+                    className="px-4 py-2 bg-teal text-white rounded hover:bg-teal/80"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Status History Modal */}
+          {showStatusHistoryModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded-lg shadow-lg w-[600px] max-w-[90vw] max-h-[90vh] flex flex-col">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xl font-medium text-teal">Status History</h3>
+                  <button
+                    onClick={toggleStatusHistoryModal}
+                    className="p-1 rounded-full hover:bg-gray-200"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="overflow-y-auto flex-1">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-2 text-left">Date</th>
+                        <th className="px-4 py-2 text-left">Changed From</th>
+                        <th className="px-4 py-2 text-left">Changed To</th>
+                        <th className="px-4 py-2 text-left">Changed By</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {statusHistory.map((record, index) => (
+                        <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                          <td className="px-4 py-2">
+                            {record.change_date === "N/A"
+                              ? 'N/A'
+                              : record.changed_at
+                                ? formatDate(record.changed_at)
+                                : 'N/A'}
+                          </td>
+                          <td className="px-4 py-2">{record.previous_status ? formatStatusForDisplay(record.previous_status) : 'Initial Status'}</td>
+                          <td className="px-4 py-2">{formatStatusForDisplay(record.new_status)}</td>
+                          <td className="px-4 py-2">{record.user_name || record.changed_by}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-3 gap-3 pl-5 flex-grow">
             <div className="text-teal">Discovered FutSuite at</div>
@@ -232,6 +402,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
             </div>
             <div className="text-teal">Applied from</div>
             <div className="col-span-2">{applicant.applied_source || 'Not specified'}</div>
+
           </div>
 
           {/* Tabs */}
@@ -266,19 +437,20 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
         {toasts.length > 0 && (
           <Toast toasts={toasts} onUndo={undoStatusUpdate} onDismiss={removeToast} />
         )}
+
       </div>
 
-      {/* Toast Messages */}
-      <div className="fixed top-4 right-4 space-y-2">
-        {toasts.map(toast => (
-          <Toast
-            key={toast.id}
-            toast={toast}
-            undoStatusUpdate={undoStatusUpdate}
-            removeToast={removeToast}
-          />
-        ))}
-      </div>
+{/* Toast Messages */}
+<div className="fixed top-4 right-4 space-y-2">
+  {toasts.map(toast => (
+    <Toast
+      key={toast.id}
+      toast={toast}
+      undoStatusUpdate={undoStatusUpdate}
+      removeToast={removeToast}
+    />
+  ))}
+</div>
       {isEditFormOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
           <div className="bg-white w-full h-full overflow-auto lg:ml-72 pointer-events-auto">
