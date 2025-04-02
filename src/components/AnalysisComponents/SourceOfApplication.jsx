@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip } from "chart.js";
 import api from "../../api/axios";
@@ -7,25 +7,51 @@ ChartJS.register(ArcElement, Tooltip);
 
 const SourceOfApplication = () => {
   const [data, setData] = useState([]);
+  const [lastFetch, setLastFetch] = useState(0);
+
+  // Memoize the fetch function to maintain its identity between renders
+  const fetchData = useCallback(async (forceRefresh = false) => {
+    try {
+      // Check if we have valid cached data
+      const cachedDataString = sessionStorage.getItem('sourceData');
+      const cachedTimeString = sessionStorage.getItem('sourceDataTimestamp');
+      
+      if (!forceRefresh && cachedDataString && cachedTimeString) {
+        const cachedTime = parseInt(cachedTimeString);
+        const currentTime = new Date().getTime();
+        const cacheAge = currentTime - cachedTime;
+        
+        // Cache valid for 5 minutes (300000 ms)
+        if (cacheAge < 300000) {
+          const parsedData = JSON.parse(cachedDataString);
+          setData(parsedData);
+          setLastFetch(cachedTime);
+          return;
+        }
+      }
+      
+      // If no valid cache or force refresh, fetch from API
+      const response = await api.get("/analytic/graphs/source");
+      
+      // Extract the source data directly from the response
+      if (response.data && response.data.source) {
+        const sourceData = response.data.source;
+        
+        // Store in session storage with timestamp
+        sessionStorage.setItem('sourceData', JSON.stringify(sourceData));
+        sessionStorage.setItem('sourceDataTimestamp', new Date().getTime().toString());
+
+        setData(sourceData);
+        setLastFetch(new Date().getTime());
+      }
+    } catch (error) {
+      console.error("Error fetching source data:", error);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await api.get("/analytic/graphs/source");
-        
-        // Extract the source data directly from the response
-        if (response.data && response.data.source) {
-          setData(response.data.source);
-        }
-        
-        console.log("Source data fetched:", response.data);
-      } catch (error) {
-        console.error("Error fetching source data:", error);
-      }
-    };
-
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const chartData = {
     labels: data.map((entry) => entry.source),
