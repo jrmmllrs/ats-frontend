@@ -3,15 +3,18 @@ import { FiSend } from "react-icons/fi";
 import MessageBox from "./MessageBox"; // Adjust path if needed
 import moment from "moment";
 import api from "../api/axios";
+import useUserStore from "../context/userStore";
 
 const DiscussionBox = ({ applicant, discussion, fetchDiscussionInterview }) => {
     const [noteBody, setNoteBody] = useState("");
+    const { user } = useUserStore();
 
     const handleSubmit = () => {
         const data = {
             interview_id: discussion.interview_id,
             note_type: "DISCUSSION",
             note_body: noteBody,
+            noted_by: user.user_id,
         }
 
         api.post('/interview/note', data).then((response) => {
@@ -33,14 +36,13 @@ const DiscussionBox = ({ applicant, discussion, fetchDiscussionInterview }) => {
 
             <div className="px-6 max-h-150 overflow-y-auto rounded-lg py-2">
                 {discussion.interview_notes.map((note) =>
+                note.note_id != null ?
                 (<MessageBox
                     key={note.note_id}
-                    sender={discussion.interviewer_first_name}
+                    sender={note.noted_by}
                     date={moment(note.noted_at).format("LLL")}
-                    message={note.note_body} />)
+                    message={note.note_body} />) : ""
                 )}
-
-
             </div>
             {/* Message input */}
             <div className=" flex items-center m-5 mt-0 gap-2">
