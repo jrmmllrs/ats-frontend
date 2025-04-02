@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -29,47 +29,78 @@ const ApplicantStatusChart = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [roles, setRoles] = useState([]);
+  const [lastFetch, setLastFetch] = useState(0);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        let url = `/analytic/graphs/requisition`;
-        
-        // Add query parameters based on selections
-        if (selectedPeriod === "month") {
-          url += "?month=true";
-        } else if (selectedPeriod === "year") {
-          url += "?year=true";
-        }
-        
-        // Add position filter if not "all"
-        if (selectedRole !== "all") {
-          url += (url.includes("?") ? "&" : "?") + `position=${selectedRole}`;
-        }
-        
-        const response = await api.get(url);
-        
-        // Ensure we have data for all months
-        let processedData = response.data.requisition;
-        
-        // If in month view, ensure all 12 months are present
-        if (selectedPeriod === "month") {
-          processedData = ensureAllMonthsPresent(processedData);
-        }
-        
-        setRequisitionData(processedData);
-        
-      } catch (err) {
-        console.error("Error fetching requisition data:", err);
-        setError("Failed to load requisition data. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+  // Generate a cache key based on the current filters
+  const getCacheKey = useCallback(() => {
+    return `requisitionData_${selectedRole}_${selectedPeriod}`;
   }, [selectedRole, selectedPeriod]);
+
+  // Memoize the fetch function to maintain its identity between renders
+  const fetchData = useCallback(async (forceRefresh = false) => {
+    try {
+      setLoading(true);
+      const cacheKey = getCacheKey();
+      const cacheTimeKey = `${cacheKey}_timestamp`;
+      
+      // Check if we have valid cached data
+      const cachedDataString = sessionStorage.getItem(cacheKey);
+      const cachedTimeString = sessionStorage.getItem(cacheTimeKey);
+      
+      if (!forceRefresh && cachedDataString && cachedTimeString) {
+        const cachedTime = parseInt(cachedTimeString);
+        const currentTime = new Date().getTime();
+        const cacheAge = currentTime - cachedTime;
+        
+        // Cache valid for 5 minutes (300000 ms)
+        if (cacheAge < 300000) {
+          const processedData = JSON.parse(cachedDataString);
+          setRequisitionData(processedData);
+          setLastFetch(cachedTime);
+          setLoading(false);
+          return;
+        }
+      }
+      
+      // If no valid cache or force refresh, fetch from API
+      let url = `/analytic/graphs/requisition`;
+      
+      // Add query parameters based on selections
+      if (selectedPeriod === "month") {
+        url += "?month=true";
+      } else if (selectedPeriod === "year") {
+        url += "?year=true";
+      }
+      
+      // Add position filter if not "all"
+      if (selectedRole !== "all") {
+        url += (url.includes("?") ? "&" : "?") + `position=${selectedRole}`;
+      }
+      
+      const response = await api.get(url);
+      
+      // Ensure we have data for all months
+      let processedData = response.data.requisition;
+      
+      // If in month view, ensure all 12 months are present
+      if (selectedPeriod === "month") {
+        processedData = ensureAllMonthsPresent(processedData);
+      }
+      
+      // Store in session storage with timestamp
+      sessionStorage.setItem(cacheKey, JSON.stringify(processedData));
+      sessionStorage.setItem(cacheTimeKey, new Date().getTime().toString());
+      
+      setRequisitionData(processedData);
+      setLastFetch(new Date().getTime());
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching requisition data:", err);
+      setError("Failed to load requisition data. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedRole, selectedPeriod, getCacheKey]);
   
   // Function to ensure all months are present in the data
   const ensureAllMonthsPresent = (data) => {
@@ -115,6 +146,11 @@ const ApplicantStatusChart = () => {
     
     return result;
   };
+
+  // Use effect for the initial fetch and when filters change
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const chartData = {
     labels: requisitionData.map((d) => d.label),
@@ -196,7 +232,17 @@ const ApplicantStatusChart = () => {
   return (
     <>
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-md font-semibold">Requisition Stats</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-md font-semibold">Requisition Stats</h2>
+ 
+          {/* Optional refresh button
+          <button 
+            onClick={() => fetchData(true)} 
+            className="text-xs text-blue-500 hover:underline ml-2"
+          >
+            Refresh
+          </button> */}
+        </div>
         <div className="flex items-center gap-2">
           <div className="relative">
             <button
