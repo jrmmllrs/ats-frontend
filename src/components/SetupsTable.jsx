@@ -1,45 +1,33 @@
 import DataTable from 'react-data-table-component';
 import { useState, useEffect } from 'react';
 import Toast from '../assets/Toast';
+import setupStore from '../context/setupStore';
+import { fetchSetups } from '../utils/setupUtils';
 
 const SetupTable = ({ onSelectApplicant }) => {
-    const [jobsData, setJobsData] = useState([
-        {
-            name: "Hybrid",
-            created_by: "HR Tester",
-            date_created: "Kahapon",
-        },
-        {
-            name: "On-Stie",
-            created_by: "HR Tester",
-            date_created: "Kahapon",
-        },
-        {
-            name: "Office-Based",
-            created_by: "HR Tester",
-            date_created: "Kahapon",
-        },
-        {
-            name: "Remote",
-            created_by: "HR Tester",
-            date_created: "Kahapon",
-        },
-    ]);
+    const { setupData, setSetupData } = setupStore(); 
     const [toasts, setToasts] = useState([]);
+
+    useEffect(() => {
+        const getSetupData = async () => {
+            await fetchSetups(setSetupData);
+        }
+        getSetupData();
+    }, [])
 
     const handleJobRowClick = (row) => {
         alert("clicked");
     };
 
     const columns = [
-        { name: 'Name', selector: row => row.name, sortable: true },
-        { name: 'Created by', selector: row => row.created_by, sortable: true },
-        { name: 'Date Created', selector: row => row.date_created, sortable: true },
+        { name: 'Name', selector: row => row.setupName, sortable: true },
+        { name: 'Created by', selector: row => row.createdBy, sortable: true },
+        { name: 'Date Created', selector: row => row.createdAt, sortable: true },
     ];
 
     return (
         <>
-            {jobsData.length === 0 ? (
+            {setupData.length === 0 ? (
                 <div className="text-center text-lg font-semibold text-gray-600 mt-8">
                     No jobs found.
                 </div>
@@ -50,10 +38,10 @@ const SetupTable = ({ onSelectApplicant }) => {
                     fixedHeaderScrollHeight="60vh"
                     responsive
                     columns={columns}
-                    data={jobsData}
+                    data={setupData}
                     onRowClicked={handleJobRowClick}
                     pagination
-                    progressPending={!jobsData.length}
+                    progressPending={!setupData.length}
                     progressComponent={<LoadingComponent />}
                 />
             )}
