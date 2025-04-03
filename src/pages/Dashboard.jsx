@@ -17,7 +17,7 @@ const formatDate = (dateString) => {
 
 // Status badge component
 const StatusBadge = ({ status }) => {
-  let color = "bg-gray-200 text-gray-800"
+  let color = "bg-gray-light text-gray-800"
 
   if (status.includes("PASSED") || status.includes("ACCEPTED") || status === "COMPLETED") {
     color = "bg-[#008080] text-white"
@@ -39,7 +39,7 @@ const StatusBadge = ({ status }) => {
 // Custom Card component
 const Card = ({ children, className = "" }) => {
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 overflow-hidden ${className}`}>
+    <div className={`bg-white rounded-2xl border border-gray-200 overflow-hidden ${className}`}>
       {children}
     </div>
   )
@@ -53,7 +53,7 @@ const CardContent = ({ children, className = "" }) => {
 // Custom Button component
 const Button = ({ children, onClick, variant = "primary", className = "", disabled = false }) => {
   const baseClasses =
-    "inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2"
+    "inline-flex items-center justify-center px-4 py-2 body-regular rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2"
 
   const variantClasses = {
     primary: "bg-[#008080] text-white hover:bg-[#006060] focus:ring-[#00a0a0]",
@@ -97,7 +97,7 @@ const Tabs = ({ tabs, activeTab, setActiveTab }) => {
 
 // Custom Skeleton component
 const Skeleton = ({ className = "" }) => {
-  return <div className={`animate-pulse bg-gray-200 rounded ${className}`}></div>
+  return <div className={`animate-pulse bg-gray-light rounded ${className}`}></div>
 }
 
 // Summary Cards Section
@@ -134,7 +134,7 @@ const SummarySection = ({ onRefresh }) => {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
       <Card>
         <CardContent className="flex flex-col">
-          <span className="text-sm font-medium text-gray-500">Total Applicants</span>
+          <span className="body-regular text-gray-dark">Total Applicants</span>
           {loading ? (
             <Skeleton className="h-8 w-24 mt-2" />
           ) : error ? (
@@ -150,7 +150,7 @@ const SummarySection = ({ onRefresh }) => {
 
       <Card>
         <CardContent className="flex flex-col">
-          <span className="text-sm font-medium text-gray-500">Hired</span>
+          <span className="body-regular text-gray-dark">Hired</span>
           {loading ? (
             <Skeleton className="h-8 w-24 mt-2" />
           ) : error ? (
@@ -166,7 +166,7 @@ const SummarySection = ({ onRefresh }) => {
 
       <Card>
         <CardContent className="flex flex-col">
-          <span className="text-sm font-medium text-gray-500">In Interview Process</span>
+          <span className="body-regular text-gray-dark">In Interview Process</span>
           {loading ? (
             <Skeleton className="h-8 w-24 mt-2" />
           ) : error ? (
@@ -182,7 +182,7 @@ const SummarySection = ({ onRefresh }) => {
 
       <Card>
         <CardContent className="flex flex-col">
-          <span className="text-sm font-medium text-gray-500">Open Positions</span>
+          <span className="body-regular text-gray-dark">Open Positions</span>
           {loading ? (
             <Skeleton className="h-8 w-24 mt-2" />
           ) : error ? (
@@ -233,7 +233,7 @@ const RecentApplicantsSection = ({ onRefresh }) => {
     <div>
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold text-gray-900">Recent Applicants</h3>
-        <p className="text-sm text-gray-500">Latest applicants in the system</p>
+        <p className="text-sm text-gray-dark">Latest applicants in the system</p>
       </div>
 
       {loading ? (
@@ -249,19 +249,19 @@ const RecentApplicantsSection = ({ onRefresh }) => {
           <table className="min-w-full divide-y divide-gray-200 table-fixed w-full">
             <thead className="bg-gray-50 sticky top-0 z-10">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider w-1/5">
                   Name
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider w-1/5">
                   Email
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider w-1/5">
                   Position
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider w-1/5">
                   Status
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider w-1/5">
                   Applied Date
                 </th>
               </tr>
@@ -275,23 +275,23 @@ const RecentApplicantsSection = ({ onRefresh }) => {
                         {`${applicant.first_name} ${applicant.middle_name ? applicant.middle_name + " " : ""}${applicant.last_name}`}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-dark">
                       {applicant.email_1}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-dark">
                       {applicant.position}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <StatusBadge status={applicant.status} />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-dark">
                       {formatDate(applicant.applied_date)}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500">
+                  <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-dark">
                     No recent applicants found
                   </td>
                 </tr>
@@ -528,7 +528,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-6 min-h-screen">
+    <div className="">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
@@ -549,12 +549,12 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 gap-6">
           <Card>
-            <CardContent className="p-0">
+            <CardContent>
               <Tabs tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
 
               <div className="p-6">
                 {/* Fixed content container with consistent height to prevent layout shift */}
-                <div className="min-h-[500px]">
+                <div className="min-h-[300px]">
                   {/* Applicants Tab Content */}
                   <div className={activeTab === "applicants" ? "block" : "hidden"}>
                     <RecentApplicantsSection onRefresh={refreshCounter} />
