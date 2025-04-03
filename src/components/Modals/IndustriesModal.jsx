@@ -1,10 +1,15 @@
 import { FaTimes } from "react-icons/fa";
+import { FaPlus } from "react-icons/fa6";
 import SetupTable from "../SetupsTable";
 import { useState } from "react";
 import IndustriesTable from "../IndustriesTable";
+import AddIndustryModal from "./AddIndustryModal";
+import AddSetupModal from "./AddSetupModal";
 
 const IndustriesModal = ({ onClose }) => {
     const [isActive, setIsActive] = useState('industry');
+    const [isAddIndustryModalOpen, setIsAddIndustryModalOpen] = useState(false);
+    const [isAddSetupModalOpen, setIsAddSetupModalOpen] = useState(false);
 
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 p-4">
@@ -27,6 +32,24 @@ const IndustriesModal = ({ onClose }) => {
                     </div>
 
                     <div className="flex gap-2">
+                        {
+                            isActive == 'industry' ?
+                                <button
+                                    onClick={() => setIsAddIndustryModalOpen(true)}
+                                    className="rounded-md flex gap-2 body-regular text-center items-center px-3 bg-white border border-teal text-teal hover:bg-teal/20 cursor-pointer"
+                                >
+                                    <FaPlus className="size-3" />
+                                    Industry
+                                </button>
+                                :
+                                <button
+                                    onClick={() => setIsAddSetupModalOpen(true)}
+                                    className="rounded-md flex gap-2 body-regular text-center items-center px-3 bg-white border border-teal text-teal hover:bg-teal/20 cursor-pointer"
+                                >
+                                    <FaPlus className="size-3" />
+                                    Setup
+                                </button>
+                        }
                         <button
                             onClick={onClose}
                             className="rounded-md bg-white text-teal hover:text-teal/50 cursor-pointer"
@@ -40,6 +63,19 @@ const IndustriesModal = ({ onClose }) => {
                 <div className="rounded-lg bg-white overflow-hidden">
                     {isActive === 'industry' ? <IndustriesTable /> : <SetupTable />}
                 </div>
+
+                {isAddIndustryModalOpen ?
+
+                    <AddIndustryModal onClose={() => setIsAddIndustryModalOpen(false)} />
+
+                    : null
+                }
+
+                {
+                    isAddSetupModalOpen ?
+                        <AddSetupModal onClose={() => setIsAddSetupModalOpen(false)} />
+                        : null
+                }
             </div>
         </div>
     );
