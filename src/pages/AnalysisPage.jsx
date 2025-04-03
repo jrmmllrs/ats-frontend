@@ -304,7 +304,7 @@ const AnalysisPage = () => {
 
   return (
     <div className="space-y-4 xs:space-y-6 sm:space-y-8 p-2 xs:p-4 sm:p-6 min-h-screen">
-      <style jsx global>{`
+      <style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 4px;
           height: 4px;

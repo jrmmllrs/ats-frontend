@@ -5,15 +5,18 @@ import { FiSend } from "react-icons/fi";
 import MessageBox from "./MessageBox"; // Adjust path if needed
 import moment from "moment";
 import api from "../api/axios";
+import useUserStore from "../context/userStore";
 
 const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
     const [noteBody, setNoteBody] = useState("");
+    const { user } = useUserStore();
 
     const handleSubmit = () => {
         const data = {
             interview_id: interview.interview_id,
             note_type: "FIRST INTERVIEW",
             note_body: noteBody,
+            noted_by: user.user_id
         }
 
         api.post('/interview/note', data).then((response) => {
@@ -54,7 +57,7 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
                     {interview.interview_notes.map((note) =>
                     (<MessageBox
                         key={note.note_id}
-                        sender={interview.interviewer_first_name}
+                        sender={note.noted_by}
                         date={moment(note.noted_at).format("LLL")}
                         message={note.note_body} />)
                     )}

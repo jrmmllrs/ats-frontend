@@ -26,10 +26,26 @@ export default function Sidebar({ isOpen, onToggleSidebar, onSelectView }) {
   };
 
   const handleLogout = () => {
+    // Remove specific cookies
     Cookies.remove("token");
+    
+    // Remove all cookies
+    const allCookies = Cookies.get();
+    Object.keys(allCookies).forEach(cookieName => {
+      Cookies.remove(cookieName);
+    });
+    
+    // Clear localStorage items
     localStorage.removeItem("tabs");
     localStorage.removeItem("isNotificationRead");
-    setUser(null); // Clear user data from Zustand store
+    
+    // Clear sessionStorage items for all analytics components
+    sessionStorage.clear();
+    
+    // Clear user data from Zustand store
+    setUser(null);
+    
+    // Redirect to login page
     navigate("/login");
   };
 
