@@ -2,45 +2,34 @@
 import DataTable from 'react-data-table-component';
 import { useState, useEffect } from 'react';
 import Toast from '../assets/Toast';
+import industriesStore from '../context/industriesStore';
+import { fetchIndustries } from '../utils/industriesUtils';
 
 const IndustriesTable = ({ onSelectApplicant }) => {
-    const [jobsData, setJobsData] = useState([
-        {
-            industry_name: "Data Operations",
-            assessment_url: "sample.url",
-            created_by: "Sample user",
-            date_created: "Sampe date",
-        },
-        {
-            industry_name: "Data Operations",
-            assessment_url: "sample.url",
-            created_by: "Sample user",
-            date_created: "Sampe date",
-        },
-        {
-            industry_name: "Data Operations",
-            assessment_url: "sample.url",
-            created_by: "Sample user",
-            date_created: "Sampe date",
-        },
-
-    ]);
+    const { industries, setIndustries } = industriesStore();
     const [toasts, setToasts] = useState([]);
+
+    useEffect(() => {
+        const getIndustries = async () => {
+            await fetchIndustries(setIndustries);
+        }
+        getIndustries();
+    }, [])
 
     const handleJobRowClick = (row) => {
         alert("clicked");
     };
 
     const columns = [
-        { name: 'Industry Name', selector: row => row.industry_name, sortable: true },
-        { name: 'Assessment Url', selector: row => row.assessment_url, sortable: true },
-        { name: 'Created By', selector: row => row.created_by, sortable: true },
-        { name: 'Date Created', selector: row => row.date_created, sortable: true },
+        { name: 'Industry Name', selector: row => row.industryName, sortable: true },
+        { name: 'Assessment Url', selector: row => row.assessmentUrl, sortable: true },
+        { name: 'Created By', selector: row => row.createdBy, sortable: true },
+        { name: 'Date Created', selector: row => row.createdAt, sortable: true },
     ];
 
     return (
         <>
-            {jobsData.length === 0 ? (
+            {industries.length === 0 ? (
                 <div className="text-center text-lg font-semibold text-gray-600 mt-8">
                     No jobs found.
                 </div>
@@ -51,10 +40,10 @@ const IndustriesTable = ({ onSelectApplicant }) => {
                     fixedHeaderScrollHeight="60vh"
                     responsive
                     columns={columns}
-                    data={jobsData}
+                    data={industries}
                     onRowClicked={handleJobRowClick}
                     pagination
-                    progressPending={!jobsData.length}
+                    progressPending={!industries.length}
                     progressComponent={<LoadingComponent />}
                 />
             )}
