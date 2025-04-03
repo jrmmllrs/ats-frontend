@@ -20,13 +20,13 @@ const StatusBadge = ({ status }) => {
   let color = "bg-gray-light text-gray-800"
 
   if (status.includes("PASSED") || status.includes("ACCEPTED") || status === "COMPLETED") {
-    color = "bg-[#008080] text-white"
+    color = "bg-teal text-white"
   } else if (status.includes("FAILED") || status.includes("REJECTED")) {
-    color = "bg-[#004040] text-white"
+    color = "bg-teal text-white"
   } else if (status.includes("SCHEDULED") || status.includes("SENT") || status === "SUBMITTED") {
-    color = "bg-[#00a0a0] text-[#004040]"
+    color = "bg-teal text-teal"
   } else if (status.includes("PENDING")) {
-    color = "bg-[#e6ffff] text-[#006060]"
+    color = "bg-[#e6ffff] text-teal"
   }
 
   return (
@@ -53,11 +53,11 @@ const CardContent = ({ children, className = "" }) => {
 // Custom Button component
 const Button = ({ children, onClick, variant = "primary", className = "", disabled = false }) => {
   const baseClasses =
-    "inline-flex items-center justify-center px-4 py-2 body-regular rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2"
+    "inline-flex items-center justify-center px-4 py-2 body-regular rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-pointer"
 
   const variantClasses = {
-    primary: "bg-[#008080] text-white hover:bg-[#006060] focus:ring-[#00a0a0]",
-    secondary: "bg-white text-[#008080] border border-[#00a0a0] hover:bg-[#e6ffff] focus:ring-[#008080]",
+    primary: "bg-teal text-white hover:bg-teal focus:ring-teal",
+    secondary: "bg-white text-teal border border-teal hover:bg-[#e6ffff] focus:ring-teal",
     danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
   }
 
@@ -82,7 +82,7 @@ const Tabs = ({ tabs, activeTab, setActiveTab }) => {
           <button
             key={tab.value}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === tab.value
-              ? "border-[#008080] text-[#006060]"
+              ? "border-teal text-teal"
               : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             onClick={() => setActiveTab(tab.value)}
@@ -134,14 +134,14 @@ const SummarySection = ({ onRefresh }) => {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
       <Card>
         <CardContent className="flex flex-col">
-          <span className="body-regular text-gray-dark">Total Applicants</span>
+          <span className="body-regular text-gray-500">Total Applicants</span>
           {loading ? (
             <Skeleton className="h-8 w-24 mt-2" />
           ) : error ? (
             <div className="text-red-500 text-sm mt-2">Error loading data</div>
           ) : (
             <div className="flex items-center mt-2">
-              <FiUsers className="mr-2 h-5 w-5 text-[#008080]" />
+              <FiUsers className="mr-2 h-5 w-5 text-teal" />
               <div className="text-2xl font-bold">{summaryData?.total_applicants.toLocaleString()}</div>
             </div>
           )}
@@ -150,14 +150,14 @@ const SummarySection = ({ onRefresh }) => {
 
       <Card>
         <CardContent className="flex flex-col">
-          <span className="body-regular text-gray-dark">Hired</span>
+          <span className="body-regular text-gray-500">Hired</span>
           {loading ? (
             <Skeleton className="h-8 w-24 mt-2" />
           ) : error ? (
             <div className="text-red-500 text-sm mt-2">Error loading data</div>
           ) : (
             <div className="flex items-center mt-2">
-              <FiUserCheck className="mr-2 h-5 w-5 text-[#006060]" />
+              <FiUserCheck className="mr-2 h-5 w-5 text-teal" />
               <div className="text-2xl font-bold">{summaryData?.hired_applicants.toLocaleString()}</div>
             </div>
           )}
@@ -166,14 +166,14 @@ const SummarySection = ({ onRefresh }) => {
 
       <Card>
         <CardContent className="flex flex-col">
-          <span className="body-regular text-gray-dark">In Interview Process</span>
+          <span className="body-regular text-gray-500">In Interview Process</span>
           {loading ? (
             <Skeleton className="h-8 w-24 mt-2" />
           ) : error ? (
             <div className="text-red-500 text-sm mt-2">Error loading data</div>
           ) : (
             <div className="flex items-center mt-2">
-              <FiCalendar className="mr-2 h-5 w-5 text-[#00a0a0]" />
+              <FiCalendar className="mr-2 h-5 w-5 text-teal" />
               <div className="text-2xl font-bold">{summaryData?.in_interview.toLocaleString()}</div>
             </div>
           )}
@@ -182,14 +182,14 @@ const SummarySection = ({ onRefresh }) => {
 
       <Card>
         <CardContent className="flex flex-col">
-          <span className="body-regular text-gray-dark">Open Positions</span>
+          <span className="body-regular text-gray-500">Open Positions</span>
           {loading ? (
             <Skeleton className="h-8 w-24 mt-2" />
           ) : error ? (
             <div className="text-red-500 text-sm mt-2">Error loading data</div>
           ) : (
             <div className="flex items-center mt-2">
-              <FiBriefcase className="mr-2 h-5 w-5 text-[#004040]" />
+              <FiBriefcase className="mr-2 h-5 w-5 text-teal" />
               <div className="text-2xl font-bold">{summaryData?.open_positions.toLocaleString()}</div>
             </div>
           )}
