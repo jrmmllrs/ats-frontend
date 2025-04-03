@@ -109,7 +109,6 @@ const ApplicantTable = ({ onSelectApplicant }) => {
     {
       name: 'Date Applied',
       selector: row => moment(row.created_at).format('MMMM DD, YYYY'),
-      sortable: true,
     },
     {
       name: 'Applicant Name',
