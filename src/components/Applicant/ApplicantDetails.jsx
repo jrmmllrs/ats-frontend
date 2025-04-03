@@ -183,14 +183,6 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
       onApplicantUpdate(updatedApplicant);
     }
     setIsEditFormOpen(false);
-    
-    // Add toast notification for successful edit
-    setToasts([...toasts, {
-      id: Date.now(),
-      applicant: updatedApplicant,
-      status: 'updated',
-      message: 'Applicant details updated successfully'
-    }]);
   }
 
   // Format status for display

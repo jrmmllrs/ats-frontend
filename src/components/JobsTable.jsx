@@ -1,39 +1,32 @@
 import DataTable from 'react-data-table-component';
 import { useState, useEffect } from 'react';
 import Toast from '../assets/Toast';
+import jobStore from '../context/jobListingStore';
+import { fetchJobs } from '../utils/jobListing';
 
 const JobsTable = ({ onSelectApplicant }) => {
-    const [jobsData, setJobsData] = useState([
-        {
-            title: "Finance Operations Manager",
-            industry: "Finance Operations",
-            employmentType: "Full-time",
-            status: "Closed",
-            setup: "Officed-based",
-            visibility: "show"
-        },
-        {
-            title: "Finance Operations Associate Manager",
-            industry: "Finance Operations",
-            employmentType: "Full-time",
-            status: "Open",
-            setup: "Officed-based",
-            visibility: "hide"
-        },
-    ]);
+    const { jobsData, setJobsData } = jobStore();
     const [toasts, setToasts] = useState([]);
+
+    useEffect(() => {
+        const getJobsData = async () => {
+            await fetchJobs(setJobsData);
+        }    
+        getJobsData();
+        console.log(jobsData);
+    }, [])
 
     const handleJobRowClick = (row) => {
         alert("clicked");
     };
 
     const columns = [
-        { name: 'Title', selector: row => row.title, sortable: true },
-        { name: 'Industry', selector: row => row.industry, sortable: true },
+        { name: 'Title', selector: row => row.jobTitle, sortable: true },
+        { name: 'Industry', selector: row => row.industryName, sortable: true },
         { name: 'Employment Type', selector: row => row.employmentType, sortable: true },
-        { name: 'Status', selector: row => row.status, sortable: true },
-        { name: 'Setup', selector: row => row.setup, sortable: true },
-        { name: 'Visibility', selector: row => row.visibility == "show" ? "Shown" : "Hidden", sortable: true }
+        { name: 'Status', selector: row => row.isOpen == "1" ? "Open" : "Closed", sortable: true },
+        { name: 'Setup', selector: row => row.setupName, sortable: true },
+        { name: 'Visibility', selector: row => row.isShown == "1" ? "Shown" : "Hidden", sortable: true }
     ];
 
     return (
