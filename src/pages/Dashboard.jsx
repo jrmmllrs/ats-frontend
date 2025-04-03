@@ -1,37 +1,7 @@
-"use client"
-
-import { useEffect, useState, useRef } from "react"
-import { FiUsers, FiUserCheck, FiCalendar, FiBriefcase, FiFilter, FiRefreshCw, FiChevronDown } from "react-icons/fi"
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-} from "chart.js"
-import { Line, Bar, Pie } from "react-chartjs-2"
+import { useEffect, useState } from "react"
+import { FiUsers, FiUserCheck, FiCalendar, FiBriefcase, FiRefreshCw } from "react-icons/fi"
 
 import api from "../api/axios"
-
-// Register ChartJS components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-)
 
 // Helper function to format dates
 const formatDate = (dateString) => {
@@ -45,14 +15,6 @@ const formatDate = (dateString) => {
   }).format(date)
 }
 
-// Helper function to get month name
-const getMonthName = (monthNum) => {
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-  return months[monthNum - 1]
-}
-
-// Status badge component
-// Status badge component
 // Status badge component
 const StatusBadge = ({ status }) => {
   let color = "bg-gray-200 text-gray-800"
@@ -74,11 +36,6 @@ const StatusBadge = ({ status }) => {
   )
 }
 
-// Custom colors for charts
-
-// Custom colors for charts - teal palette
-const COLORS = ["#004040", "#006060", "#008080", "#00a0a0", "#00bfbf", "#e0f7fa", "#e6ffff"]
-
 // Custom Card component
 const Card = ({ children, className = "" }) => {
   return (
@@ -88,70 +45,9 @@ const Card = ({ children, className = "" }) => {
   )
 }
 
-// Custom Card Header component
-const CardHeader = ({ title, description }) => {
-  return (
-    <div className="px-6 py-4 border-b border-gray-200">
-      {title && <h3 className="text-lg font-semibold text-gray-900">{title}</h3>}
-      {description && <p className="text-sm text-gray-500 mt-1">{description}</p>}
-    </div>
-  )
-}
-
 // Custom Card Content component
 const CardContent = ({ children, className = "" }) => {
   return <div className={`p-6 ${className}`}>{children}</div>
-}
-
-// Custom Select component
-const Select = ({ options, value, onChange, className = "" }) => {
-  const [isOpen, setIsOpen] = useState(false)
-  const selectRef = useRef(null)
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (selectRef.current && !selectRef.current.contains(event.target)) {
-        setIsOpen(false)
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [])
-
-  return (
-    <div className={`relative ${className}`} ref={selectRef}>
-      <button
-        type="button"
-        className="flex items-center justify-between w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <span>{options.find((option) => option.value === value)?.label || "Select..."}</span>
-        <FiChevronDown className="w-4 h-4 ml-2" />
-      </button>
-
-      {isOpen && (
-        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
-          <ul className="py-1 overflow-auto text-base">
-            {options.map((option) => (
-              <li
-                key={option.value}
-                className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 ${value === option.value ? "bg-blue-50 text-blue-700" : ""}`}
-                onClick={() => {
-                  onChange(option.value)
-                  setIsOpen(false)
-                }}
-              >
-                {option.label}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  )
 }
 
 // Custom Button component
@@ -185,11 +81,10 @@ const Tabs = ({ tabs, activeTab, setActiveTab }) => {
         {tabs.map((tab) => (
           <button
             key={tab.value}
-            className={`py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === tab.value
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === tab.value
                 ? "border-[#008080] text-[#006060]"
                 : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            }`}
+              }`}
             onClick={() => setActiveTab(tab.value)}
           >
             {tab.label}
@@ -205,166 +100,435 @@ const Skeleton = ({ className = "" }) => {
   return <div className={`animate-pulse bg-gray-200 rounded ${className}`}></div>
 }
 
-export default function Dashboard() {
-  // State for all dashboard data
+// Summary Cards Section
+const SummarySection = ({ onRefresh }) => {
   const [summaryData, setSummaryData] = useState(null)
-  const [statusDistribution, setStatusDistribution] = useState([])
-  const [sourceDistribution, setSourceDistribution] = useState([])
-  const [monthlyTrends, setMonthlyTrends] = useState([])
-  const [jobPositions, setJobPositions] = useState([])
-  const [recentApplicants, setRecentApplicants] = useState([])
-  const [hiringFunnel, setHiringFunnel] = useState(null)
-  const [interviewSchedule, setInterviewSchedule] = useState([])
-  const [timeToHire, setTimeToHire] = useState([])
-
-  // Loading states
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  // Filters
-  const [year, setYear] = useState(new Date().getFullYear().toString())
+  const fetchSummaryData = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await api.get("/analytics/dashboard/summary")
+      setSummaryData(response.data.data)
+    } catch (err) {
+      console.error("Error fetching summary data:", err)
+      setError("Failed to load summary data")
+    } finally {
+      setLoading(false)
+    }
+  }
 
+  useEffect(() => {
+    fetchSummaryData()
+  }, [])
+
+  useEffect(() => {
+    if (onRefresh) {
+      fetchSummaryData()
+    }
+  }, [onRefresh])
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <Card>
+        <CardContent className="flex flex-col">
+          <span className="text-sm font-medium text-gray-500">Total Applicants</span>
+          {loading ? (
+            <Skeleton className="h-8 w-24 mt-2" />
+          ) : error ? (
+            <div className="text-red-500 text-sm mt-2">Error loading data</div>
+          ) : (
+            <div className="flex items-center mt-2">
+              <FiUsers className="mr-2 h-5 w-5 text-[#008080]" />
+              <div className="text-2xl font-bold">{summaryData?.total_applicants.toLocaleString()}</div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="flex flex-col">
+          <span className="text-sm font-medium text-gray-500">Hired</span>
+          {loading ? (
+            <Skeleton className="h-8 w-24 mt-2" />
+          ) : error ? (
+            <div className="text-red-500 text-sm mt-2">Error loading data</div>
+          ) : (
+            <div className="flex items-center mt-2">
+              <FiUserCheck className="mr-2 h-5 w-5 text-[#006060]" />
+              <div className="text-2xl font-bold">{summaryData?.hired_applicants.toLocaleString()}</div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="flex flex-col">
+          <span className="text-sm font-medium text-gray-500">In Interview Process</span>
+          {loading ? (
+            <Skeleton className="h-8 w-24 mt-2" />
+          ) : error ? (
+            <div className="text-red-500 text-sm mt-2">Error loading data</div>
+          ) : (
+            <div className="flex items-center mt-2">
+              <FiCalendar className="mr-2 h-5 w-5 text-[#00a0a0]" />
+              <div className="text-2xl font-bold">{summaryData?.in_interview.toLocaleString()}</div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="flex flex-col">
+          <span className="text-sm font-medium text-gray-500">Open Positions</span>
+          {loading ? (
+            <Skeleton className="h-8 w-24 mt-2" />
+          ) : error ? (
+            <div className="text-red-500 text-sm mt-2">Error loading data</div>
+          ) : (
+            <div className="flex items-center mt-2">
+              <FiBriefcase className="mr-2 h-5 w-5 text-[#004040]" />
+              <div className="text-2xl font-bold">{summaryData?.open_positions.toLocaleString()}</div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+// Recent Applicants Section
+const RecentApplicantsSection = ({ onRefresh }) => {
+  const [applicants, setApplicants] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  const fetchApplicants = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await api.get("/analytics/dashboard/recent-applicants")
+      setApplicants(response.data.data)
+    } catch (err) {
+      console.error("Error fetching recent applicants:", err)
+      setError("Failed to load recent applicants")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchApplicants()
+  }, [])
+
+  useEffect(() => {
+    if (onRefresh) {
+      fetchApplicants()
+    }
+  }, [onRefresh])
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold text-gray-900">Recent Applicants</h3>
+        <p className="text-sm text-gray-500">Latest applicants in the system</p>
+      </div>
+
+      {loading ? (
+        <div className="space-y-2">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
+      ) : error ? (
+        <div className="p-4 text-red-500 text-center">{error}</div>
+      ) : (
+        <div className="overflow-x-auto h-[400px]">
+          <table className="min-w-full divide-y divide-gray-200 table-fixed w-full">
+            <thead className="bg-gray-50 sticky top-0 z-10">
+              <tr>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+                  Name
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+                  Email
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+                  Position
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+                  Status
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+                  Applied Date
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {applicants.length > 0 ? (
+                applicants.map((applicant) => (
+                  <tr key={applicant.applicant_id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="font-medium text-gray-900">
+                        {`${applicant.first_name} ${applicant.middle_name ? applicant.middle_name + " " : ""}${applicant.last_name}`}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {applicant.email_1}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {applicant.position}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <StatusBadge status={applicant.status} />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatDate(applicant.applied_date)}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500">
+                    No recent applicants found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Pending Applicants Section
+const PendingApplicantsSection = ({ onRefresh }) => {
+  const [pendingApplicants, setPendingApplicants] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  const fetchPendingApplicants = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await api.get("/analytics/dashboard/pending-applicants")
+      setPendingApplicants(response.data.data)
+    } catch (err) {
+      console.error("Error fetching pending applicants:", err)
+      setError("Failed to load pending applicants")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchPendingApplicants()
+  }, [])
+
+  useEffect(() => {
+    if (onRefresh) {
+      fetchPendingApplicants()
+    }
+  }, [onRefresh])
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold text-gray-900">Pending Applicants</h3>
+        <p className="text-sm text-gray-500">Applicants awaiting review</p>
+      </div>
+
+      {loading ? (
+        <div className="space-y-2">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
+      ) : error ? (
+        <div className="p-4 text-red-500 text-center">{error}</div>
+      ) : (
+        <div className="overflow-x-auto h-[400px]">
+          <table className="min-w-full divide-y divide-gray-200 table-fixed w-full">
+            <thead className="bg-gray-50 sticky top-0 z-10">
+              <tr>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+                  Name
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+                  Email
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+                  Position
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+                  Status
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+                  Applied Date
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {pendingApplicants.length > 0 ? (
+                pendingApplicants.map((applicant) => (
+                  <tr key={applicant.applicant_id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="font-medium text-gray-900">
+                        {`${applicant.first_name} ${applicant.middle_name ? applicant.middle_name + " " : ""}${applicant.last_name}`}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {applicant.email_1}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {applicant.position}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <StatusBadge status={applicant.status} />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatDate(applicant.applied_date)}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500">
+                    No pending applicants found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Interviews Section
+const InterviewsSection = ({ onRefresh }) => {
+  const [interviewSchedule, setInterviewSchedule] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  const fetchInterviewSchedule = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await api.get("/analytics/dashboard/interview-schedule")
+      setInterviewSchedule(response.data.data)
+    } catch (err) {
+      console.error("Error fetching interview schedule:", err)
+      setError("Failed to load interview schedule")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchInterviewSchedule()
+  }, [])
+
+  useEffect(() => {
+    if (onRefresh) {
+      fetchInterviewSchedule()
+    }
+  }, [onRefresh])
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold text-gray-900">Upcoming Interviews</h3>
+        <p className="text-sm text-gray-500">Scheduled interviews for the next 7 days</p>
+      </div>
+
+      {loading ? (
+        <div className="space-y-2">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
+      ) : error ? (
+        <div className="p-4 text-red-500 text-center">{error}</div>
+      ) : (
+        <div className="overflow-x-auto h-[400px]">
+          <table className="min-w-full divide-y divide-gray-200 table-fixed w-full">
+            <thead className="bg-gray-50 sticky top-0 z-10">
+              <tr>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
+                  Candidate
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
+                  Position
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
+                  Interview Date
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
+                  Interviewer
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {interviewSchedule.length > 0 ? (
+                interviewSchedule.map((interview) => (
+                  <tr key={interview.interview_id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="font-medium text-gray-900">
+                        {`${interview.first_name} ${interview.middle_name ? interview.middle_name + " " : ""}${interview.last_name}`}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {interview.position}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatDate(interview.date_of_interview)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {interview.interviewer_name}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="4" className="px-6 py-4 text-center text-sm text-gray-500">
+                    No upcoming interviews found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default function Dashboard() {
+  // State for tracking refresh trigger
+  const [refreshCounter, setRefreshCounter] = useState(0)
+  
   // Active tab
   const [activeTab, setActiveTab] = useState("applicants")
 
   // Tabs configuration
   const tabs = [
     { label: "Recent Applicants", value: "applicants" },
+    { label: "Pending Applicants", value: "pending" },
     { label: "Upcoming Interviews", value: "interviews" },
   ]
 
-  // Year options
-  const yearOptions = [
-    { label: "2023", value: "2023" },
-    { label: "2022", value: "2022" },
-    { label: "2021", value: "2021" },
-  ]
-
-  // Fetch all dashboard data
-  // Replace the fetchDashboardData function with this:
-  const fetchDashboardData = async () => {
-    setLoading(true)
-
-    try {
-      // Replace fetch calls with axios calls
-      const [
-        summaryResponse,
-        statusResponse,
-        sourceResponse,
-        monthlyResponse,
-        jobsResponse,
-        applicantsResponse,
-        funnelResponse,
-        interviewResponse,
-        timeResponse,
-      ] = await Promise.all([
-        api.get("/analytics/dashboard/summary"),
-        api.get("/analytics/dashboard/status-distribution"),
-        api.get("/analytics/dashboard/source-distribution"),
-        api.get(`/analytics/dashboard/monthly-trends?year=${year}`),
-        api.get("/analytics/dashboard/job-positions"),
-        api.get("/analytics/dashboard/recent-applicants"),
-        api.get("/analytics/dashboard/hiring-funnel"),
-        api.get("/analytics/dashboard/interview-schedule"),
-        api.get("/analytics/dashboard/time-to-hire"),
-      ])
-
-      // Update state with fetched data (axios puts response in .data)
-      setSummaryData(summaryResponse.data.data)
-      setStatusDistribution(statusResponse.data.data)
-      setSourceDistribution(sourceResponse.data.data)
-      setMonthlyTrends(monthlyResponse.data.data)
-      setJobPositions(jobsResponse.data.data)
-      setRecentApplicants(applicantsResponse.data.data)
-      setHiringFunnel(funnelResponse.data.data)
-      setInterviewSchedule(interviewResponse.data.data)
-      setTimeToHire(timeResponse.data.data)
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error)
-    } finally {
-      setLoading(false)
-    }
+  // Handle refresh action
+  const handleRefresh = () => {
+    setRefreshCounter(prev => prev + 1)
   }
 
-  // Fetch data on component mount
-  useEffect(() => {
-    fetchDashboardData()
-  }, [year])
-
-  // Prepare data for monthly trends chart
-  const monthlyTrendsChartData = {
-    labels: monthlyTrends.map((item) => getMonthName(item.month)),
-    datasets: [
-      {
-        label: "Applicants",
-        data: monthlyTrends.map((item) => item.applicant_count),
-        fill: true,
-        backgroundColor: "rgba(0, 128, 128, 0.2)", // teal with opacity
-        borderColor: "rgba(0, 128, 128, 1)", // teal
-        tension: 0.4,
-      },
-      {
-        label: "Hired",
-        data: monthlyTrends.map((item) => item.hired_count),
-        fill: true,
-        backgroundColor: "rgba(0, 96, 96, 0.2)", // darker teal with opacity
-        borderColor: "rgba(0, 96, 96, 1)", // darker teal
-        tension: 0.4,
-      },
-    ],
-  }
-
-  // Prepare data for hiring funnel chart
-  const hiringFunnelLabels = ["Applications", "Pre-Screening", "Interviews", "Job Offers", "Hired"]
-  const hiringFunnelChartData = {
-    labels: hiringFunnelLabels,
-    datasets: [
-      {
-        label: "Applicants",
-        data: hiringFunnel
-          ? [
-              hiringFunnel.total_applications,
-              hiringFunnel.pre_screening,
-              hiringFunnel.interview_stage,
-              hiringFunnel.job_offer_stage,
-              hiringFunnel.hired,
-            ]
-          : [],
-        backgroundColor: COLORS.map((color) => `${color}`),
-      },
-    ],
-  }
-
-  // Prepare data for source distribution chart
-  const sourceDistributionChartData = {
-    labels: sourceDistribution.map((item) => item.applied_source),
-    datasets: [
-      {
-        label: "Applicants",
-        data: sourceDistribution.map((item) => item.count),
-        backgroundColor: COLORS.map((color) => `${color}`),
-        borderWidth: 1,
-      },
-    ],
-  }
-
-  // Prepare data for job positions chart
-  const jobPositionsChartData = {
-    labels: jobPositions.map((item) => item.title),
-    datasets: [
-      {
-        label: "Applicants",
-        data: jobPositions.map((item) => item.applicant_count),
-        backgroundColor: "rgba(0, 128, 128, 0.8)", // teal
-      },
-      {
-        label: "Hired",
-        data: jobPositions.map((item) => item.hired_count),
-        backgroundColor: "rgba(0, 96, 96, 0.8)", // darker teal
-      },
-    ],
-  }
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
@@ -373,12 +537,7 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center space-x-4 mt-4 md:mt-0">
-            <div className="flex items-center space-x-2">
-              <FiFilter className="text-gray-500" />
-              <Select options={yearOptions} value={year} onChange={setYear} className="w-32" />
-            </div>
-
-            <Button onClick={() => fetchDashboardData()} variant="secondary" className="flex items-center gap-2">
+            <Button onClick={handleRefresh} variant="secondary" className="flex items-center gap-2">
               <FiRefreshCw className="h-4 w-4" />
               Refresh
             </Button>
@@ -386,423 +545,31 @@ export default function Dashboard() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <Card>
-            <CardContent className="flex flex-col">
-              <span className="text-sm font-medium text-gray-500">Total Applicants</span>
-              {loading ? (
-                <Skeleton className="h-8 w-24 mt-2" />
-              ) : (
-                <div className="flex items-center mt-2">
-                  <FiUsers className="mr-2 h-5 w-5 text-[#008080]" />
-                  <div className="text-2xl font-bold">{summaryData?.total_applicants.toLocaleString()}</div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <SummarySection onRefresh={refreshCounter} />
 
-          <Card>
-            <CardContent className="flex flex-col">
-              <span className="text-sm font-medium text-gray-500">Hired</span>
-              {loading ? (
-                <Skeleton className="h-8 w-24 mt-2" />
-              ) : (
-                <div className="flex items-center mt-2">
-                  <FiUserCheck className="mr-2 h-5 w-5 text-[#006060]" />
-                  <div className="text-2xl font-bold">{summaryData?.hired_applicants.toLocaleString()}</div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="flex flex-col">
-              <span className="text-sm font-medium text-gray-500">In Interview Process</span>
-              {loading ? (
-                <Skeleton className="h-8 w-24 mt-2" />
-              ) : (
-                <div className="flex items-center mt-2">
-                  <FiCalendar className="mr-2 h-5 w-5 text-[#00a0a0]" />
-                  <div className="text-2xl font-bold">{summaryData?.in_interview.toLocaleString()}</div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="flex flex-col">
-              <span className="text-sm font-medium text-gray-500">Open Positions</span>
-              {loading ? (
-                <Skeleton className="h-8 w-24 mt-2" />
-              ) : (
-                <div className="flex items-center mt-2">
-                  <FiBriefcase className="mr-2 h-5 w-5 text-[#004040]" />
-                  <div className="text-2xl font-bold">{summaryData?.open_positions.toLocaleString()}</div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Monthly Trends Chart */}
-          <Card>
-            <CardHeader title="Monthly Applicant Trends" description="Applications and hires by month" />
-            <CardContent>
-              {loading ? (
-                <div className="w-full h-[300px] flex items-center justify-center">
-                  <Skeleton className="h-[250px] w-full" />
-                </div>
-              ) : (
-                <div className="h-[300px]">
-                  <Line
-                    data={monthlyTrendsChartData}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: {
-                          position: "top",
-                        },
-                        tooltip: {
-                          mode: "index",
-                          intersect: false,
-                        },
-                      },
-                      scales: {
-                        y: {
-                          beginAtZero: true,
-                        },
-                      },
-                    }}
-                  />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Hiring Funnel Chart */}
-          <Card>
-            <CardHeader title="Hiring Funnel" description="Applicants at each stage of the hiring process" />
-            <CardContent>
-              {loading ? (
-                <div className="w-full h-[300px] flex items-center justify-center">
-                  <Skeleton className="h-[250px] w-full" />
-                </div>
-              ) : (
-                <div className="h-[300px]">
-                  <Bar
-                    data={hiringFunnelChartData}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      indexAxis: "y",
-                      plugins: {
-                        legend: {
-                          display: false,
-                        },
-                        tooltip: {
-                          callbacks: {
-                            label: (context) => `${context.raw} Applicants`,
-                          },
-                        },
-                      },
-                      scales: {
-                        x: {
-                          beginAtZero: true,
-                        },
-                      },
-                    }}
-                  />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Distribution Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Source Distribution */}
-          <Card>
-            <CardHeader title="Applicant Sources" description="Where applicants are coming from" />
-            <CardContent>
-              {loading ? (
-                <div className="w-full h-[300px] flex items-center justify-center">
-                  <Skeleton className="h-[250px] w-full" />
-                </div>
-              ) : (
-                <div className="h-[300px] flex justify-center">
-                  <Pie
-                    data={sourceDistributionChartData}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: {
-                          position: "right",
-                        },
-                        tooltip: {
-                          callbacks: {
-                            label: (context) => {
-                              const label = context.label || ""
-                              const value = context.raw || 0
-                              const total = context.dataset.data.reduce((a, b) => a + b, 0)
-                              const percentage = Math.round((value / total) * 100)
-                              return `${label}: ${value} (${percentage}%)`
-                            },
-                          },
-                        },
-                      },
-                    }}
-                  />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Job Position Analytics */}
-          <Card>
-            <CardHeader title="Top Job Positions" description="Applicants by job position" />
-            <CardContent>
-              {loading ? (
-                <div className="w-full h-[300px] flex items-center justify-center">
-                  <Skeleton className="h-[250px] w-full" />
-                </div>
-              ) : (
-                <div className="h-[300px]">
-                  <Bar
-                    data={jobPositionsChartData}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: {
-                          position: "top",
-                        },
-                        tooltip: {
-                          mode: "index",
-                          intersect: false,
-                        },
-                      },
-                      scales: {
-                        y: {
-                          beginAtZero: true,
-                        },
-                      },
-                    }}
-                  />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Tables Section */}
         <div className="grid grid-cols-1 gap-6">
           <Card>
             <CardContent className="p-0">
               <Tabs tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
 
               <div className="p-6">
-                {activeTab === "applicants" && (
-                  <>
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900">Recent Applicants</h3>
-                      <p className="text-sm text-gray-500">Latest applicants in the system</p>
-                    </div>
+                {/* Fixed content container with consistent height to prevent layout shift */}
+                <div className="min-h-[500px]">
+                  {/* Applicants Tab Content */}
+                  <div className={activeTab === "applicants" ? "block" : "hidden"}>
+                    <RecentApplicantsSection onRefresh={refreshCounter} />
+                  </div>
 
-                    {loading ? (
-                      <div className="space-y-2">
-                        {[...Array(5)].map((_, i) => (
-                          <Skeleton key={i} className="h-12 w-full" />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th
-                                scope="col"
-                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                              >
-                                Name
-                              </th>
-                              <th
-                                scope="col"
-                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                              >
-                                Email
-                              </th>
-                              <th
-                                scope="col"
-                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                              >
-                                Position
-                              </th>
-                              <th
-                                scope="col"
-                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                              >
-                                Status
-                              </th>
-                              <th
-                                scope="col"
-                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                              >
-                                Applied Date
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {recentApplicants.map((applicant) => (
-                              <tr key={applicant.applicant_id}>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="font-medium text-gray-900">
-                                    {`${applicant.first_name} ${applicant.middle_name ? applicant.middle_name + " " : ""}${applicant.last_name}`}
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {applicant.email_1}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {applicant.position}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <StatusBadge status={applicant.status} />
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {formatDate(applicant.applied_date)}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </>
-                )}
+                  {/* Pending Applicants Tab Content */}
+                  <div className={activeTab === "pending" ? "block" : "hidden"}>
+                    <PendingApplicantsSection onRefresh={refreshCounter} />
+                  </div>
 
-                {activeTab === "interviews" && (
-                  <>
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900">Upcoming Interviews</h3>
-                      <p className="text-sm text-gray-500">Scheduled interviews for the next 7 days</p>
-                    </div>
-
-                    {loading ? (
-                      <div className="space-y-2">
-                        {[...Array(5)].map((_, i) => (
-                          <Skeleton key={i} className="h-12 w-full" />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th
-                                scope="col"
-                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                              >
-                                Candidate
-                              </th>
-                              <th
-                                scope="col"
-                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                              >
-                                Position
-                              </th>
-                              <th
-                                scope="col"
-                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                              >
-                                Interview Date
-                              </th>
-                              <th
-                                scope="col"
-                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                              >
-                                Interviewer
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {interviewSchedule.map((interview) => (
-                              <tr key={interview.interview_id}>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="font-medium text-gray-900">
-                                    {`${interview.first_name} ${interview.middle_name ? interview.middle_name + " " : ""}${interview.last_name}`}
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {interview.position}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {formatDate(interview.date_of_interview)}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {interview.interviewer_name}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {activeTab === "timeToHire" && (
-                  <>
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900">Time to Hire</h3>
-                      <p className="text-sm text-gray-500">Average days to hire by position</p>
-                    </div>
-
-                    {loading ? (
-                      <div className="space-y-2">
-                        {[...Array(5)].map((_, i) => (
-                          <Skeleton key={i} className="h-12 w-full" />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th
-                                scope="col"
-                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                              >
-                                Position
-                              </th>
-                              <th
-                                scope="col"
-                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                              >
-                                Average Days to Hire
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {timeToHire.map((position) => (
-                              <tr key={position.job_id}>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="font-medium text-gray-900">{position.title}</div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {position.avg_days_to_hire.toFixed(1)} days
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </>
-                )}
+                  {/* Interviews Tab Content */}
+                  <div className={activeTab === "interviews" ? "block" : "hidden"}>
+                    <InterviewsSection onRefresh={refreshCounter} />
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -811,4 +578,3 @@ export default function Dashboard() {
     </div>
   )
 }
-
