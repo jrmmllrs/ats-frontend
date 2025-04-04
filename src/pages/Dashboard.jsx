@@ -3,6 +3,8 @@ import { FiUsers, FiUserCheck, FiCalendar, FiBriefcase, FiRefreshCw } from "reac
 
 import api from "../api/axios"
 
+import PendingApplicantConfirmationModal from "../components/Modals/PendingApplicantConfirmationModal"
+
 // Helper function to format dates
 const formatDate = (dateString) => {
   const date = new Date(dateString)
@@ -82,8 +84,8 @@ const Tabs = ({ tabs, activeTab, setActiveTab }) => {
           <button
             key={tab.value}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === tab.value
-                ? "border-[#008080] text-[#006060]"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              ? "border-[#008080] text-[#006060]"
+              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             onClick={() => setActiveTab(tab.value)}
           >
@@ -304,18 +306,29 @@ const RecentApplicantsSection = ({ onRefresh }) => {
   )
 }
 
-// Pending Applicants Section
 const PendingApplicantsSection = ({ onRefresh }) => {
   const [pendingApplicants, setPendingApplicants] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [selectedApplicant, setSelectedApplicant] = useState(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const fetchPendingApplicants = async () => {
     setLoading(true)
     setError(null)
     try {
-      const response = await api.get("/analytics/dashboard/pending-applicants")
-      setPendingApplicants(response.data.data)
+      const response = await api.get("/applicants/pending")
+      // Update to use the title provided in the API response
+      setPendingApplicants(response.data.pendingApplicants.map(item => ({
+        applicant_id: item.pending_applicant_id,
+        first_name: item.applicant.first_name,
+        middle_name: item.applicant.middle_name,
+        last_name: item.applicant.last_name,
+        email_1: item.applicant.email_1,
+        position: item.applicant.title, // Now using the job title directly
+        status: item.status === 1 ? "PENDING" : "UNKNOWN",
+        applied_date: item.applicant.date_applied
+      })))
     } catch (err) {
       console.error("Error fetching pending applicants:", err)
       setError("Failed to load pending applicants")
@@ -333,6 +346,16 @@ const PendingApplicantsSection = ({ onRefresh }) => {
       fetchPendingApplicants()
     }
   }, [onRefresh])
+
+  const handleRowClick = (applicant) => {
+    setSelectedApplicant(applicant)
+    setIsModalOpen(true)
+  }
+
+  const handleActionComplete = (action) => {
+    // Refresh the data after action completes
+    fetchPendingApplicants()
+  }
 
   return (
     <div>
@@ -374,7 +397,11 @@ const PendingApplicantsSection = ({ onRefresh }) => {
             <tbody className="bg-white divide-y divide-gray-200">
               {pendingApplicants.length > 0 ? (
                 pendingApplicants.map((applicant) => (
-                  <tr key={applicant.applicant_id}>
+                  <tr 
+                    key={applicant.applicant_id} 
+                    onClick={() => handleRowClick(applicant)}
+                    className="hover:bg-gray-50 cursor-pointer"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="font-medium text-gray-900">
                         {`${applicant.first_name} ${applicant.middle_name ? applicant.middle_name + " " : ""}${applicant.last_name}`}
@@ -404,6 +431,16 @@ const PendingApplicantsSection = ({ onRefresh }) => {
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {selectedApplicant && (
+        <PendingApplicantConfirmationModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          applicant={selectedApplicant}
+          onActionComplete={handleActionComplete}
+        />
       )}
     </div>
   )
@@ -511,7 +548,7 @@ const InterviewsSection = ({ onRefresh }) => {
 export default function Dashboard() {
   // State for tracking refresh trigger
   const [refreshCounter, setRefreshCounter] = useState(0)
-  
+
   // Active tab
   const [activeTab, setActiveTab] = useState("applicants")
 
