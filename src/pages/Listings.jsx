@@ -164,7 +164,7 @@ export default function Listings() {
         );
       case "dashboard":
         return (
-          <div className="flex md:pt-5 items-center justify-center">
+          <div className="w-full">
             <Dashboard />
           </div>
         );
