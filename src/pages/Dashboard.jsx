@@ -5,6 +5,7 @@ import api from "../api/axios"
 
 import PendingApplicantConfirmationModal from "../components/Modals/PendingApplicantConfirmationModal"
 import RecentTable from "../components/RecentTable"
+import PendingTable from "../components/PendingTable"
 
 // Helper function to format dates TO BE REMOVED
 const formatDate = (dateString) => {
@@ -210,7 +211,7 @@ const RecentApplicantsSection = ({ onRefresh }) => {
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Recent Applicants</h3>
+        <h3 className="headline text-gray-900">Recent Applicants</h3>
         <p className="body-tiny text-gray-400">Latest applicants in the system</p>
       </div>
 
@@ -288,9 +289,9 @@ const PendingApplicantsSection = ({ onRefresh }) => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Pending Applicants</h3>
-        <p className="body-regular text-gray-500">Applicants awaiting review</p>
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="headline text-gray-900">Pending Applicants</h3>
+        <p className="body-tiny text-gray-500">Applicants awaiting review</p>
       </div>
 
       {loading ? (
@@ -302,76 +303,24 @@ const PendingApplicantsSection = ({ onRefresh }) => {
       ) : error ? (
         <div className="p-4 text-red-500 text-center">{error}</div>
       ) : (
-        <div className="overflow-x-auto h-[400px]">
-          <table className="min-w-full divide-y divide-gray-200 table-fixed w-full">
-            <thead className="bg-gray-50 sticky top-0 z-10">
-              <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
-                  Name
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
-                  Email
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
-                  Position
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
-                  Status
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
-                  Applied Date
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {pendingApplicants.length > 0 ? (
-                pendingApplicants.map((applicant) => (
-                  <tr
-                    key={applicant.applicant_id}
-                    onClick={() => handleRowClick(applicant)}
-                    className="hover:bg-gray-50 cursor-pointer"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900">
-                        {`${applicant.first_name} ${applicant.middle_name ? applicant.middle_name + " " : ""}${applicant.last_name}`}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap body-regular text-gray-500">
-                      {applicant.email_1}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap body-regular text-gray-500">
-                      {applicant.position}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <StatusBadge status={applicant.status} />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap body-regular text-gray-500">
-                      {formatDate(applicant.applied_date)}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="5" className="px-6 py-4 text-center body-regular text-gray-500">
-                    No pending applicants found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <PendingTable
+          applicants={pendingApplicants}
+          onSelectApplicant={handleRowClick}
+        />
       )}
 
       {/* Confirmation Modal */}
-      {selectedApplicant && (
-        <PendingApplicantConfirmationModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          applicant={selectedApplicant}
-          onActionComplete={handleActionComplete}
-        />
-      )}
-    </div>
+      {
+        selectedApplicant && (
+          <PendingApplicantConfirmationModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            applicant={selectedApplicant}
+            onActionComplete={handleActionComplete}
+          />
+        )
+      }
+    </div >
   )
 }
 
