@@ -6,6 +6,7 @@ import api from "../api/axios"
 import PendingApplicantConfirmationModal from "../components/Modals/PendingApplicantConfirmationModal"
 import RecentTable from "../components/RecentTable"
 import PendingTable from "../components/PendingTable"
+import InterviewTable from "../components/InterviewTable"
 
 // Helper function to format dates TO BE REMOVED
 const formatDate = (dateString) => {
@@ -17,27 +18,6 @@ const formatDate = (dateString) => {
     hour: "2-digit",
     minute: "2-digit",
   }).format(date)
-}
-
-// Status badge component TO BE MOVED IN THE RECENT TABLE
-const StatusBadge = ({ status }) => {
-  let color = "bg-gray-light text-gray-800"
-
-  if (status.includes("PASSED") || status.includes("ACCEPTED") || status === "COMPLETED") {
-    color = "bg-teal-light text-white"
-  } else if (status.includes("FAILED") || status.includes("REJECTED")) {
-    color = "bg-gray-light text-gray-dark"
-  } else if (status.includes("INTERVIEW") || status.includes("SENT") || status === "SUBMITTED") {
-    color = "bg-teal-soft text-teal"
-  } else if (status.includes("PENDING")) {
-    color = "bg-orange-100 text-gray-dark"
-  }
-
-  return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${color}`}>
-      {status.replace(/_/g, " ")}
-    </span>
-  )
 }
 
 // Custom Tabs component
@@ -357,8 +337,8 @@ const InterviewsSection = ({ onRefresh }) => {
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Upcoming Interviews</h3>
-        <p className="body-regular text-gray-500">Scheduled interviews for the next 7 days</p>
+        <h3 className="headline text-gray-900 cursor-default">Upcoming Interviews</h3>
+        <p className="body-tiny text-gray-400 cursor-default">Scheduled interviews for the next 7 days</p>
       </div>
 
       {loading ? (
@@ -370,54 +350,7 @@ const InterviewsSection = ({ onRefresh }) => {
       ) : error ? (
         <div className="p-4 text-red-500 text-center">{error}</div>
       ) : (
-        <div className="overflow-x-auto h-[400px]">
-          <table className="min-w-full divide-y divide-gray-200 table-fixed w-full">
-            <thead className="bg-gray-50 sticky top-0 z-10">
-              <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
-                  Candidate
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
-                  Position
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
-                  Interview Date
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
-                  Interviewer
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {interviewSchedule.length > 0 ? (
-                interviewSchedule.map((interview) => (
-                  <tr key={interview.interview_id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900">
-                        {`${interview.first_name} ${interview.middle_name ? interview.middle_name + " " : ""}${interview.last_name}`}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap body-regular text-gray-500">
-                      {interview.position}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap body-regular text-gray-500">
-                      {formatDate(interview.date_of_interview)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap body-regular text-gray-500">
-                      {interview.interviewer_name}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="4" className="px-6 py-4 text-center body-regular text-gray-500">
-                    No upcoming interviews found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <InterviewTable applicants={interviewSchedule} />
       )}
     </div>
   )
@@ -447,7 +380,7 @@ export default function Dashboard() {
       <div className="w-[80%] mx-auto mt-5">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+            <h1 className="display text-gray-900">Dashboard</h1>
             <p className="text-gray-500">Track and analyze your recruitment metrics</p>
           </div>
 
