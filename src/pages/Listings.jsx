@@ -14,6 +14,7 @@ import Dashboard from "./Dashboard.jsx";
 import Configurations from "./Configurations.jsx";
 import api from "../api/axios.js";
 import Cookies from "js-cookie";
+import Jobs from "./Jobs.jsx";
 
 const MAX_TABS = 10;
 
@@ -129,11 +130,13 @@ export default function Listings() {
     if (activeTab !== null && selectedView === "listings") {
       const activeApplicant = tabs.find((tab) => tab.id === activeTab);
       if (activeApplicant) {
+        console.log("Active Applicant Data:", activeApplicant.data); // Debugging log
         return (
           <ApplicantDetailsPage
             applicant={activeApplicant.data}
             onBack={() => setActiveTab(null)}
           />
+
         );
       }
     }
@@ -161,20 +164,24 @@ export default function Listings() {
         );
       case "dashboard":
         return (
-          <div className="flex h-full items-center justify-center">
+          <div className="w-full">
             <Dashboard />
           </div>
         );
+      case "jobs":
+        return (
+          <Jobs />
+        );
       case "config":
         return (
-          <div className="flex h-full items-center justify-center">
+          <div className="flex h-full items-start justify-start">
             <Configurations />
           </div>
         );
       default:
         return (
           <div className="p-6 text-center text-lg font-semibold">
-            Welcome to the Applicant Tracking System
+            This is the default page. Configure it in the Listings.jsx
           </div>
         );
     }

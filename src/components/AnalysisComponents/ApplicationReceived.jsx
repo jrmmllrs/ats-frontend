@@ -1,27 +1,78 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import api from "../../api/axios";
 import { FaInfoCircle } from "react-icons/fa";
 
 const ApplicationReceived = () => {
   const [totalApplications, setTotalApplications] = useState(0);
-  const [months, setMonths] = useState([]);
+  const [monthsData, setMonthsData] = useState([]);
   const [showTooltip, setShowTooltip] = useState(false);
+  const [lastFetch, setLastFetch] = useState(0);
 
-  useEffect(() => {
-    const fetchApplicationTrend = async () => {
-      try {
-        const response = await api.get("/analytic/graphs/application-trend");
-        const data = response.data.data;
-
-        setTotalApplications(data.total);
-        setMonths(data.trend.map((item) => ({ name: item.month, count: item.count })));
-      } catch (error) {
-        console.error("Error fetching application trend data:", error);
+  // Memoize the fetch function to maintain its identity between renders
+  const fetchApplicationData = useCallback(async (forceRefresh = false) => {
+    try {
+      // Check if we have valid cached data
+      const cachedDataString = sessionStorage.getItem('applicationData');
+      const cachedTimeString = sessionStorage.getItem('applicationDataTimestamp');
+      
+      if (!forceRefresh && cachedDataString && cachedTimeString) {
+        const cachedTime = parseInt(cachedTimeString);
+        const currentTime = new Date().getTime();
+        const cacheAge = currentTime - cachedTime;
+        
+        // Cache valid for 5 minutes (300000 ms)
+        if (cacheAge < 300000) {
+          const parsedData = JSON.parse(cachedDataString);
+          setTotalApplications(parsedData.total);
+          setMonthsData(parsedData.breakdown);
+          return;
+        }
       }
-    };
+      
+      // If no valid cache or force refresh, fetch from API
+      const response = await api.get("/analytic/metrics");
+      const data = response.data.applicationsReceived;
 
-    fetchApplicationTrend();
+      // Store in session storage with timestamp
+      sessionStorage.setItem('applicationData', JSON.stringify(data));
+      sessionStorage.setItem('applicationDataTimestamp', new Date().getTime().toString());
+
+      setTotalApplications(data.total);
+      setMonthsData(data.breakdown);
+      setLastFetch(new Date().getTime());
+    } catch (error) {
+      console.error("Error fetching application metrics:", error);
+    }
   }, []);
+
+  // Use effect for the initial fetch
+  useEffect(() => {
+    fetchApplicationData();
+  }, [fetchApplicationData]);
+
+  // Memoize the application data based on last fetch time
+  const applicationData = useMemo(() => {
+    return {
+      total: totalApplications,
+      months: monthsData,
+      lastUpdated: lastFetch ? new Date(lastFetch).toLocaleTimeString() : 'Never'
+    };
+  }, [totalApplications, monthsData, lastFetch]);
+
+  // Memoize the formatted months to avoid recalculation on every render
+  const months = useMemo(() => {
+    return monthsData.map((item) => {
+      // Convert YYYY-MM format to month name
+      const [year, month] = item.month.split('-');
+      const date = new Date(year, month - 1);
+      const monthName = date.toLocaleString('default', { month: 'long' });
+      
+      return { 
+        name: monthName, 
+        count: item.count 
+      };
+    });
+  }, [monthsData]);
 
   return (
     <>
@@ -36,13 +87,22 @@ const ApplicationReceived = () => {
           {showTooltip && (
             <span className="absolute mt-5 w-48 p-2 body-tiny text-teal bg-teal-soft rounded shadow-lg text-justify">
               This card shows the number of applications received.
+              <br />
+              Last updated: {applicationData.lastUpdated}
             </span>
           )}
+          {/* Optional refresh button */}
+          {/* <button 
+            onClick={() => fetchApplicationData(true)} 
+            className="text-xs text-blue-500 hover:underline"
+          >
+            Refresh
+          </button> */}
         </div>
       </div>
 
       <p className="mb-6 text-center text-4xl font-semibold">
-        {totalApplications}
+        {applicationData.total}
       </p>
 
       <div className="space-y-2">

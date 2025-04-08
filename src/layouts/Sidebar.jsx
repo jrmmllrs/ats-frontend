@@ -4,6 +4,7 @@ import {
   FaTable,
   FaUsers,
   FaChartBar,
+  FaBriefcase
 } from "react-icons/fa";
 
 import { FaGear } from "react-icons/fa6";
@@ -25,10 +26,26 @@ export default function Sidebar({ isOpen, onToggleSidebar, onSelectView }) {
   };
 
   const handleLogout = () => {
+    // Remove specific cookies
     Cookies.remove("token");
+    
+    // Remove all cookies
+    const allCookies = Cookies.get();
+    Object.keys(allCookies).forEach(cookieName => {
+      Cookies.remove(cookieName);
+    });
+    
+    // Clear localStorage items
     localStorage.removeItem("tabs");
     localStorage.removeItem("isNotificationRead");
-    setUser(null); // Clear user data from Zustand store
+    
+    // Clear sessionStorage items for all analytics components
+    sessionStorage.clear();
+    
+    // Clear user data from Zustand store
+    setUser(null);
+    
+    // Redirect to login page
     navigate("/login");
   };
 
@@ -84,7 +101,7 @@ export default function Sidebar({ isOpen, onToggleSidebar, onSelectView }) {
               active={currentView === "dashboard"}
             />
             <SidebarLink
-              text="Listings"
+              text="Applicants"
               icon={<FaUsers />}
               onClick={() => handleSelectView("listings")}
               active={currentView === "listings"}
@@ -94,6 +111,12 @@ export default function Sidebar({ isOpen, onToggleSidebar, onSelectView }) {
               icon={<FaChartBar />}
               onClick={() => handleSelectView("analytics")}
               active={currentView === "analytics"}
+            />
+            <SidebarLink
+              text="Jobs"
+              icon={<FaBriefcase />}
+              onClick={() => handleSelectView("jobs")}
+              active={currentView === "jobs"}
             />
             <SidebarLink
               text="Configurations"

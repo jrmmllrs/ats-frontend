@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { FaInfoCircle } from "react-icons/fa";
 import api from "../../api/axios";
 
@@ -8,51 +8,74 @@ const InternalVsExternalHires = () => {
   const [error, setError] = useState(null);
   const [internalData, setInternalData] = useState({ count: 0, percentage: 0 });
   const [externalData, setExternalData] = useState({ count: 0, percentage: 0 });
+  const [lastFetch, setLastFetch] = useState(0);
 
-  useEffect(() => {
-    const fetchSourceData = async () => {
-      try {
-        setIsLoading(true);
-        const response = await api.get("/analytic/graphs/applicant-sources");
-
-        if (response.data && response.data.data && response.data.data.sources) {
-          const sources = response.data.data.sources;
-
-          // Find internal and external data
-          const internalSource = sources.find(source =>
-            source.source_type === "Internal Referral" ||
-            source.source_type.toLowerCase().includes("internal")
-          );
-
-          const externalSource = sources.find(source =>
-            source.source_type === "External" ||
-            source.source_type.toLowerCase().includes("external")
-          );
-
-          if (internalSource) {
-            setInternalData({
-              count: internalSource.count,
-              percentage: Math.round(Number(internalSource.percentage))
-            });
-          }
-
-          if (externalSource) {
-            setExternalData({
-              count: externalSource.count,
-              percentage: Math.round(Number(externalSource.percentage))
-            });
-          }
+  // Memoize the fetch function to maintain its identity between renders
+  const fetchSourceData = useCallback(async (forceRefresh = false) => {
+    try {
+      setIsLoading(true);
+      
+      // Check if we have valid cached data
+      const cachedDataString = sessionStorage.getItem('internalExternalData');
+      const cachedTimeString = sessionStorage.getItem('internalExternalDataTimestamp');
+      
+      if (!forceRefresh && cachedDataString && cachedTimeString) {
+        const cachedTime = parseInt(cachedTimeString);
+        const currentTime = new Date().getTime();
+        const cacheAge = currentTime - cachedTime;
+        
+        // Cache valid for 5 minutes (300000 ms)
+        if (cacheAge < 300000) {
+          const parsedData = JSON.parse(cachedDataString);
+          setInternalData(parsedData.internal);
+          setExternalData(parsedData.external);
+          setLastFetch(cachedTime);
+          setIsLoading(false);
+          return;
         }
-      } catch (err) {
-        console.error("Error fetching source data:", err);
-        setError("Failed to load source data");
-      } finally {
-        setIsLoading(false);
       }
-    };
+      
+      // If no valid cache or force refresh, fetch from API
+      const response = await api.get("/analytic/metrics");
 
-    fetchSourceData();
+      if (response.data && response.data.internalExternalHires) {
+        const { internal, external, internalRate, externalRate } = response.data.internalExternalHires;
+        
+        const internalObj = {
+          count: internal,
+          percentage: Math.round(internalRate)
+        };
+        
+        const externalObj = {
+          count: external,
+          percentage: Math.round(externalRate)
+        };
+        
+        // Store in session storage with timestamp
+        const dataToCache = {
+          internal: internalObj,
+          external: externalObj
+        };
+        
+        sessionStorage.setItem('internalExternalData', JSON.stringify(dataToCache));
+        sessionStorage.setItem('internalExternalDataTimestamp', new Date().getTime().toString());
+        
+        setInternalData(internalObj);
+        setExternalData(externalObj);
+        setLastFetch(new Date().getTime());
+      }
+    } catch (err) {
+      console.error("Error fetching source data:", err);
+      setError("Failed to load source data");
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  // Use effect for the initial fetch
+  useEffect(() => {
+    fetchSourceData();
+  }, [fetchSourceData]);
 
   return (
     <>
@@ -67,8 +90,17 @@ const InternalVsExternalHires = () => {
           {showTooltip && (
             <span className="absolute mt-5 w-48 p-2 body-tiny text-teal bg-teal-soft rounded shadow-lg text-justify z-10">
               This card shows the percentage breakdown of internal(referral) vs external hires in your organization over time
+              <br />
+              Last updated: {lastFetch ? new Date(lastFetch).toLocaleTimeString() : 'Never'}
             </span>
           )}
+          {/* Optional refresh button */}
+          {/* <button 
+            onClick={() => fetchSourceData(true)} 
+            className="text-xs text-blue-500 hover:underline"
+          >
+            Refresh
+          </button> */}
         </div>
       </div>
 
@@ -83,11 +115,6 @@ const InternalVsExternalHires = () => {
             <span className="text-xl text-gray-600">-</span>
             <span className="text-4xl font-semibold">{externalData.percentage}%</span>
           </div>
-
-
-
-
-
         </div>
       )}
     </>

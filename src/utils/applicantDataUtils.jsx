@@ -1,7 +1,6 @@
 import api from "../api/axios";
 import moment from "moment";
 import { filterCounter } from "./statusCounterFunctions";
-import { useApplicantData } from "../hooks/useApplicantData";
 
 export const fetchApplicants = async (setApplicantData) => {
     const { data } = await api.get(`/applicants`);
@@ -14,10 +13,10 @@ export const filterApplicants = async (position, setApplicantData, status, date,
     position != "All" ? sql += `position=${position}` : sql += "";
     date !== "Invalid date" ? sql += `&${dateType}=${date}` : sql += "";
     
-    if (status.length === 0 && position === "All" && date === "") {
+    if (status.length === 0 && position === "All" && date === "Invalid date") {
         fetchApplicants(setApplicantData);
     }
-    else {
+    else {   
         status.forEach((statusItem) => {
             sql += `&status=${statusItem}`;
           });
@@ -44,7 +43,7 @@ export const searchApplicant = async (searchValue, setApplicantData, positionFil
         status.forEach((statusItem) => {
             sql += `&status=${statusItem}`;
         });
-        if (moment(dateFilter).format("MMMM") !== "Invalid date") { //Only for Validation
+        if (moment(dateFilter).format("MMMM") !== "Invalid date") {
             if (dateFilterType === "month") {
                 sql += `&month=${moment(dateFilter).format("MMMM")}`;
             }

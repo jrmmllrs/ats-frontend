@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { FaInfoCircle } from "react-icons/fa";
 import api from "../../api/axios";
 
@@ -7,33 +7,62 @@ const TopJobPositions = () => {
   const [jobPositions, setJobPositions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lastFetch, setLastFetch] = useState(0);
 
-  useEffect(() => {
-    const fetchTopJobs = async () => {
-      try {
-        setIsLoading(true);
-        const response = await api.get("/analytic/graphs/top-applied-jobs");
+  // Memoize the fetch function to maintain its identity between renders
+  const fetchTopJobs = useCallback(async (forceRefresh = false) => {
+    try {
+      setIsLoading(true);
+      
+      // Check if we have valid cached data
+      const cachedDataString = sessionStorage.getItem('topJobsData');
+      const cachedTimeString = sessionStorage.getItem('topJobsDataTimestamp');
+      
+      if (!forceRefresh && cachedDataString && cachedTimeString) {
+        const cachedTime = parseInt(cachedTimeString);
+        const currentTime = new Date().getTime();
+        const cacheAge = currentTime - cachedTime;
         
-        if (response.data && response.data.data && response.data.data.jobs) {
-          // Transform the data to match our component's expected format
-          const formattedJobs = response.data.data.jobs.map(job => ({
-            title: job.job_title,
-            percentage: Math.round(job.percentage), // Round to whole number for cleaner UI
-            count: job.application_count
-          }));
-          
-          setJobPositions(formattedJobs);
+        // Cache valid for 5 minutes (300000 ms)
+        if (cacheAge < 300000) {
+          const parsedData = JSON.parse(cachedDataString);
+          setJobPositions(parsedData);
+          setLastFetch(cachedTime);
+          setIsLoading(false);
+          return;
         }
-      } catch (err) {
-        console.error("Error fetching top job positions:", err);
-        setError("Failed to load top job positions");
-      } finally {
-        setIsLoading(false);
       }
-    };
-
-    fetchTopJobs();
+      
+      // If no valid cache or force refresh, fetch from API
+      const response = await api.get("/analytic/metrics");
+      
+      if (response.data && response.data.topJobs && response.data.topJobs.formattedTopJobs) {
+        // Transform the data to match our component's expected format
+        const formattedJobs = response.data.topJobs.formattedTopJobs.map(job => ({
+          title: job.title,
+          percentage: parseFloat(job.percentage.replace('%', '')), // Remove % sign and convert to number
+          count: job.hires
+        }));
+        
+        // Store in session storage with timestamp
+        sessionStorage.setItem('topJobsData', JSON.stringify(formattedJobs));
+        sessionStorage.setItem('topJobsDataTimestamp', new Date().getTime().toString());
+        
+        setJobPositions(formattedJobs);
+        setLastFetch(new Date().getTime());
+      }
+    } catch (err) {
+      console.error("Error fetching top job positions:", err);
+      setError("Failed to load top job positions");
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  // Use effect for the initial fetch
+  useEffect(() => {
+    fetchTopJobs();
+  }, [fetchTopJobs]);
 
   return (
     <>
@@ -48,8 +77,17 @@ const TopJobPositions = () => {
           {showTooltip && (
             <span className="absolute mt-5 w-48 p-2 body-tiny text-teal bg-teal-soft rounded shadow-lg text-justify z-10">
               This is a breakdown of the most frequently applied job positions by candidates
+              <br />
+              Last updated: {lastFetch ? new Date(lastFetch).toLocaleTimeString() : 'Never'}
             </span>
           )}
+          {/* Optional refresh button */}
+          {/* <button 
+            onClick={() => fetchTopJobs(true)} 
+            className="text-xs text-blue-500 hover:underline"
+          >
+            Refresh
+          </button> */}
         </div>
       </div>
       

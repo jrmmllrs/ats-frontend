@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { FaInfoCircle } from "react-icons/fa";
 import api from "../../api/axios";
 
@@ -8,37 +8,77 @@ const CandidateDropOffRate = () => {
   const [error, setError] = useState(null);
   const [overallRate, setOverallRate] = useState(0);
   const [monthlyRates, setMonthlyRates] = useState({});
+  const [lastFetch, setLastFetch] = useState(0);
 
-  useEffect(() => {
-    const fetchDropOffData = async () => {
-      try {
-        setIsLoading(true);
-        const response = await api.get("/analytic/graphs/drop-off-rate");
+  // Memoize the fetch function to maintain its identity between renders
+  const fetchDropOffData = useCallback(async (forceRefresh = false) => {
+    try {
+      setIsLoading(true);
+      
+      // Check if we have valid cached data
+      const cachedDataString = sessionStorage.getItem('dropOffRateData');
+      const cachedTimeString = sessionStorage.getItem('dropOffRateDataTimestamp');
+      
+      if (!forceRefresh && cachedDataString && cachedTimeString) {
+        const cachedTime = parseInt(cachedTimeString);
+        const currentTime = new Date().getTime();
+        const cacheAge = currentTime - cachedTime;
         
-        if (response.data && response.data.data) {
-          const { overall, monthlyData } = response.data.data;
-          
-          // Set overall rate - round to nearest whole number for display
-          setOverallRate(Math.round(parseFloat(overall.dropoff_rate)));
-          
-          // Transform monthly data into expected format
-          const formattedMonthlyRates = {};
-          monthlyData.forEach(month => {
-            formattedMonthlyRates[month.month] = Math.round(parseFloat(month.dropoff_rate));
-          });
-          
-          setMonthlyRates(formattedMonthlyRates);
+        // Cache valid for 5 minutes (300000 ms)
+        if (cacheAge < 300000) {
+          const parsedData = JSON.parse(cachedDataString);
+          setOverallRate(parsedData.overallRate);
+          setMonthlyRates(parsedData.monthlyRates);
+          setLastFetch(cachedTime);
+          setIsLoading(false);
+          return;
         }
-      } catch (err) {
-        console.error("Error fetching drop-off rate data:", err);
-        setError("Failed to load drop-off rate data");
-      } finally {
-        setIsLoading(false);
       }
-    };
-
-    fetchDropOffData();
+      
+      // If no valid cache or force refresh, fetch from API
+      const response = await api.get("/analytic/metrics");
+      
+      if (response.data && response.data.dropOffRate) {
+        const { overallDropOffRate, monthlyDropOffs } = response.data.dropOffRate;
+        
+        // Set overall rate
+        setOverallRate(parseFloat(overallDropOffRate));
+        
+        // Transform monthly data into expected format
+        const formattedMonthlyRates = {};
+        monthlyDropOffs.forEach(item => {
+          const [year, month] = item.month.split('-');
+          const date = new Date(year, month - 1);
+          const monthName = date.toLocaleString('default', { month: 'long' });
+          
+          formattedMonthlyRates[monthName] = parseFloat(item.dropOffRate);
+        });
+        
+        setMonthlyRates(formattedMonthlyRates);
+        
+        // Store in session storage with timestamp
+        const dataToCache = {
+          overallRate: parseFloat(overallDropOffRate),
+          monthlyRates: formattedMonthlyRates
+        };
+        
+        sessionStorage.setItem('dropOffRateData', JSON.stringify(dataToCache));
+        sessionStorage.setItem('dropOffRateDataTimestamp', new Date().getTime().toString());
+        
+        setLastFetch(new Date().getTime());
+      }
+    } catch (err) {
+      console.error("Error fetching drop-off rate data:", err);
+      setError("Failed to load drop-off rate data");
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  // Use effect for the initial fetch
+  useEffect(() => {
+    fetchDropOffData();
+  }, [fetchDropOffData]);
 
   return (
     <>
@@ -50,10 +90,20 @@ const CandidateDropOffRate = () => {
             onMouseEnter={() => setShowTooltip(true)}
             onMouseLeave={() => setShowTooltip(false)}
           />
-          {showTooltip &&
+          {showTooltip && (
             <span className="absolute mt-5 w-48 p-2 body-tiny text-teal bg-teal-soft rounded shadow-lg text-justify z-10">
               This shows the percentage of candidates who start but do not complete the application or interview process.
-            </span>}
+              <br />
+              Last updated: {lastFetch ? new Date(lastFetch).toLocaleTimeString() : 'Never'}
+            </span>
+          )}
+          {/* Optional refresh button */}
+          {/* <button 
+            onClick={() => fetchDropOffData(true)} 
+            className="text-xs text-blue-500 hover:underline"
+          >
+            Refresh
+          </button> */}
         </div>
       </div>
       
@@ -64,7 +114,7 @@ const CandidateDropOffRate = () => {
       ) : (
         <>
           <div className="mb-6 text-center text-4xl font-semibold">
-            {overallRate}%
+            {overallRate}
           </div>
           {Object.keys(monthlyRates).length > 0 ? (
             <div className="space-y-2">
@@ -90,7 +140,7 @@ const CandidateDropOffRate = () => {
                 .map(([month, rate]) => (
                   <div key={month} className="flex justify-between">
                     <span className="font-medium">{month}</span>
-                    <span className="font-medium">{rate}%</span>
+                    <span className="font-medium">{rate}</span>
                   </div>
                 ))}
             </div>

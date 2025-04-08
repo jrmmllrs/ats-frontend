@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip } from "chart.js";
 import api from "../../api/axios";
@@ -7,27 +7,59 @@ ChartJS.register(ArcElement, Tooltip);
 
 const SourceOfApplication = () => {
   const [data, setData] = useState([]);
+  const [lastFetch, setLastFetch] = useState(0);
+
+  // Memoize the fetch function to maintain its identity between renders
+  const fetchData = useCallback(async (forceRefresh = false) => {
+    try {
+      // Check if we have valid cached data
+      const cachedDataString = sessionStorage.getItem('sourceData');
+      const cachedTimeString = sessionStorage.getItem('sourceDataTimestamp');
+      
+      if (!forceRefresh && cachedDataString && cachedTimeString) {
+        const cachedTime = parseInt(cachedTimeString);
+        const currentTime = new Date().getTime();
+        const cacheAge = currentTime - cachedTime;
+        
+        // Cache valid for 5 minutes (300000 ms)
+        if (cacheAge < 300000) {
+          const parsedData = JSON.parse(cachedDataString);
+          setData(parsedData);
+          setLastFetch(cachedTime);
+          return;
+        }
+      }
+      
+      // If no valid cache or force refresh, fetch from API
+      const response = await api.get("/analytic/graphs/source");
+      
+      // Extract the source data directly from the response
+      if (response.data && response.data.source) {
+        const sourceData = response.data.source;
+        
+        // Store in session storage with timestamp
+        sessionStorage.setItem('sourceData', JSON.stringify(sourceData));
+        sessionStorage.setItem('sourceDataTimestamp', new Date().getTime().toString());
+
+        setData(sourceData);
+        setLastFetch(new Date().getTime());
+      }
+    } catch (error) {
+      console.error("Error fetching source data:", error);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await api.get("/analytic/graphs/source");
-        setData(response.data.source);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const chartData = {
     labels: data.map((entry) => entry.source),
     datasets: [
       {
         data: data.map((entry) => entry.value),
-        backgroundColor: ["#008080", "#66b2b2", "#d9ebeb", "#ffcccb", "#c0c0c0"],
-        hoverBackgroundColor: ["#007777", "#5daaaa", "#cce5e5", "#ff9999", "#a9a9a9"],
+        backgroundColor: ["#008080", "#33A3A3", "#66C5C5", "#99E6E6", "#CCF2F2"],
+        hoverBackgroundColor: ["#006666", "#2A8888", "#55A8A8", "#77BCBC", "#AACBCB"],
       },
     ],
   };
@@ -71,11 +103,11 @@ const SourceOfApplication = () => {
             <div
               className="h-3 w-3 rounded-full"
               style={{
-                backgroundColor: chartData.datasets[0].backgroundColor[index],
+                backgroundColor: chartData.datasets[0].backgroundColor[index % 5],
               }}
             />
             <span className="text-sm text-gray-700">{entry.source}</span>
-            <span className="ml-auto text-sm font-medium">{entry.value}%</span>
+            <span className="ml-auto text-sm font-medium">{entry.value}</span>
           </div>
         ))}
       </div>

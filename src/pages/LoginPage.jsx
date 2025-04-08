@@ -27,7 +27,7 @@ export default function LoginPage() {
 
       if (response.status === 200) {
         Cookies.set("token", response.data.token, { expires: rememberMe ? 7 : 1 });
-        navigate("/hr_ats");
+        navigate("/ats");
       } else {
         setError("Invalid email or password");
       }
@@ -41,6 +41,10 @@ export default function LoginPage() {
   const handleCopyCredentials = (userEmail, userPassword) => {
     setEmail(userEmail);
     setPassword(userPassword);
+  };
+
+  const toggleTestCredentials = () => {
+    setShowTestCredentials(!showTestCredentials);
   };
 
   useEffect(() => {
@@ -83,15 +87,14 @@ export default function LoginPage() {
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-teal-500 to-teal-600 p-6">
-            <div className="flex justify-center">
-              <div className="bg-white/20 p-3 rounded-full">
+            <div className="flex justify-center relative">
+              <div className="bg-white/20 p-3 rounded-full cursor-pointer" onClick={toggleTestCredentials}>
                 <FiUser className="text-white text-2xl" />
               </div>
             </div>
             <h2 className="text-2xl font-bold text-center text-white mt-3">Welcome Back</h2>
             <p className="text-center text-teal-100 text-sm mt-1">Sign in to your account</p>
           </div>
-
           {/* Form */}
           <div className="p-6">
             <form onSubmit={handleLogin} className="space-y-5">
@@ -138,7 +141,7 @@ export default function LoginPage() {
                 </div>
               </div>
 
-         
+
 
               {error && (
                 <div className="bg-red-50 text-red-500 p-3 rounded-lg text-sm flex items-center">
@@ -148,9 +151,8 @@ export default function LoginPage() {
 
               <button
                 type="submit"
-                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition ${
-                  isLoading ? "opacity-75 cursor-not-allowed" : ""
-                }`}
+                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition ${isLoading ? "opacity-75 cursor-not-allowed" : ""
+                  }`}
                 disabled={isLoading}
               >
                 {isLoading ? (
