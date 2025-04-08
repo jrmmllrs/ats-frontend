@@ -6,7 +6,7 @@ import api from "../api/axios"
 import PendingApplicantConfirmationModal from "../components/Modals/PendingApplicantConfirmationModal"
 import RecentTable from "../components/RecentTable"
 
-// Helper function to format dates
+// Helper function to format dates TO BE REMOVED
 const formatDate = (dateString) => {
   const date = new Date(dateString)
   return new Intl.DateTimeFormat("en-US", {
@@ -18,7 +18,7 @@ const formatDate = (dateString) => {
   }).format(date)
 }
 
-// Status badge component
+// Status badge component TO BE MOVED IN THE RECENT TABLE
 const StatusBadge = ({ status }) => {
   let color = "bg-gray-light text-gray-800"
 
@@ -36,43 +36,6 @@ const StatusBadge = ({ status }) => {
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${color}`}>
       {status.replace(/_/g, " ")}
     </span>
-  )
-}
-
-// Custom Card component
-const Card = ({ children, className = "" }) => {
-  return (
-    <div className={`bg-white rounded-2xl border border-gray-200 ${className}`}>
-      {children}
-    </div>
-  )
-}
-
-// Custom Card Content component
-const CardContent = ({ children, className = "" }) => {
-  return <div className={`p-6 ${className}`}>{children}</div>
-}
-
-// Custom Button component
-const Button = ({ children, onClick, variant = "primary", className = "", disabled = false }) => {
-  const baseClasses =
-    "inline-flex items-center justify-center px-4 py-2 body-regular rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-pointer"
-
-  const variantClasses = {
-    primary: "bg-teal text-white hover:bg-teal focus:ring-teal",
-    secondary: "bg-white text-teal border border-teal hover:bg-[#e6ffff] focus:ring-teal",
-    danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
-  }
-
-  return (
-    <button
-      type="button"
-      className={`${baseClasses} ${variantClasses[variant]} ${disabled ? "opacity-50 cursor-not-allowed" : ""} ${className}`}
-      onClick={onClick}
-      disabled={disabled}
-    >
-      {children}
-    </button>
   )
 }
 
@@ -139,7 +102,7 @@ const SummarySection = ({ onRefresh }) => {
         onClick={() => alert("applicants")}
         className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
       >
-        <CardContent className="flex flex-col">
+        <div className="p-6 flex flex-col">
           <span className="body-regular text-gray-500">Total Applicants</span>
           {loading ? (
             <Skeleton className="h-8 w-24 mt-2" />
@@ -151,14 +114,14 @@ const SummarySection = ({ onRefresh }) => {
               <div className="text-2xl font-bold">{summaryData?.total_applicants.toLocaleString()}</div>
             </div>
           )}
-        </CardContent>
+        </div>
       </div>
 
       <div
         onClick={() => alert("applicants")}
         className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
       >
-        <CardContent className="flex flex-col">
+        <div className="p-6 flex flex-col">
           <span className="body-regular text-gray-500">Hired</span>
           {loading ? (
             <Skeleton className="h-8 w-24 mt-2" />
@@ -170,14 +133,14 @@ const SummarySection = ({ onRefresh }) => {
               <div className="text-2xl font-bold">{summaryData?.hired_applicants.toLocaleString()}</div>
             </div>
           )}
-        </CardContent>
+        </div>
       </div>
 
       <div
         onClick={() => alert("applicants")}
         className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
       >
-        <CardContent className="flex flex-col">
+        <div className="p-6 flex flex-col">
           <span className="body-regular text-gray-500">In Interview Process</span>
           {loading ? (
             <Skeleton className="h-8 w-24 mt-2" />
@@ -189,14 +152,14 @@ const SummarySection = ({ onRefresh }) => {
               <div className="text-2xl font-bold">{summaryData?.in_interview.toLocaleString()}</div>
             </div>
           )}
-        </CardContent>
+        </div>
       </div>
 
       <div
         onClick={() => alert("jobs")}
         className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
       >
-        <CardContent className="flex flex-col">
+        <div className="p-6 flex flex-col">
           <span className="body-regular text-gray-500">Open Positions</span>
           {loading ? (
             <Skeleton className="h-8 w-24 mt-2" />
@@ -208,7 +171,7 @@ const SummarySection = ({ onRefresh }) => {
               <div className="text-2xl font-bold">{summaryData?.open_positions.toLocaleString()}</div>
             </div>
           )}
-        </CardContent>
+        </div>
       </div>
     </div>
   )
@@ -267,60 +230,6 @@ const RecentApplicantsSection = ({ onRefresh }) => {
             alert(`Applicant: ${applicant.first_name} ${applicant.last_name}`)
           }}
         />
-        // <div className="overflow-x-auto h-[400px]">
-        //   <table className="min-w-full divide-y divide-gray-200 table-fixed w-full">
-        //     <thead className="bg-gray-50 sticky top-0 z-10">
-        //       <tr>
-        //         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider w-1/5">
-        //           Name
-        //         </th>
-        //         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider w-1/5">
-        //           Email
-        //         </th>
-        //         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider w-1/5">
-        //           Position
-        //         </th>
-        //         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider w-1/5">
-        //           Status
-        //         </th>
-        //         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider w-1/5">
-        //           Applied Date
-        //         </th>
-        //       </tr>
-        //     </thead>
-        //     <tbody className="bg-white divide-y divide-gray-200">
-        //       {applicants.length > 0 ? (
-        //         applicants.map((applicant) => (
-        //           <tr key={applicant.applicant_id}>
-        //             <td className="px-6 py-4 whitespace-nowrap">
-        //               <div className="font-medium text-gray-900">
-        //                 {`${applicant.first_name} ${applicant.middle_name ? applicant.middle_name + " " : ""}${applicant.last_name}`}
-        //               </div>
-        //             </td>
-        //             <td className="px-6 py-4 whitespace-nowrap body-regular text-gray-dark">
-        //               {applicant.email_1}
-        //             </td>
-        //             <td className="px-6 py-4 whitespace-nowrap body-regular text-gray-dark">
-        //               {applicant.position}
-        //             </td>
-        //             <td className="px-6 py-4 whitespace-nowrap">
-        //               <StatusBadge status={applicant.status} />
-        //             </td>
-        //             <td className="px-6 py-4 whitespace-nowrap body-regular text-gray-dark">
-        //               {formatDate(applicant.applied_date)}
-        //             </td>
-        //           </tr>
-        //         ))
-        //       ) : (
-        //         <tr>
-        //           <td colSpan="5" className="px-6 py-4 text-center body-regular text-gray-dark">
-        //             No recent applicants found
-        //           </td>
-        //         </tr>
-        //       )}
-        //     </tbody>
-        //   </table>
-        // </div>
       )}
     </div>
   )
@@ -585,48 +494,47 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="">
-      <div className="max-w-7xl mx-auto">
+    <div>
+      <div className="w-[80%] mx-auto mt-5">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Recruitment Dashboard</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
             <p className="text-gray-500">Track and analyze your recruitment metrics</p>
           </div>
 
           <div className="flex items-center space-x-4 mt-4 md:mt-0">
-            <Button onClick={handleRefresh} variant="secondary" className="flex items-center gap-2">
+            <div onClick={handleRefresh} variant="secondary" className="flex items-center gap-2 bg-white text-teal border border-teal hover:bg-[#e6ffff] focus:ring-teal justify-center px-4 py-2 body-regular rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-pointer">
               <FiRefreshCw className="h-4 w-4" />
               Refresh
-            </Button>
+            </div>
           </div>
         </div>
 
         {/* Summary Cards */}
         <SummarySection onRefresh={refreshCounter} />
 
-        <div className="grid grid-cols-1 gap-6">
+        <div className=" gap-6">
           <div className="bg-white rounded-2xl border border-gray-200">
             <div className="px-6 py-3">
               <Tabs tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
 
               <div className="p-4">
                 {/* Fixed content container with consistent height to prevent layout shift */}
-                <div className="min-h-[300px]">
-                  {/* Applicants Tab Content */}
-                  <div className={activeTab === "applicants" ? "block" : "hidden"}>
-                    <RecentApplicantsSection onRefresh={refreshCounter} />
-                  </div>
-
-                  {/* Pending Applicants Tab Content */}
-                  <div className={activeTab === "pending" ? "block" : "hidden"}>
-                    <PendingApplicantsSection onRefresh={refreshCounter} />
-                  </div>
-
-                  {/* Interviews Tab Content */}
-                  <div className={activeTab === "interviews" ? "block" : "hidden"}>
-                    <InterviewsSection onRefresh={refreshCounter} />
-                  </div>
+                {/* Applicants Tab Content */}
+                <div className={activeTab === "applicants" ? "block" : "hidden"}>
+                  <RecentApplicantsSection onRefresh={refreshCounter} />
                 </div>
+
+                {/* Pending Applicants Tab Content */}
+                <div className={activeTab === "pending" ? "block" : "hidden"}>
+                  <PendingApplicantsSection onRefresh={refreshCounter} />
+                </div>
+
+                {/* Interviews Tab Content */}
+                <div className={activeTab === "interviews" ? "block" : "hidden"}>
+                  <InterviewsSection onRefresh={refreshCounter} />
+                </div>
+
               </div>
             </div>
           </div>
