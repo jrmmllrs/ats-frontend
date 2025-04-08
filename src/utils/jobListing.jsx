@@ -19,3 +19,13 @@ export const fetchCloseJobsCount = async (setCloseJobsCount) => {
     const { data } = await api.get(`/jobs/close/count`);
     setCloseJobsCount(data.data.count);
 }
+
+export const searchJobs = async (searchVal, setJobsData) => {
+    if (searchVal != ""){
+        const { data } = await api.get(`/jobs/search/${searchVal}`);
+        setJobsData(data.data);
+    }
+    else {
+        fetchJobs(setJobsData);
+    }
+}

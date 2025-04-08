@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Toast from '../assets/Toast';
 import setupStore from '../context/setupStore';
 import { fetchSetups } from '../utils/setupUtils';
+import moment from 'moment';
 
 const SetupTable = ({ onSelectApplicant }) => {
     const { setupData, setSetupData } = setupStore(); 
@@ -22,7 +23,7 @@ const SetupTable = ({ onSelectApplicant }) => {
     const columns = [
         { name: 'Name', selector: row => row.setupName, sortable: true },
         { name: 'Created by', selector: row => row.createdBy, sortable: true },
-        { name: 'Date Created', selector: row => row.createdAt, sortable: true },
+        { name: 'Date Created', selector: row => moment(row.createdAt).format('LLL'), sortable: true },
     ];
 
     return (
