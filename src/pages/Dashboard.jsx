@@ -20,13 +20,13 @@ const StatusBadge = ({ status }) => {
   let color = "bg-gray-light text-gray-800"
 
   if (status.includes("PASSED") || status.includes("ACCEPTED") || status === "COMPLETED") {
-    color = "bg-teal text-white"
+    color = "bg-teal-light text-white"
   } else if (status.includes("FAILED") || status.includes("REJECTED")) {
-    color = "bg-teal text-white"
+    color = "bg-gray-light text-gray-dark"
   } else if (status.includes("SCHEDULED") || status.includes("SENT") || status === "SUBMITTED") {
-    color = "bg-teal text-teal"
+    color = "bg-teal-soft text-teal"
   } else if (status.includes("PENDING")) {
-    color = "bg-[#e6ffff] text-teal"
+    color = "bg-teal-light text-white"
   }
 
   return (
@@ -39,7 +39,7 @@ const StatusBadge = ({ status }) => {
 // Custom Card component
 const Card = ({ children, className = "" }) => {
   return (
-    <div className={`bg-white rounded-2xl border border-gray-200 overflow-hidden ${className}`}>
+    <div className={`bg-white rounded-2xl border border-gray-200 ${className}`}>
       {children}
     </div>
   )
@@ -132,7 +132,10 @@ const SummarySection = ({ onRefresh }) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-      <Card>
+      <div
+        onClick={() => alert("applicants")}
+        className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
+      >
         <CardContent className="flex flex-col">
           <span className="body-regular text-gray-500">Total Applicants</span>
           {loading ? (
@@ -146,9 +149,12 @@ const SummarySection = ({ onRefresh }) => {
             </div>
           )}
         </CardContent>
-      </Card>
+      </div>
 
-      <Card>
+      <div
+        onClick={() => alert("applicants")}
+        className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
+      >
         <CardContent className="flex flex-col">
           <span className="body-regular text-gray-500">Hired</span>
           {loading ? (
@@ -162,9 +168,12 @@ const SummarySection = ({ onRefresh }) => {
             </div>
           )}
         </CardContent>
-      </Card>
+      </div>
 
-      <Card>
+      <div
+        onClick={() => alert("applicants")}
+        className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
+      >
         <CardContent className="flex flex-col">
           <span className="body-regular text-gray-500">In Interview Process</span>
           {loading ? (
@@ -178,9 +187,12 @@ const SummarySection = ({ onRefresh }) => {
             </div>
           )}
         </CardContent>
-      </Card>
+      </div>
 
-      <Card>
+      <div
+        onClick={() => alert("jobs")}
+        className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
+      >
         <CardContent className="flex flex-col">
           <span className="body-regular text-gray-500">Open Positions</span>
           {loading ? (
@@ -194,7 +206,7 @@ const SummarySection = ({ onRefresh }) => {
             </div>
           )}
         </CardContent>
-      </Card>
+      </div>
     </div>
   )
 }
