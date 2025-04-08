@@ -4,6 +4,7 @@ import { FiUsers, FiUserCheck, FiCalendar, FiBriefcase, FiRefreshCw } from "reac
 import api from "../api/axios"
 
 import PendingApplicantConfirmationModal from "../components/Modals/PendingApplicantConfirmationModal"
+import RecentTable from "../components/RecentTable"
 
 // Helper function to format dates
 const formatDate = (dateString) => {
@@ -83,7 +84,7 @@ const Tabs = ({ tabs, activeTab, setActiveTab }) => {
         {tabs.map((tab) => (
           <button
             key={tab.value}
-            className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === tab.value
+            className={`py-2 px-1 border-b-2 font-medium body-regular cursor-pointer ${activeTab === tab.value
               ? "border-teal text-teal"
               : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
@@ -143,7 +144,7 @@ const SummarySection = ({ onRefresh }) => {
           {loading ? (
             <Skeleton className="h-8 w-24 mt-2" />
           ) : error ? (
-            <div className="text-red-500 text-sm mt-2">Error loading data</div>
+            <div className="text-red-500 body-regular mt-2">Error loading data</div>
           ) : (
             <div className="flex items-center mt-2">
               <FiUsers className="mr-2 h-5 w-5 text-teal" />
@@ -162,7 +163,7 @@ const SummarySection = ({ onRefresh }) => {
           {loading ? (
             <Skeleton className="h-8 w-24 mt-2" />
           ) : error ? (
-            <div className="text-red-500 text-sm mt-2">Error loading data</div>
+            <div className="text-red-500 body-regular mt-2">Error loading data</div>
           ) : (
             <div className="flex items-center mt-2">
               <FiUserCheck className="mr-2 h-5 w-5 text-teal" />
@@ -181,7 +182,7 @@ const SummarySection = ({ onRefresh }) => {
           {loading ? (
             <Skeleton className="h-8 w-24 mt-2" />
           ) : error ? (
-            <div className="text-red-500 text-sm mt-2">Error loading data</div>
+            <div className="text-red-500 body-regular mt-2">Error loading data</div>
           ) : (
             <div className="flex items-center mt-2">
               <FiCalendar className="mr-2 h-5 w-5 text-teal" />
@@ -200,7 +201,7 @@ const SummarySection = ({ onRefresh }) => {
           {loading ? (
             <Skeleton className="h-8 w-24 mt-2" />
           ) : error ? (
-            <div className="text-red-500 text-sm mt-2">Error loading data</div>
+            <div className="text-red-500 body-regular mt-2">Error loading data</div>
           ) : (
             <div className="flex items-center mt-2">
               <FiBriefcase className="mr-2 h-5 w-5 text-teal" />
@@ -247,7 +248,7 @@ const RecentApplicantsSection = ({ onRefresh }) => {
     <div>
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold text-gray-900">Recent Applicants</h3>
-        <p className="text-sm text-gray-dark">Latest applicants in the system</p>
+        <p className="body-tiny text-gray-400">Latest applicants in the system</p>
       </div>
 
       {loading ? (
@@ -259,60 +260,67 @@ const RecentApplicantsSection = ({ onRefresh }) => {
       ) : error ? (
         <div className="p-4 text-red-500 text-center">{error}</div>
       ) : (
-        <div className="overflow-x-auto h-[400px]">
-          <table className="min-w-full divide-y divide-gray-200 table-fixed w-full">
-            <thead className="bg-gray-50 sticky top-0 z-10">
-              <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider w-1/5">
-                  Name
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider w-1/5">
-                  Email
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider w-1/5">
-                  Position
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider w-1/5">
-                  Status
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider w-1/5">
-                  Applied Date
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {applicants.length > 0 ? (
-                applicants.map((applicant) => (
-                  <tr key={applicant.applicant_id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900">
-                        {`${applicant.first_name} ${applicant.middle_name ? applicant.middle_name + " " : ""}${applicant.last_name}`}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-dark">
-                      {applicant.email_1}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-dark">
-                      {applicant.position}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <StatusBadge status={applicant.status} />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-dark">
-                      {formatDate(applicant.applied_date)}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-dark">
-                    No recent applicants found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <RecentTable
+          applicants={applicants}
+          onRowClick={(applicant) => {
+            console.log("Clicked applicant:", applicant)
+            alert(`Applicant: ${applicant.first_name} ${applicant.last_name}`)
+          }}
+        />
+        // <div className="overflow-x-auto h-[400px]">
+        //   <table className="min-w-full divide-y divide-gray-200 table-fixed w-full">
+        //     <thead className="bg-gray-50 sticky top-0 z-10">
+        //       <tr>
+        //         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider w-1/5">
+        //           Name
+        //         </th>
+        //         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider w-1/5">
+        //           Email
+        //         </th>
+        //         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider w-1/5">
+        //           Position
+        //         </th>
+        //         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider w-1/5">
+        //           Status
+        //         </th>
+        //         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider w-1/5">
+        //           Applied Date
+        //         </th>
+        //       </tr>
+        //     </thead>
+        //     <tbody className="bg-white divide-y divide-gray-200">
+        //       {applicants.length > 0 ? (
+        //         applicants.map((applicant) => (
+        //           <tr key={applicant.applicant_id}>
+        //             <td className="px-6 py-4 whitespace-nowrap">
+        //               <div className="font-medium text-gray-900">
+        //                 {`${applicant.first_name} ${applicant.middle_name ? applicant.middle_name + " " : ""}${applicant.last_name}`}
+        //               </div>
+        //             </td>
+        //             <td className="px-6 py-4 whitespace-nowrap body-regular text-gray-dark">
+        //               {applicant.email_1}
+        //             </td>
+        //             <td className="px-6 py-4 whitespace-nowrap body-regular text-gray-dark">
+        //               {applicant.position}
+        //             </td>
+        //             <td className="px-6 py-4 whitespace-nowrap">
+        //               <StatusBadge status={applicant.status} />
+        //             </td>
+        //             <td className="px-6 py-4 whitespace-nowrap body-regular text-gray-dark">
+        //               {formatDate(applicant.applied_date)}
+        //             </td>
+        //           </tr>
+        //         ))
+        //       ) : (
+        //         <tr>
+        //           <td colSpan="5" className="px-6 py-4 text-center body-regular text-gray-dark">
+        //             No recent applicants found
+        //           </td>
+        //         </tr>
+        //       )}
+        //     </tbody>
+        //   </table>
+        // </div>
       )}
     </div>
   )
@@ -373,7 +381,7 @@ const PendingApplicantsSection = ({ onRefresh }) => {
     <div>
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold text-gray-900">Pending Applicants</h3>
-        <p className="text-sm text-gray-500">Applicants awaiting review</p>
+        <p className="body-regular text-gray-500">Applicants awaiting review</p>
       </div>
 
       {loading ? (
@@ -409,8 +417,8 @@ const PendingApplicantsSection = ({ onRefresh }) => {
             <tbody className="bg-white divide-y divide-gray-200">
               {pendingApplicants.length > 0 ? (
                 pendingApplicants.map((applicant) => (
-                  <tr 
-                    key={applicant.applicant_id} 
+                  <tr
+                    key={applicant.applicant_id}
                     onClick={() => handleRowClick(applicant)}
                     className="hover:bg-gray-50 cursor-pointer"
                   >
@@ -419,23 +427,23 @@ const PendingApplicantsSection = ({ onRefresh }) => {
                         {`${applicant.first_name} ${applicant.middle_name ? applicant.middle_name + " " : ""}${applicant.last_name}`}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap body-regular text-gray-500">
                       {applicant.email_1}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap body-regular text-gray-500">
                       {applicant.position}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <StatusBadge status={applicant.status} />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap body-regular text-gray-500">
                       {formatDate(applicant.applied_date)}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500">
+                  <td colSpan="5" className="px-6 py-4 text-center body-regular text-gray-500">
                     No pending applicants found
                   </td>
                 </tr>
@@ -492,7 +500,7 @@ const InterviewsSection = ({ onRefresh }) => {
     <div>
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold text-gray-900">Upcoming Interviews</h3>
-        <p className="text-sm text-gray-500">Scheduled interviews for the next 7 days</p>
+        <p className="body-regular text-gray-500">Scheduled interviews for the next 7 days</p>
       </div>
 
       {loading ? (
@@ -531,20 +539,20 @@ const InterviewsSection = ({ onRefresh }) => {
                         {`${interview.first_name} ${interview.middle_name ? interview.middle_name + " " : ""}${interview.last_name}`}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap body-regular text-gray-500">
                       {interview.position}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap body-regular text-gray-500">
                       {formatDate(interview.date_of_interview)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap body-regular text-gray-500">
                       {interview.interviewer_name}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="4" className="px-6 py-4 text-center text-sm text-gray-500">
+                  <td colSpan="4" className="px-6 py-4 text-center body-regular text-gray-500">
                     No upcoming interviews found
                   </td>
                 </tr>
@@ -597,11 +605,11 @@ export default function Dashboard() {
         <SummarySection onRefresh={refreshCounter} />
 
         <div className="grid grid-cols-1 gap-6">
-          <Card>
-            <CardContent>
+          <div className="bg-white rounded-2xl border border-gray-200">
+            <div className="px-6 py-3">
               <Tabs tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
 
-              <div className="p-6">
+              <div className="p-4">
                 {/* Fixed content container with consistent height to prevent layout shift */}
                 <div className="min-h-[300px]">
                   {/* Applicants Tab Content */}
@@ -620,8 +628,8 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>
