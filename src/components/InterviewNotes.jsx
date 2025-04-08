@@ -1,5 +1,3 @@
-
-
 import React, { useState } from "react";
 import { FiSend } from "react-icons/fi";
 import MessageBox from "./MessageBox"; // Adjust path if needed
