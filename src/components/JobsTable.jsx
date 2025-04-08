@@ -13,7 +13,6 @@ const JobsTable = ({ onSelectApplicant }) => {
             await fetchJobs(setJobsData);
         }    
         getJobsData();
-        console.log(jobsData);
     }, [])
 
     const handleJobRowClick = (row) => {

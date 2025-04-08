@@ -29,3 +29,13 @@ export const searchJobs = async (searchVal, setJobsData) => {
         fetchJobs(setJobsData);
     }
 }
+
+export const getCloseJobs = async (setJobsData) => {
+    const { data } = await api.get(`/jobs/close`);
+    setJobsData(data.data);
+} 
+
+export const getOpenJobs = async (setJobsData) => {
+    const { data } = await api.get(`/jobs/open`);
+    setJobsData(data.data);
+}
