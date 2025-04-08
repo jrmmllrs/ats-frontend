@@ -19,27 +19,6 @@ const formatDate = (dateString) => {
   }).format(date)
 }
 
-// Status badge component TO BE MOVED IN THE RECENT TABLE
-const StatusBadge = ({ status }) => {
-  let color = "bg-gray-light text-gray-800"
-
-  if (status.includes("PASSED") || status.includes("ACCEPTED") || status === "COMPLETED") {
-    color = "bg-teal-light text-white"
-  } else if (status.includes("FAILED") || status.includes("REJECTED")) {
-    color = "bg-gray-light text-gray-dark"
-  } else if (status.includes("INTERVIEW") || status.includes("SENT") || status === "SUBMITTED") {
-    color = "bg-teal-soft text-teal"
-  } else if (status.includes("PENDING")) {
-    color = "bg-orange-100 text-gray-dark"
-  }
-
-  return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${color}`}>
-      {status.replace(/_/g, " ")}
-    </span>
-  )
-}
-
 // Custom Tabs component
 const Tabs = ({ tabs, activeTab, setActiveTab }) => {
   return (
