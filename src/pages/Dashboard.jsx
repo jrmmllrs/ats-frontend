@@ -26,10 +26,10 @@ const StatusBadge = ({ status }) => {
     color = "bg-teal-light text-white"
   } else if (status.includes("FAILED") || status.includes("REJECTED")) {
     color = "bg-gray-light text-gray-dark"
-  } else if (status.includes("SCHEDULED") || status.includes("SENT") || status === "SUBMITTED") {
+  } else if (status.includes("INTERVIEW") || status.includes("SENT") || status === "SUBMITTED") {
     color = "bg-teal-soft text-teal"
   } else if (status.includes("PENDING")) {
-    color = "bg-teal-light text-white"
+    color = "bg-orange-100 text-gray-dark"
   }
 
   return (

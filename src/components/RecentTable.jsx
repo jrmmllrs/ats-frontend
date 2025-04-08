@@ -19,7 +19,7 @@ const RecentTable = ({ applicants, onSelectApplicant }) => {
         { name: 'Name', selector: row => `${row.first_name} ${row.last_name}` },
         { name: 'Email', selector: row => row.email_1 },
         { name: 'Position', selector: row => row.position },
-        { name: 'Status', selector: row => row.status },
+        { name: 'Status', selector: row => <StatusBadge status={row.status} /> },
         { name: 'Applied Date', selector: row => moment(row.applied_date).format("LLL") },
     ];
 
@@ -55,6 +55,26 @@ function LoadingComponent() {
             ))}
         </div>
     );
+}
+
+const StatusBadge = ({ status }) => {
+    let color = "bg-gray-light text-gray-800"
+
+    if (status.includes("PASSED") || status.includes("ACCEPTED") || status === "COMPLETED") {
+        color = "bg-teal-light text-white"
+    } else if (status.includes("FAILED") || status.includes("REJECTED")) {
+        color = "bg-gray-light text-gray-dark"
+    } else if (status.includes("INTERVIEW") || status.includes("SENT") || status === "SUBMITTED") {
+        color = "bg-teal-soft text-teal"
+    } else if (status.includes("PENDING")) {
+        color = "bg-orange-100 text-gray-dark"
+    }
+
+    return (
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${color}`}>
+            {status.replace(/_/g, " ")}
+        </span>
+    )
 }
 
 export default RecentTable;
