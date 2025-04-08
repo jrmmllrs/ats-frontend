@@ -2,7 +2,9 @@ import { create } from "zustand";
 
 const jobStore = create((set) => ({
     jobsData: [],
-    setJobsData: (payload) => set({ jobsData: payload })
+    isGearModalOpen: false,
+    setJobsData: (payload) => set({ jobsData: payload }),
+    setIsGearModalOpen: (payload) => set({ isGearModalOpen: payload })
 }));
 
 export default jobStore;

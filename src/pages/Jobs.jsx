@@ -2,10 +2,12 @@ import JobList from "../layouts/JobList";
 import JobCountStore from "../context/jobsCountStore";
 import { useEffect } from "react";
 import { fetchCloseJobsCount, fetchIndustriesCount, fetchOpenJobsCount } from "../utils/jobListing";
+import jobStore from "../context/jobListingStore";
 
 
 const Jobs = () => {
     const { industriesCount, setIndustriesCount, openJobsCount, setOpenJobsCount, closeJobsCount, setCloseJobsCount } = JobCountStore();
+    const { setIsGearModalOpen } = jobStore();
 
     useEffect(() => {
         const getCounts = async () => {
@@ -27,7 +29,7 @@ const Jobs = () => {
                     <div className="text-sm text-gray-500 text-center">Applications</div>
                 </div> */}
                 <div
-                    onClick={() => alert("industry")}
+                    onClick={() => setIsGearModalOpen(true)}      //nyenyenyenyenyenye
                     className="rounded-md grid place-content-center cursor-pointer bg-white border border-gray-light"
                 >
                     <span className="text-3xl text-center">{industriesCount}</span>
