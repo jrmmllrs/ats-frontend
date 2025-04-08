@@ -9,7 +9,6 @@ import jobStore from "../context/jobListingStore";
 const JobList = () => {
     const [searchVal, setSearchVal] = useState("");
     const [isAddJobModalOpen, setIsAddJobModalOpen] = useState(false);
-    const [isGearModalOpen, setIsGearModalOpen] = useState(false);
     const [jobData, setJobData] = useState({
         title: "",
         industry: "",
@@ -24,7 +23,7 @@ const JobList = () => {
         status: "Open",
         visibility: "Public",
     });
-    const { jobsData, setJobsData } = jobStore();
+    const { jobsData, setJobsData, isGearModalOpen, setIsGearModalOpen } = jobStore();
 
     const handleChange = (e) => {
         setJobData({ ...jobData, [e.target.name]: e.target.value });
