@@ -2,8 +2,12 @@ import { useState } from "react";
 import JobsTable from "../components/JobsTable";
 import { FaGear, FaPlus } from "react-icons/fa6";
 import IndustriesModal from "../components/Modals/IndustriesModal";
+import { set } from "date-fns";
+import { searchJobs } from "../utils/jobListing";
+import jobStore from "../context/jobListingStore";
 
 const JobList = () => {
+    const [searchVal, setSearchVal] = useState("");
     const [isAddJobModalOpen, setIsAddJobModalOpen] = useState(false);
     const [isGearModalOpen, setIsGearModalOpen] = useState(false);
     const [jobData, setJobData] = useState({
@@ -20,6 +24,7 @@ const JobList = () => {
         status: "Open",
         visibility: "Public",
     });
+    const { jobsData, setJobsData } = jobStore();
 
     const handleChange = (e) => {
         setJobData({ ...jobData, [e.target.name]: e.target.value });
@@ -60,6 +65,8 @@ const JobList = () => {
                     type="text"
                     placeholder="Search jobs..."
                     className="w-full sm:w-1/2 md:w-1/4 p-2 body-regular focus:outline-teal border border-gray-300 rounded-md"
+                    onChange={(e) => {setSearchVal(e.target.value); searchJobs(e.target.value, setJobsData);
+                    }}
                 />
             </div>
 
