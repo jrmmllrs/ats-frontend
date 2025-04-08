@@ -1,10 +1,9 @@
 import DataTable from 'react-data-table-component';
 import { useState, useEffect } from 'react';
-import Toast from '../assets/Toast';
+import moment from 'moment';
 
 const RecentTable = ({ applicants, onSelectApplicant }) => {
     const [recentApplicants, setApplicants] = useState(applicants || []);
-    const [toasts, setToasts] = useState([]);
 
     useEffect(() => {
         setApplicants(applicants || []);
@@ -21,7 +20,7 @@ const RecentTable = ({ applicants, onSelectApplicant }) => {
         { name: 'Email', selector: row => row.email_1 },
         { name: 'Position', selector: row => row.position },
         { name: 'Status', selector: row => row.status },
-        { name: 'Applied Date', selector: row => row.applied_date },
+        { name: 'Applied Date', selector: row => moment(row.applied_date).format("LLL") },
     ];
 
     return (
@@ -44,17 +43,6 @@ const RecentTable = ({ applicants, onSelectApplicant }) => {
                     progressComponent={<LoadingComponent />}
                 />
             )}
-
-            {/* Toasts if needed */}
-            {/* <div className="fixed top-4 right-4 space-y-2">
-        {toasts.map(toast => (
-          <Toast
-            key={toast.id}
-            toast={toast}
-            removeToast={() => setToasts(toasts.filter(t => t.id !== toast.id))}
-          />
-        ))}
-      </div> */}
         </>
     );
 };
