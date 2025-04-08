@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Toast from '../assets/Toast';
 import industriesStore from '../context/industriesStore';
 import { fetchIndustries } from '../utils/industriesUtils';
+import moment from 'moment';
 
 const IndustriesTable = ({ onSelectApplicant }) => {
     const { industries, setIndustries } = industriesStore();
@@ -24,7 +25,7 @@ const IndustriesTable = ({ onSelectApplicant }) => {
         { name: 'Industry Name', selector: row => row.industryName, sortable: true },
         { name: 'Assessment Url', selector: row => row.assessmentUrl, sortable: true },
         { name: 'Created By', selector: row => row.createdBy, sortable: true },
-        { name: 'Date Created', selector: row => row.createdAt, sortable: true },
+        { name: 'Date Created', selector: row => moment(row.createdAt).format('LLL'), sortable: true },
     ];
 
     return (
