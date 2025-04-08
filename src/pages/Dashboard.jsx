@@ -19,16 +19,16 @@ const formatDate = (dateString) => {
 
 // Status badge component
 const StatusBadge = ({ status }) => {
-  let color = "bg-gray-200 text-gray-800"
+  let color = "bg-gray-light text-gray-800"
 
   if (status.includes("PASSED") || status.includes("ACCEPTED") || status === "COMPLETED") {
-    color = "bg-[#008080] text-white"
+    color = "bg-teal-light text-white"
   } else if (status.includes("FAILED") || status.includes("REJECTED")) {
-    color = "bg-[#004040] text-white"
+    color = "bg-gray-light text-gray-dark"
   } else if (status.includes("SCHEDULED") || status.includes("SENT") || status === "SUBMITTED") {
-    color = "bg-[#00a0a0] text-[#004040]"
+    color = "bg-teal-soft text-teal"
   } else if (status.includes("PENDING")) {
-    color = "bg-[#e6ffff] text-[#006060]"
+    color = "bg-teal-light text-white"
   }
 
   return (
@@ -41,7 +41,7 @@ const StatusBadge = ({ status }) => {
 // Custom Card component
 const Card = ({ children, className = "" }) => {
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden ${className}`}>
+    <div className={`bg-white rounded-2xl border border-gray-200 ${className}`}>
       {children}
     </div>
   )
@@ -55,11 +55,11 @@ const CardContent = ({ children, className = "" }) => {
 // Custom Button component
 const Button = ({ children, onClick, variant = "primary", className = "", disabled = false }) => {
   const baseClasses =
-    "inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2"
+    "inline-flex items-center justify-center px-4 py-2 body-regular rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-pointer"
 
   const variantClasses = {
-    primary: "bg-[#008080] text-white hover:bg-[#006060] focus:ring-[#00a0a0]",
-    secondary: "bg-white text-[#008080] border border-[#00a0a0] hover:bg-[#e6ffff] focus:ring-[#008080]",
+    primary: "bg-teal text-white hover:bg-teal focus:ring-teal",
+    secondary: "bg-white text-teal border border-teal hover:bg-[#e6ffff] focus:ring-teal",
     danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
   }
 
@@ -84,7 +84,7 @@ const Tabs = ({ tabs, activeTab, setActiveTab }) => {
           <button
             key={tab.value}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === tab.value
-              ? "border-[#008080] text-[#006060]"
+              ? "border-teal text-teal"
               : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             onClick={() => setActiveTab(tab.value)}
@@ -99,7 +99,7 @@ const Tabs = ({ tabs, activeTab, setActiveTab }) => {
 
 // Custom Skeleton component
 const Skeleton = ({ className = "" }) => {
-  return <div className={`animate-pulse bg-gray-200 rounded ${className}`}></div>
+  return <div className={`animate-pulse bg-gray-light rounded ${className}`}></div>
 }
 
 // Summary Cards Section
@@ -134,69 +134,81 @@ const SummarySection = ({ onRefresh }) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-      <Card>
+      <div
+        onClick={() => alert("applicants")}
+        className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
+      >
         <CardContent className="flex flex-col">
-          <span className="text-sm font-medium text-gray-500">Total Applicants</span>
+          <span className="body-regular text-gray-500">Total Applicants</span>
           {loading ? (
             <Skeleton className="h-8 w-24 mt-2" />
           ) : error ? (
             <div className="text-red-500 text-sm mt-2">Error loading data</div>
           ) : (
             <div className="flex items-center mt-2">
-              <FiUsers className="mr-2 h-5 w-5 text-[#008080]" />
+              <FiUsers className="mr-2 h-5 w-5 text-teal" />
               <div className="text-2xl font-bold">{summaryData?.total_applicants.toLocaleString()}</div>
             </div>
           )}
         </CardContent>
-      </Card>
+      </div>
 
-      <Card>
+      <div
+        onClick={() => alert("applicants")}
+        className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
+      >
         <CardContent className="flex flex-col">
-          <span className="text-sm font-medium text-gray-500">Hired</span>
+          <span className="body-regular text-gray-500">Hired</span>
           {loading ? (
             <Skeleton className="h-8 w-24 mt-2" />
           ) : error ? (
             <div className="text-red-500 text-sm mt-2">Error loading data</div>
           ) : (
             <div className="flex items-center mt-2">
-              <FiUserCheck className="mr-2 h-5 w-5 text-[#006060]" />
+              <FiUserCheck className="mr-2 h-5 w-5 text-teal" />
               <div className="text-2xl font-bold">{summaryData?.hired_applicants.toLocaleString()}</div>
             </div>
           )}
         </CardContent>
-      </Card>
+      </div>
 
-      <Card>
+      <div
+        onClick={() => alert("applicants")}
+        className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
+      >
         <CardContent className="flex flex-col">
-          <span className="text-sm font-medium text-gray-500">In Interview Process</span>
+          <span className="body-regular text-gray-500">In Interview Process</span>
           {loading ? (
             <Skeleton className="h-8 w-24 mt-2" />
           ) : error ? (
             <div className="text-red-500 text-sm mt-2">Error loading data</div>
           ) : (
             <div className="flex items-center mt-2">
-              <FiCalendar className="mr-2 h-5 w-5 text-[#00a0a0]" />
+              <FiCalendar className="mr-2 h-5 w-5 text-teal" />
               <div className="text-2xl font-bold">{summaryData?.in_interview.toLocaleString()}</div>
             </div>
           )}
         </CardContent>
-      </Card>
+      </div>
 
-      <Card>
+      <div
+        onClick={() => alert("jobs")}
+        className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
+      >
         <CardContent className="flex flex-col">
-          <span className="text-sm font-medium text-gray-500">Open Positions</span>
+          <span className="body-regular text-gray-500">Open Positions</span>
           {loading ? (
             <Skeleton className="h-8 w-24 mt-2" />
           ) : error ? (
             <div className="text-red-500 text-sm mt-2">Error loading data</div>
           ) : (
             <div className="flex items-center mt-2">
-              <FiBriefcase className="mr-2 h-5 w-5 text-[#004040]" />
+              <FiBriefcase className="mr-2 h-5 w-5 text-teal" />
               <div className="text-2xl font-bold">{summaryData?.open_positions.toLocaleString()}</div>
             </div>
           )}
         </CardContent>
-      </Card>
+      </div>
     </div>
   )
 }
@@ -235,7 +247,7 @@ const RecentApplicantsSection = ({ onRefresh }) => {
     <div>
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold text-gray-900">Recent Applicants</h3>
-        <p className="text-sm text-gray-500">Latest applicants in the system</p>
+        <p className="text-sm text-gray-dark">Latest applicants in the system</p>
       </div>
 
       {loading ? (
@@ -251,19 +263,19 @@ const RecentApplicantsSection = ({ onRefresh }) => {
           <table className="min-w-full divide-y divide-gray-200 table-fixed w-full">
             <thead className="bg-gray-50 sticky top-0 z-10">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider w-1/5">
                   Name
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider w-1/5">
                   Email
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider w-1/5">
                   Position
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider w-1/5">
                   Status
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider w-1/5">
                   Applied Date
                 </th>
               </tr>
@@ -277,23 +289,23 @@ const RecentApplicantsSection = ({ onRefresh }) => {
                         {`${applicant.first_name} ${applicant.middle_name ? applicant.middle_name + " " : ""}${applicant.last_name}`}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-dark">
                       {applicant.email_1}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-dark">
                       {applicant.position}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <StatusBadge status={applicant.status} />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-dark">
                       {formatDate(applicant.applied_date)}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500">
+                  <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-dark">
                     No recent applicants found
                   </td>
                 </tr>
@@ -565,7 +577,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-6 min-h-screen">
+    <div className="">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
@@ -586,12 +598,12 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 gap-6">
           <Card>
-            <CardContent className="p-0">
+            <CardContent>
               <Tabs tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
 
               <div className="p-6">
                 {/* Fixed content container with consistent height to prevent layout shift */}
-                <div className="min-h-[500px]">
+                <div className="min-h-[300px]">
                   {/* Applicants Tab Content */}
                   <div className={activeTab === "applicants" ? "block" : "hidden"}>
                     <RecentApplicantsSection onRefresh={refreshCounter} />
