@@ -1,4 +1,5 @@
 import FixingBugs from '../assets/fixing-bugs.svg';
+import GdriveConfig from '../components/Gdrive';
 import SMTPConfiguration from '../components/SmtpConfig.';
 
 const Configurations = () => {
@@ -14,8 +15,13 @@ const Configurations = () => {
                         
                         <SMTPConfiguration />
                     </div>
+
+                    <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+                     
+                        
+                     <GdriveConfig />
+                 </div>
                     
-                    {/* You can add more configuration sections here as needed */}
                 </div>
             </div>
         </div>
