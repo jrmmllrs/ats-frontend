@@ -17,8 +17,7 @@ const Configurations = () => {
                     </div>
 
                     <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-                     
-                        
+                
                      <GdriveConfig />
                  </div>
                     
