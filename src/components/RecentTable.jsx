@@ -1,20 +1,34 @@
 import DataTable from 'react-data-table-component';
 import { useState, useEffect } from 'react';
 import moment from 'moment';
+import { useNavigate } from 'react-router-dom';
 
 const RecentTable = ({ applicants, onSelectApplicant }) => {
     const [recentApplicants, setApplicants] = useState(applicants || []);
+    const navigate = useNavigate();
 
     useEffect(() => {
         setApplicants(applicants || []);
     }, [applicants]);
 
-    const handleJobRowClick = (row) => {
-        alert(`Clicked on: ${row.first_name} ${row.last_name}`);
-        console.log("Clicked row:", row);
-        if (onSelectApplicant) onSelectApplicant(row); // optional callback
-    };
 
+
+    const handleJobRowClick = (row) => {
+        console.log("Clicked row:", row);
+        if (onSelectApplicant) {
+            onSelectApplicant(row);
+            return;
+        }
+
+        const applicantId = row.applicant_id || row.id;
+        // Use state to pass data instead of query parameters
+        navigate("/ats", {
+            state: {
+                view: "listings",
+                applicantId: applicantId
+            }
+        });
+    };
     const columns = [
         { name: 'Name', selector: row => `${row.first_name} ${row.last_name}` },
         { name: 'Email', selector: row => row.email_1 },

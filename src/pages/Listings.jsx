@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { FaTimes } from "react-icons/fa";
+import { useSearchParams, useLocation } from "react-router-dom";
 import Sidebar from "../layouts/Sidebar.jsx";
 import Header from "../layouts/Header.jsx";
 import ApplicantList from "../layouts/ApplicantList.jsx";
@@ -19,6 +20,8 @@ import Jobs from "./Jobs.jsx";
 const MAX_TABS = 10;
 
 export default function Listings() {
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
   const [selectedView, setSelectedView] = useState("dashboard");
   const [tabs, setTabs] = useState(() => {
     const savedTabs = localStorage.getItem("tabs");
@@ -35,6 +38,67 @@ export default function Listings() {
   const atsModalRef = useRef(null);
 
   const toggleATSHealthcheck = () => setShowATSHealthcheck(!showATSHealthcheck);
+
+  // Handle URL parameters
+  useEffect(() => {
+    const view = searchParams.get('view');
+    const applicantId = searchParams.get('applicant');
+    
+    // Set the view if specified in URL
+    if (view) {
+      setSelectedView(view);
+    }
+    
+    // If applicant ID is in URL, fetch and open that applicant
+    if (applicantId) {
+      const fetchAndOpenApplicant = async () => {
+        try {
+          const response = await api.get(`/applicants/${applicantId}`);
+          if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+            selectApplicant(response.data[0]);
+          } else {
+            console.error("No applicant data found for ID:", applicantId);
+          }
+        } catch (error) {
+          console.error("Error fetching applicant data:", error);
+        }
+      };
+      
+      fetchAndOpenApplicant();
+    }
+  }, [searchParams]); // Run when URL parameters change
+  
+  // Handle location state (from RecentTable navigation)
+  useEffect(() => {
+    // Check if we have state from navigation
+    if (location.state) {
+      const { view, applicantId } = location.state;
+      
+      // Set the view if specified
+      if (view) {
+        setSelectedView(view);
+      }
+      
+      // If applicant ID is provided, fetch and open that applicant
+      if (applicantId) {
+        const fetchAndOpenApplicant = async () => {
+          try {
+            const response = await api.get(`/applicants/${applicantId}`);
+            if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+              selectApplicant(response.data[0]);
+            }
+          } catch (error) {
+            console.error("Error fetching applicant data:", error);
+          }
+        };
+        
+        fetchAndOpenApplicant();
+        
+        // Clear the state after using it to prevent reopening on page refresh
+        window.history.replaceState({}, document.title);
+      }
+    }
+  }, [location]); // This runs when location changes
 
   // Close modal when clicking outside
   useEffect(() => {
@@ -193,7 +257,12 @@ export default function Listings() {
       <div
         className={`fixed top-0 bottom-0 left-0 z-50 transition-transform duration-300 ease-in-out ${isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
-        <Sidebar isOpen={isSidebarOpen} onToggleSidebar={toggleSidebar} onSelectView={selectView} />
+        <Sidebar 
+          isOpen={isSidebarOpen} 
+          onToggleSidebar={toggleSidebar} 
+          onSelectView={selectView} 
+          selectedView={selectedView}
+        />
       </div>
 
       {/* Main Content */}

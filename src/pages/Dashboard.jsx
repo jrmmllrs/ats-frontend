@@ -305,17 +305,18 @@ const PendingApplicantsSection = ({ onRefresh }) => {
 }
 
 // Interviews Section
+// Interviews Section
 const InterviewsSection = ({ onRefresh }) => {
-  const [interviewSchedule, setInterviewSchedule] = useState([])
+  const [applicants, setApplicants] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const fetchInterviewSchedule = async () => {
+  const fetchApplicants = async () => {
     setLoading(true)
     setError(null)
     try {
       const response = await api.get("/analytics/dashboard/interview-schedule")
-      setInterviewSchedule(response.data.data)
+      setApplicants(response.data.data)
     } catch (err) {
       console.error("Error fetching interview schedule:", err)
       setError("Failed to load interview schedule")
@@ -325,20 +326,20 @@ const InterviewsSection = ({ onRefresh }) => {
   }
 
   useEffect(() => {
-    fetchInterviewSchedule()
+    fetchApplicants()
   }, [])
 
   useEffect(() => {
     if (onRefresh) {
-      fetchInterviewSchedule()
+      fetchApplicants()
     }
   }, [onRefresh])
 
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h3 className="headline text-gray-900 cursor-default">Upcoming Interviews</h3>
-        <p className="body-tiny text-gray-400 cursor-default">Scheduled interviews for the next 7 days</p>
+        <h3 className="headline text-gray-900">Upcoming Interviews</h3>
+        <p className="body-tiny text-gray-400">Scheduled interviews for the next 7 days</p>
       </div>
 
       {loading ? (
@@ -350,7 +351,17 @@ const InterviewsSection = ({ onRefresh }) => {
       ) : error ? (
         <div className="p-4 text-red-500 text-center">{error}</div>
       ) : (
-        <InterviewTable applicants={interviewSchedule} />
+        <InterviewTable
+          applicants={applicants}
+        />
+
+      //   <RecentTable
+      //   applicants={applicants}
+      //   onRowClick={(applicant) => {
+      //     console.log("Clicked applicant:", applicant)
+      //     alert(`Applicant: ${applicant.first_name} ${applicant.last_name}`)
+      //   }}
+      // />
       )}
     </div>
   )
