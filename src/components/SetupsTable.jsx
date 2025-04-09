@@ -9,13 +9,6 @@ const SetupTable = ({ onSelectApplicant }) => {
     const { setupData, setSetupData } = setupStore(); 
     const [toasts, setToasts] = useState([]);
 
-    useEffect(() => {
-        const getSetupData = async () => {
-            await fetchSetups(setSetupData);
-        }
-        getSetupData();
-    }, [])
-
     const handleJobRowClick = (row) => {
         alert("clicked");
     };

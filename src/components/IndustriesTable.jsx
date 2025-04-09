@@ -10,13 +10,6 @@ const IndustriesTable = ({ onSelectApplicant }) => {
     const { industries, setIndustries } = industriesStore();
     const [toasts, setToasts] = useState([]);
 
-    useEffect(() => {
-        const getIndustries = async () => {
-            await fetchIndustries(setIndustries);
-        }
-        getIndustries();
-    }, [])
-
     const handleJobRowClick = (row) => {
         alert("clicked");
     };

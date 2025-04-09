@@ -39,3 +39,11 @@ export const getOpenJobs = async (setJobsData) => {
     const { data } = await api.get(`/jobs/open`);
     setJobsData(data.data);
 }
+
+export const updateJob = async (jobData) => {
+    try {
+        await api.put('/jobs/'+jobData.jobId, jobData);
+    } catch (error) {
+        console.error('Error Updating Job: ', error);
+    } 
+}

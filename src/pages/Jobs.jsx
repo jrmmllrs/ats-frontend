@@ -11,8 +11,6 @@ const Jobs = () => {
     const [activeTab, setActiveTab] = useState();
 
     const handleTabClick = (tab) => {
-        console.log("tab", tab);
-
         if (tab === "open" && activeTab !== "open") {
             setActiveTab("open");
             getOpenJobs(setJobsData);
