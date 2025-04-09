@@ -6,6 +6,16 @@ import api from '../api/axios';
 function GdriveConfig() {
     const [jsonContent, setJsonContent] = useState(null);
     const [folderId, setFolderId] = useState('');
+    const [showTooltip, setShowTooltip] = useState(false);
+
+    const handlePasteFolderID = async () => {
+        try {
+            const text = await navigator.clipboard.readText();
+            setFolderId(text);
+        } catch (error) {
+            alert("Failed to paste folder ID");
+        }
+    };
 
     const handleFileChange = async (e) => {
         const file = e.target.files[0];
@@ -16,9 +26,10 @@ function GdriveConfig() {
                 setJsonContent(parsed);
             } catch (err) {
                 console.error("Invalid JSON file", err);
+                alert("Invalid JSON file. Please check the content.");
             }
         } else {
-            console.error("Please upload a valid JSON file.");
+            alert("Please upload a valid JSON file.");
         }
     };
 
@@ -27,71 +38,96 @@ function GdriveConfig() {
             alert("Missing JSON or Folder ID");
             return;
         }
+
         const data = {
-            company_id: "1111", 
+            company_id: "1111",
             config_json: jsonContent,
             gdrive_folder_id: folderId
-        }
+        };
 
-        api.post('/user-configuration/gdrive/add-credentials', data).then((response) => {
+        try {
+            const response = await api.post('/user-configuration/gdrive/add-credentials', data);
             console.log(response);
-            
-            alert("added")
-        }).catch((error) =>{
-            alert(error.message)
-        })
+            alert("Google Drive credentials successfully added!");
+        } catch (error) {
+            alert(`Upload failed: ${error.message}`);
+        }
     };
 
     return (
-        <div className="p-4 space-y-4">
+        <div className="w-full p-6 bg-white text-gray-dark border border-gray-light rounded-2xl">
             <div>
-              
-                <ul>
-                     <h2>Google Drive Credentials</h2>
-                    <li>Create a Google Cloud Console Account. Go to: <a href="https://console.cloud.google.com/">Google Cloud</a></li>
-                    <li>Create a project</li>
-                    <li>In the API's and Services, and go to library. </li>
-                    <li>Search for Google Drive API and enable it.</li>
-                    <li>Go to credentials tab, and create credentials and select the service accounts.</li>
-                    <li>fill in the details and click 'create & continue'</li>
-                    <li>In the "Role" section, select "Editor" or "Owner" and Click "Continue"</li>
-                    <li>After creating the service account, go to "APIs & Services" and go to "Credentials"</li>
-                    <li>Under "Service Accounts", click on the newly created account.</li>
-                    <li>Go to the "Keys" tab. Click 'Add key' and select JSON</li>
-                   
-                </ul>
-                <ul>
-                    <h2>Google Drive Folder</h2>
-                    <li>Create a GDrive folder and set the access to 'anyone with the link' and 'editor'</li>
-                    <li>The Google Folder ID is located at the end of the URL</li>
-                </ul>
-                
+                <h2 className="text-xl font-bold mb-2">How to Setup Google Drive Integration</h2>
+
+                <div className="space-y-2 text-sm text-gray-700">
+                    <div className="mb-4 text-sm text-gray-600 bg-gray-50 p-3 rounded-md border border-gray-200">
+                        <h3 className="font-semibold">Google Drive Credentials</h3>
+                        <ol className="list-decimal list-inside space-y-1">
+                            <li>Create a Google Cloud Console Account: <a href="https://console.cloud.google.com/" target="_blank" className="text-blue-600 underline">Google Cloud</a></li>
+                            <li>Create a new project.</li>
+                            <li>Enable the "Google Drive API" under APIs & Services → Library.</li>
+                            <li>Create credentials and select "Service Account".</li>
+                            <li>Give it a name and role (Editor or Owner).</li>
+                            <li>Go to the "Keys" tab → Add key → JSON. Download the file.</li>
+                        </ol>
+                    </div>
+
+                    <div className="mb-4 text-sm text-gray-600 bg-gray-50 p-3 rounded-md border border-gray-200">
+                        <h3 className="font-semibold">Google Drive Folder</h3>
+                        <ul className="list-disc list-inside">
+                            <li>Create a folder in Google Drive.</li>
+                            <li>Share it with “anyone with the link” and set them as Editor.</li>
+                            <li>The folder ID is at the end of the URL after `/folders/`.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div className='mb-2'>
+                <label className="block mb-1 font-semibold">Upload GDrive JSON Credentials</label>
+                <input
+                    type="file"
+                    accept="application/json"
+                    onChange={handleFileChange}
+                    className="border border-gray-300 p-1 rounded-md w-full text-sm file:bg-gray-100 file:border-none file:rounded file:px-4 file:py-2 file:mr-4 file:text-gray-700"
+                />
+            </div>
+
+            <div className='mb-2'>
+                <label className="block mb-1 font-semibold">Enter GDrive Folder ID</label>
+                <div className="relative">
+                    <input
+                        type="text"
+                        value={folderId}
+                        onChange={(e) => setFolderId(e.target.value)}
+                        className="border border-gray-300 p-2 rounded-md w-full text-sm"
+                        placeholder="e.g. 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74"
+                    />
+                    <button
+                        onClick={handlePasteFolderID}
+                        onMouseEnter={() => setShowTooltip(true)}
+                        onMouseLeave={() => setShowTooltip(false)}
+                        className="absolute top-1/2 -translate-y-1/2 right-2 text-gray-600 hover:text-gray-900 p-1 rounded-md hover:bg-gray-100"
+                    >
+                        <FaPaste size={14} />
+                    </button>
+                    {showTooltip && (
+                        <div className="absolute top-[-32px] right-0 bg-gray-800 text-white text-xs rounded px-2 py-1 shadow-lg">
+                            Paste Password
+                        </div>
+                    )}
+                </div>
 
             </div>
-            <div>
-                <label className="block mb-1 font-semibold">GDrive JSON Credentials</label>
-                <input 
-                    type="file" 
-                    accept="application/json"
-                    onChange={handleFileChange} 
-                    className="border p-2 rounded w-full" 
-                />
+
+            <div className="text-right">
+                <button
+                    onClick={handleUpload}
+                    className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md transition"
+                >
+                    Upload Credentials
+                </button>
             </div>
-            <div>
-                <label className="block mb-1 font-semibold">GDrive Folder ID</label>
-                <input 
-                    type="text" 
-                    value={folderId} 
-                    onChange={(e) => setFolderId(e.target.value)} 
-                    className="border p-2 rounded w-full" 
-                />
-            </div>
-            <button 
-                onClick={handleUpload} 
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-            >
-                Upload
-            </button>
         </div>
     );
 }
