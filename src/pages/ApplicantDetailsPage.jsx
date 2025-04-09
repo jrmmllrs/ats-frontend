@@ -1,27 +1,32 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useParams } from "react-router-dom"; // Add this import
 import ApplicantDetails from "../components/Applicant/ApplicantDetails";
 import ApplicantDiscussionPage from "../components/Applicant/ApplicantDiscussionPage";
 import ApplicantSendMailPage from "../components/Applicant/ApplicantSendMailPage";
 import api from "../api/axios";
 import Loader from "../assets/Loader";
 
-function ApplicantDetailsPage({ applicant }) {
+function ApplicantDetailsPage({ applicant = null, onBack = null }) {
+  const { id } = useParams(); // Get ID from URL params if available
   const [activeTab, setActiveTab] = useState("discussion");
   const [loading, setLoading] = useState(true);
   const [applicantInfo, setApplicantInfo] = useState({});
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  // Determine which ID to use - from props or from URL
+  const applicantId = applicant?.applicant_id || id;
+
   // Create a reusable fetch function
   const fetchApplicantData = useCallback(async () => {
-    if (!applicant?.applicant_id) {
+    if (!applicantId) {
       setLoading(false);
       return;
     }
 
     setLoading(true);
     try {
-      console.log("Fetching applicant data for ID:", applicant.applicant_id);
-      const response = await api.get(`/applicants/${applicant.applicant_id}`);
+      console.log("Fetching applicant data for ID:", applicantId);
+      const response = await api.get(`/applicants/${applicantId}`);
       
       if (response.data && Array.isArray(response.data) && response.data.length > 0) {
         console.log("Fetched applicant data:", response.data);
@@ -37,13 +42,13 @@ function ApplicantDetailsPage({ applicant }) {
     } finally {
       setLoading(false);
     }
-  }, [applicant?.applicant_id]);
+  }, [applicantId]);
 
   // Fetch data when component mounts or when applicant changes
   useEffect(() => {
     setApplicantInfo({}); // Reset before fetching
     fetchApplicantData();
-  }, [applicant, fetchApplicantData, refreshTrigger]);
+  }, [fetchApplicantData, refreshTrigger]);
 
   // Function to trigger a refresh
   const handleApplicantUpdate = (updatedInfo) => {
@@ -76,8 +81,8 @@ function ApplicantDetailsPage({ applicant }) {
     );
   }
 
-  // If no applicant is selected or data couldn't be fetched
-  if (!applicant || Object.keys(applicantInfo || {}).length === 0) {
+  // If no applicant ID is provided or data couldn't be fetched
+  if (!applicantId || Object.keys(applicantInfo || {}).length === 0) {
     return (
       <div className="border rounded-lg mx-auto text-center p-5">
         <p className="text-gray-500">Select an applicant to view details</p>

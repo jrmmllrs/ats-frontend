@@ -1,19 +1,35 @@
 import DataTable from 'react-data-table-component';
 import { useState, useEffect } from 'react';
 import moment from 'moment';
+import { useNavigate } from 'react-router-dom';
 
 const InterviewTable = ({ applicants, onSelectApplicant }) => {
-    const [scheduledInterview, setScheduledInterview] = useState(applicants || []);
+    const [interviews, setInterviews] = useState(applicants || []);
+    const navigate = useNavigate();
 
     useEffect(() => {
-        setScheduledInterview(applicants || []);
+        setInterviews(applicants || []);
     }, [applicants]);
 
+ 
     const handleJobRowClick = (row) => {
-        alert(`Clicked on: ${row.first_name} ${row.last_name}`);
         console.log("Clicked row:", row);
-        if (onSelectApplicant) onSelectApplicant(row); // optional callback
+        if (onSelectApplicant) {
+            onSelectApplicant(row);
+            return;
+        }
+
+        const applicantId = row.applicant_id || row.id;
+        // Use state to pass data instead of query parameters
+        navigate("/ats", {
+            state: {
+                view: "listings",
+                applicantId: applicantId
+            }
+        });
     };
+
+
 
     const columns = [
         { name: 'Candidate', selector: row => `${row.first_name} ${row.last_name}` },
@@ -24,9 +40,9 @@ const InterviewTable = ({ applicants, onSelectApplicant }) => {
 
     return (
         <>
-            {scheduledInterview.length === 0 ? (
+            {interviews.length === 0 ? (
                 <div className="text-center text-lg font-semibold text-gray-600 mt-8">
-                    No recent applicants found.
+                    No upcoming interviews found.
                 </div>
             ) : (
                 <DataTable
@@ -36,8 +52,8 @@ const InterviewTable = ({ applicants, onSelectApplicant }) => {
                     fixedHeaderScrollHeight="45vh"
                     responsive
                     columns={columns}
-                    data={scheduledInterview}
-                    progressPending={!scheduledInterview.length}
+                    data={interviews}
+                    progressPending={!interviews.length}
                     onRowClicked={handleJobRowClick}
                     progressComponent={<LoadingComponent />}
                 />
@@ -45,7 +61,6 @@ const InterviewTable = ({ applicants, onSelectApplicant }) => {
         </>
     );
 };
-
 function LoadingComponent() {
     return (
         <div className="flex flex-col w-full space-y-2">

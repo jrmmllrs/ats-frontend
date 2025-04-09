@@ -11,13 +11,20 @@ import { FaGear } from "react-icons/fa6";
 import useUserStore from "../context/userStore";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-export default function Sidebar({ isOpen, onToggleSidebar, onSelectView }) {
+export default function Sidebar({ isOpen, onToggleSidebar, onSelectView, selectedView }) {
   const user = useUserStore((state) => state.user);
   const setUser = useUserStore((state) => state.setUser);
   const navigate = useNavigate();
-  const [currentView, setCurrentView] = useState("dashboard");
+  const [currentView, setCurrentView] = useState(selectedView || "dashboard");
+
+  // Synchronize with parent component's view state
+  useEffect(() => {
+    if (selectedView && selectedView !== currentView) {
+      setCurrentView(selectedView);
+    }
+  }, [selectedView]);
 
   const handleSelectView = (view) => {
     setCurrentView(view);
