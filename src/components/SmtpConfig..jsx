@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaCopy, FaPaste } from "react-icons/fa";
+import { FaPaste } from "react-icons/fa";
 import useUserStore from '../context/userStore';
 import api from '../api/axios';
 
@@ -8,12 +8,6 @@ const SMTPConfiguration = () => {
     const [email] = useState(user.user_email);
     const [appPassword, setAppPassword] = useState('');
     const [showTooltip, setShowTooltip] = useState(false);
-
-    const handleCopyEmail = () => {
-        navigator.clipboard.writeText(email)
-            .then(() => alert("Email copied to clipboard"))
-            .catch(() => alert("Failed to copy email"));
-    };
 
     const handlePastePassword = async () => {
         try {
@@ -25,85 +19,85 @@ const SMTPConfiguration = () => {
     };
 
     const handleAddLink = () => {
-        if (!appPassword) {
-            return alert("Please enter the App Password");
-        }
+        if (!appPassword) return alert("Please enter the App Password");
 
-        const isConfirmed = window.confirm("Are you sure you want to add this password?");
-        if (!isConfirmed) return;
-
-        api.post('/user-configuration/smtp/add-credentials', {
-            user_id: user.user_id,
-            app_pass: appPassword
-        })
-            .then(() => {
-                alert('Password updated successfully');
-                setAppPassword('');
+        if (window.confirm("Are you sure you want to add this password?")) {
+            api.post('/user-configuration/smtp/add-credentials', {
+                user_id: user.user_id,
+                app_pass: appPassword
             })
-            .catch((err) => alert(`Error: ${err.message}`));
+                .then(() => {
+                    alert('Password updated successfully');
+                    setAppPassword('');
+                })
+                .catch((err) => alert(`Error: ${err.message}`));
+        }
     };
 
     return (
-        <div className="max-w-md mx-auto p-6 bg-white text-gray-dark border border-gray-light rounded-2xl">
-            <h2 className="text-2xl font-semibold mb-4">SMTP Configuration</h2>
-            <p className="text-gray-600 mb-6">Setup your Google SMTP configuration for automated email.</p>
+        <div className="w-full p-6 bg-white text-gray-dark border border-gray-light rounded-2xl">
+            <h2 className="text-xl font-semibold mb-2">SMTP Configuration</h2>
+            <p className="text-sm text-gray-600 mb-6">
+                Configure your Google SMTP for automated system emails.
+            </p>
 
-            {/* Email Field with Copy Button */}
-            <label className="block mb-2 text-gray-dark">Email</label>
-            <div className="relative flex items-center">
+            {/* Email (Read-only) */}
+            <div className="mb-4">
+                <label className="block font-medium mb-1">Email</label>
                 <input
                     type="email"
                     value={email}
-                    className="w-full p-2 border border-gray-light rounded-md bg-gray-100"
                     disabled
+                    className="w-full bg-gray-100 text-gray-700 p-2 rounded-md border border-gray-300 cursor-not-allowed"
                 />
+            </div>
+
+            {/* App Password Field */}
+            <div className="mb-2">
+                <label className="block font-medium mb-1">
+                    App Password <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                    <input
+                        type="text"
+                        value={appPassword}
+                        onChange={(e) => setAppPassword(e.target.value)}
+                        placeholder="Paste generated password here"
+                        className="w-full p-2 pr-10 border border-gray-300 rounded-md"
+                    />
+                    <button
+                        onClick={handlePastePassword}
+                        onMouseEnter={() => setShowTooltip(true)}
+                        onMouseLeave={() => setShowTooltip(false)}
+                        className="absolute top-1/2 -translate-y-1/2 right-2 text-gray-600 hover:text-gray-900 p-1 rounded-md hover:bg-gray-100"
+                    >
+                        <FaPaste size={14} />
+                    </button>
+
+                    {showTooltip && (
+                        <div className="absolute top-[-32px] right-0 bg-gray-800 text-white text-xs rounded px-2 py-1 shadow-lg">
+                            Paste Password
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Password Instructions */}
-            <label className="block mt-4 mb-2 text-gray-dark">
-                App Password <span className="text-red-500">*</span>
-            </label>
-            <p className="text-sm text-gray-500 mb-4">
-                Follow the instructions below to generate your app password:
-                <ol className="list-decimal list-inside ml-4">
+            <div className="mb-2 text-sm text-gray-600 bg-gray-50 p-3 rounded-md border border-gray-200">
+                <p className="mb-2 font-medium">How to get App Password:</p>
+                <ol className="list-decimal list-inside space-y-1 pl-3">
                     <li>Go to your Google Account</li>
-                    <li>Go to Security</li>
-                    <li>Enable 2-step verification</li>
-                    <li>Generate & copy your App Password</li>
+                    <li>Navigate to <strong>Security</strong></li>
+                    <li>Enable <strong>2-Step Verification</strong></li>
+                    <li>Scroll to <strong>App Passwords</strong> & generate one</li>
                 </ol>
-            </p>
-
-            {/* Password Field with Paste Button */}
-            <div className="relative flex items-center">
-                <input
-                    type="text"
-                    value={appPassword}
-                    onChange={(e) => setAppPassword(e.target.value)}
-                    className="w-full p-2 border border-gray-light rounded-md"
-                    placeholder="Generated Password"
-                />
-                <button
-                    onClick={handlePastePassword}
-                    onMouseEnter={() => setShowTooltip(true)}
-                    onMouseLeave={() => setShowTooltip(false)}
-                    className="absolute right-2 text-gray-600 hover:text-gray-900 border border-gray-light p-1 cursor-pointer rounded-md hover:bg-gray-light"
-                >
-                    <FaPaste />
-                </button>
-
-                {/* Tooltip */}
-                {showTooltip && (
-                    <div className="absolute -top-8 right-0 bg-teal-soft text-white text-xs rounded py-1 px-2 shadow-md">
-                        Paste Password
-                    </div>
-                )}
             </div>
 
             {/* Submit Button */}
-            <div className="flex justify-end mt-6">
+            <div className="text-right">
                 <button
                     onClick={handleAddLink}
-                    className="bg-teal text-white px-4 py-2 rounded-md cursor-pointer hover:bg-teal/70"
+                    className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md transition"
                 >
                     Add Password
                 </button>
