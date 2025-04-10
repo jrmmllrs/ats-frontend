@@ -30,7 +30,7 @@ const RecentTable = ({ applicants, onSelectApplicant }) => {
         });
     };
     const columns = [
-        { name: 'Name', selector: row => `${row.first_name} ${row.last_name}` },
+        { name: 'Name', selector: row => <NameCell row={row} /> },
         { name: 'Email', selector: row => row.email_1 },
         { name: 'Position', selector: row => row.position },
         { name: 'Status', selector: row => <StatusBadge status={row.status} /> },
@@ -89,6 +89,13 @@ const StatusBadge = ({ status }) => {
             {status.replace(/_/g, " ")}
         </span>
     )
+}
+
+const NameCell = ({ row }) => {
+    const fullName = `${row.first_name} ${row.last_name}`;
+    return (
+        <span className="text-gray-dark body-regular">{fullName}</span>
+    );
 }
 
 export default RecentTable;

@@ -271,7 +271,7 @@ const PendingApplicantsSection = ({ onRefresh }) => {
     <div>
       <div className="flex justify-between items-center mb-3">
         <h3 className="headline text-gray-900">Pending Applicants</h3>
-        <p className="body-tiny text-gray-500">Applicants awaiting review</p>
+        <p className="body-tiny text-gray-400">Applicants awaiting review</p>
       </div>
 
       {loading ? (
@@ -304,7 +304,6 @@ const PendingApplicantsSection = ({ onRefresh }) => {
   )
 }
 
-// Interviews Section
 // Interviews Section
 const InterviewsSection = ({ onRefresh }) => {
   const [applicants, setApplicants] = useState([])
@@ -355,13 +354,13 @@ const InterviewsSection = ({ onRefresh }) => {
           applicants={applicants}
         />
 
-      //   <RecentTable
-      //   applicants={applicants}
-      //   onRowClick={(applicant) => {
-      //     console.log("Clicked applicant:", applicant)
-      //     alert(`Applicant: ${applicant.first_name} ${applicant.last_name}`)
-      //   }}
-      // />
+        //   <RecentTable
+        //   applicants={applicants}
+        //   onRowClick={(applicant) => {
+        //     console.log("Clicked applicant:", applicant)
+        //     alert(`Applicant: ${applicant.first_name} ${applicant.last_name}`)
+        //   }}
+        // />
       )}
     </div>
   )
@@ -388,7 +387,7 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div className="w-[80%] mx-auto mt-5">
+      <div className=" mx-auto mt-5">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
             <h1 className="display text-gray-900">Dashboard</h1>
@@ -412,18 +411,15 @@ export default function Dashboard() {
               <Tabs tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
 
               <div className="p-4">
-                {/* Fixed content container with consistent height to prevent layout shift */}
-                {/* Applicants Tab Content */}
+
                 <div className={activeTab === "applicants" ? "block" : "hidden"}>
                   <RecentApplicantsSection onRefresh={refreshCounter} />
                 </div>
 
-                {/* Pending Applicants Tab Content */}
                 <div className={activeTab === "pending" ? "block" : "hidden"}>
                   <PendingApplicantsSection onRefresh={refreshCounter} />
                 </div>
 
-                {/* Interviews Tab Content */}
                 <div className={activeTab === "interviews" ? "block" : "hidden"}>
                   <InterviewsSection onRefresh={refreshCounter} />
                 </div>
