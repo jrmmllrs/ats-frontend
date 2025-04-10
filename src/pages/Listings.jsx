@@ -43,12 +43,12 @@ export default function Listings() {
   useEffect(() => {
     const view = searchParams.get('view');
     const applicantId = searchParams.get('applicant');
-    
+
     // Set the view if specified in URL
     if (view) {
       setSelectedView(view);
     }
-    
+
     // If applicant ID is in URL, fetch and open that applicant
     if (applicantId) {
       const fetchAndOpenApplicant = async () => {
@@ -63,22 +63,22 @@ export default function Listings() {
           console.error("Error fetching applicant data:", error);
         }
       };
-      
+
       fetchAndOpenApplicant();
     }
   }, [searchParams]); // Run when URL parameters change
-  
+
   // Handle location state (from RecentTable navigation)
   useEffect(() => {
     // Check if we have state from navigation
     if (location.state) {
       const { view, applicantId } = location.state;
-      
+
       // Set the view if specified
       if (view) {
         setSelectedView(view);
       }
-      
+
       // If applicant ID is provided, fetch and open that applicant
       if (applicantId) {
         const fetchAndOpenApplicant = async () => {
@@ -91,9 +91,9 @@ export default function Listings() {
             console.error("Error fetching applicant data:", error);
           }
         };
-        
+
         fetchAndOpenApplicant();
-        
+
         // Clear the state after using it to prevent reopening on page refresh
         window.history.replaceState({}, document.title);
       }
@@ -257,10 +257,10 @@ export default function Listings() {
       <div
         className={`fixed top-0 bottom-0 left-0 z-50 transition-transform duration-300 ease-in-out ${isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
-        <Sidebar 
-          isOpen={isSidebarOpen} 
-          onToggleSidebar={toggleSidebar} 
-          onSelectView={selectView} 
+        <Sidebar
+          isOpen={isSidebarOpen}
+          onToggleSidebar={toggleSidebar}
+          onSelectView={selectView}
           selectedView={selectedView}
         />
       </div>
@@ -271,7 +271,9 @@ export default function Listings() {
           <AddApplicantForm onClose={() => setShowAddApplicantForm(false)} />
         ) : (
           <>
-            <Header onToggleSidebar={toggleSidebar} onToggleATSHealthcheck={toggleATSHealthcheck} />
+            {selectedView === "dashboard" ? null :
+              <Header onToggleSidebar={toggleSidebar} onToggleATSHealthcheck={toggleATSHealthcheck} selectedView={selectedView} />
+            }
             {/* Tabs Section */}
             {selectedView === "listings" && !showAddApplicantForm && (
               <div className="mb-4 flex flex-wrap items-center rounded-lg border border-gray-light bg-white p-1 pb-0">
