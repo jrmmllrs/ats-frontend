@@ -49,11 +49,12 @@ const Skeleton = ({ className = "" }) => {
 }
 
 // Summary Cards Section
-const SummarySection = ({ onRefresh }) => {
+const SummarySection = ({ onRefresh, setActiveTab }) => {
   const [summaryData, setSummaryData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const navigate = useNavigate();
+
 
   const fetchSummaryData = async () => {
     setLoading(true)
@@ -81,12 +82,7 @@ const SummarySection = ({ onRefresh }) => {
 
   const handleCardClick = (tab) => {
     if (tab === "interviews") {
-      navigate("/ats", {
-        state: {
-          view: "dashboard",
-          activeTab: "pending",
-        }
-      });
+      setActiveTab(tab)
       return;
     }
 
@@ -101,7 +97,7 @@ const SummarySection = ({ onRefresh }) => {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
       <div
         onClick={() => handleCardClick("listings")}
-        className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
+        className="bg-white rounded-2xl border border-gray-200 cursor-pointer hover:bg-teal-soft transition duration-200 ease-in-out"
       >
         <div className="p-6 flex flex-col">
           <span className="body-regular text-gray-500">Total Applicants</span>
@@ -120,7 +116,7 @@ const SummarySection = ({ onRefresh }) => {
 
       <div
         onClick={() => handleCardClick("analytics")}
-        className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
+        className="bg-white rounded-2xl border border-gray-200 cursor-pointer hover:bg-teal-soft transition duration-200 ease-in-out"
       >
         <div className="p-6 flex flex-col">
           <span className="body-regular text-gray-500">Hired</span>
@@ -138,8 +134,8 @@ const SummarySection = ({ onRefresh }) => {
       </div>
 
       <div
-        // onClick={() => handleCardClick("interviews")}
-        className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
+        onClick={() => handleCardClick("interviews")}
+        className="bg-white rounded-2xl border border-gray-200 cursor-pointer hover:bg-teal-soft transition duration-200 ease-in-out"
       >
         <div className="p-6 flex flex-col">
           <span className="body-regular text-gray-500">In Interview Process</span>
@@ -158,7 +154,7 @@ const SummarySection = ({ onRefresh }) => {
 
       <div
         onClick={() => handleCardClick("jobs")}
-        className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
+        className="bg-white rounded-2xl border border-gray-200 cursor-pointer hover:bg-teal-soft transition duration-200 ease-in-out"
       >
         <div className="p-6 flex flex-col">
           <span className="body-regular text-gray-500">Open Positions</span>
@@ -423,7 +419,7 @@ export default function Dashboard() {
         </div>
 
         {/* Summary Cards */}
-        <SummarySection onRefresh={refreshCounter} />
+        <SummarySection onRefresh={refreshCounter} setActiveTab={setActiveTab} />
 
         <div className=" gap-6">
           <div className="bg-white rounded-2xl border border-gray-200">
