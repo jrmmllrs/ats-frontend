@@ -271,7 +271,7 @@ const PendingApplicantsSection = ({ onRefresh }) => {
     <div>
       <div className="flex justify-between items-center mb-3">
         <h3 className="headline text-gray-900">Pending Applicants</h3>
-        <p className="body-tiny text-gray-500">Applicants awaiting review</p>
+        <p className="body-tiny text-gray-400">Applicants awaiting review</p>
       </div>
 
       {loading ? (
@@ -411,19 +411,18 @@ export default function Dashboard() {
               <Tabs tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
 
               <div className="p-4">
-                {/* Fixed content container with consistent height to prevent layout shift */}
 
                 <div className={activeTab === "applicants" ? "block" : "hidden"}>
                   <RecentApplicantsSection onRefresh={refreshCounter} />
                 </div>
 
-                {/* <div className={activeTab === "pending" ? "block" : "hidden"}>
+                <div className={activeTab === "pending" ? "block" : "hidden"}>
                   <PendingApplicantsSection onRefresh={refreshCounter} />
-                </div> */}
+                </div>
 
-                {/* <div className={activeTab === "interviews" ? "block" : "hidden"}>
+                <div className={activeTab === "interviews" ? "block" : "hidden"}>
                   <InterviewsSection onRefresh={refreshCounter} />
-                </div> */}
+                </div>
 
               </div>
             </div>
