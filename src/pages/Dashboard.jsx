@@ -403,10 +403,10 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div className=" mx-auto mt-5">
+      <div className=" mx-auto mt-10">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
-            <h1 className="display text-gray-900">Dashboard</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
             <p className="text-gray-500">Track and analyze your recruitment metrics</p>
           </div>
 
