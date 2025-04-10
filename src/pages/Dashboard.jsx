@@ -7,6 +7,7 @@ import PendingApplicantConfirmationModal from "../components/Modals/PendingAppli
 import RecentTable from "../components/RecentTable"
 import PendingTable from "../components/PendingTable"
 import InterviewTable from "../components/InterviewTable"
+import { useNavigate } from "react-router-dom"
 
 // Helper function to format dates TO BE REMOVED
 const formatDate = (dateString) => {
@@ -52,6 +53,7 @@ const SummarySection = ({ onRefresh }) => {
   const [summaryData, setSummaryData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const navigate = useNavigate();
 
   const fetchSummaryData = async () => {
     setLoading(true)
@@ -77,10 +79,18 @@ const SummarySection = ({ onRefresh }) => {
     }
   }, [onRefresh])
 
+  const handleCardClick = () => {
+    navigate("/ats", {
+      state: {
+        view: "listings",
+      }
+    });
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
       <div
-        onClick={() => alert("applicants")}
+        onClick={() => handleCardClick()}
         className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
       >
         <div className="p-6 flex flex-col">
