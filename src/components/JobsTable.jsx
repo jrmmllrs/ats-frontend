@@ -2,7 +2,8 @@ import DataTable from 'react-data-table-component';
 import { useState, useEffect } from 'react';
 import Toast from '../assets/Toast';
 import jobStore from '../context/jobListingStore';
-import { fetchJobs, updateJob } from '../utils/jobListing';
+import { fetchJobs, updateJob, fetchCloseJobsCount, fetchOpenJobsCount } from '../utils/jobListing';
+import JobCountStore from '../context/jobsCountStore';
 import setupStore from '../context/setupStore';
 import industriesStore from '../context/industriesStore';
 import { fetchSetups } from '../utils/setupUtils';
@@ -12,6 +13,7 @@ const JobsTable = ({ onSelectApplicant }) => {
     const { jobsData, setJobsData } = jobStore();
     const [toasts, setToasts] = useState([]);
     const [isAddJobModalOpen, setIsAddJobModalOpen] = useState(false);
+    const { setOpenJobsCount, setCloseJobsCount } = JobCountStore();
     const [jobData, setJobData] = useState({});
     const { setupData, setSetupData } = setupStore();
     const { industries, setIndustries } = industriesStore();
@@ -26,7 +28,6 @@ const JobsTable = ({ onSelectApplicant }) => {
     }, [])
 
     const handleJobRowClick = (row) => {
-        console.log(row);
         setJobData(row)
         setIsAddJobModalOpen(true);
     };
@@ -36,7 +37,9 @@ const JobsTable = ({ onSelectApplicant }) => {
         e.preventDefault();
         try {
             await updateJob(jobData);
-            await fetchJobs(setJobsData); 
+            await fetchJobs(setJobsData);
+            await fetchCloseJobsCount(setCloseJobsCount);
+            await fetchOpenJobsCount(setOpenJobsCount); 
             setIsAddJobModalOpen(false);
         } catch (error) {
             console.error('Error updating job:', error);
