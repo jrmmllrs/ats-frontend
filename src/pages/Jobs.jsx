@@ -7,8 +7,8 @@ import jobStore from "../context/jobListingStore";
 
 const Jobs = () => {
     const { industriesCount, setIndustriesCount, openJobsCount, setOpenJobsCount, closeJobsCount, setCloseJobsCount } = JobCountStore();
-    const { setIsGearModalOpen, setJobsData } = jobStore();
-    const [activeTab, setActiveTab] = useState();
+    const { setIsGearModalOpen, setJobsData, activeTab, setActiveTab } = jobStore();
+    //const [activeTab, setActiveTab] = useState();
 
     const handleTabClick = (tab) => {
         if (tab === "open" && activeTab !== "open") {

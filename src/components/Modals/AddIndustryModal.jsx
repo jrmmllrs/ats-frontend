@@ -1,19 +1,34 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaTimes } from "react-icons/fa";
+import { addIndustry } from "../../utils/industriesUtils";
+import industriesStore from "../../context/industriesStore";
+import useUserStore from "../../context/userStore";
 
-const AddIndustryModal = ({ onClose, onSave }) => {
+const AddIndustryModal = ({ onClose }) => {
+    const { setIndustries } = industriesStore();
+    const { user } = useUserStore();
     const [industryData, setIndustryData] = useState({
-        industry_name: "",
-        assessment_url: "",
+        industryName: "",
+        assessmentUrl: "",
+        userId: ""
     });
+
+    useEffect(() => {
+        if (user) {
+            setIndustryData((prev) => ({
+                ...prev,
+                userId: user.user_id,
+            }))
+        }
+    }, [user]);
 
     const handleChange = (e) => {
         setIndustryData({ ...industryData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        onSave(industryData);
+        await addIndustry(setIndustries, industryData);
         onClose();
     };
 
@@ -32,8 +47,7 @@ const AddIndustryModal = ({ onClose, onSave }) => {
                         <label className="block text-gray-700">Industry Name</label>
                         <input
                             type="text"
-                            name="industry_name"
-                            value={industryData.industry_name}
+                            name="industryName"
                             onChange={handleChange}
                             className="w-full p-2 border border-gray-300 rounded-md"
                             required
@@ -45,8 +59,7 @@ const AddIndustryModal = ({ onClose, onSave }) => {
                         <label className="block text-gray-700">Assessment URL</label>
                         <input
                             type="text"
-                            name="assessment_url"
-                            value={industryData.assessment_url}
+                            name="assessmentUrl"
                             onChange={handleChange}
                             className="w-full p-2 border border-gray-300 rounded-md"
                         />
