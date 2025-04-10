@@ -1,15 +1,29 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import { FaBars } from "react-icons/fa"
 import { FaBell } from "react-icons/fa6";
 import api from "../api/axios"
 
-export default function Header({ onSelectView, onToggleSidebar, onToggleATSHealthcheck }) {
-  const [currentView, setCurrentView] = useState("listings")
+export default function Header({ onSelectView, onToggleSidebar, onToggleATSHealthcheck, selectedView }) {
+  // const [currentView, setCurrentView] = useState("listings")
   const [notificationCount, setNotificationCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [isNotificationRead, setIsNotificationRead] = useState(
     JSON.parse(localStorage.getItem("isNotificationRead")) || false,
   )
+  const [titlePage, setTitlePage] = useState("")
+
+  useEffect(() => {
+    if (selectedView === "listings") {
+      setTitlePage("Applicants")
+    } else if (selectedView === "analytics") {
+      setTitlePage("Analytics")
+    } else if (selectedView === "jobs") {
+      setTitlePage("Jobs")
+    } else if (selectedView === "config") {
+      setTitlePage("Configurations")
+    }
+  })
+
 
   useEffect(() => {
     const fetchNotificationCount = async () => {
@@ -67,7 +81,7 @@ export default function Header({ onSelectView, onToggleSidebar, onToggleATSHealt
           <FaBars size={24} />
         </button>
         <p className="display text-gray-dark block md:hidden">ATS</p>
-        <p className="display text-gray-dark hidden md:block">Application Tracking System</p>
+        <p className="text-2xl font-bold text-gray-dark hidden md:block">{titlePage}</p>
       </div>
       <div className="flex items-center gap-4 ">
         <button
