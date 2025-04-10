@@ -5,7 +5,7 @@ import api from "../../api/axios";
 
 ChartJS.register(ArcElement, Tooltip);
 
-const SourceOfApplication = () => {
+const SourceOfApplication = ({ year, month }) => { // Receive year and month props
   const [data, setData] = useState([]);
   const [lastFetch, setLastFetch] = useState(0);
 
@@ -13,8 +13,9 @@ const SourceOfApplication = () => {
   const fetchData = useCallback(async (forceRefresh = false) => {
     try {
       // Check if we have valid cached data
-      const cachedDataString = sessionStorage.getItem('sourceData');
-      const cachedTimeString = sessionStorage.getItem('sourceDataTimestamp');
+      const cacheKey = `sourceData_${year}_${month}`;
+      const cachedDataString = sessionStorage.getItem(cacheKey);
+      const cachedTimeString = sessionStorage.getItem(`${cacheKey}_timestamp`);
       
       if (!forceRefresh && cachedDataString && cachedTimeString) {
         const cachedTime = parseInt(cachedTimeString);
@@ -31,15 +32,25 @@ const SourceOfApplication = () => {
       }
       
       // If no valid cache or force refresh, fetch from API
-      const response = await api.get("/analytic/graphs/source");
+      let url = `/analytic/graphs/source`;
+
+      // Add year and month filters
+      if (year !== "all") {
+        url += (url.includes("?") ? "&" : "?") + `year=${year}`;
+      }
+      if (month !== "all") {
+        url += (url.includes("?") ? "&" : "?") + `month=${month}`;
+      }
+      
+      const response = await api.get(url);
       
       // Extract the source data directly from the response
       if (response.data && response.data.source) {
         const sourceData = response.data.source;
         
         // Store in session storage with timestamp
-        sessionStorage.setItem('sourceData', JSON.stringify(sourceData));
-        sessionStorage.setItem('sourceDataTimestamp', new Date().getTime().toString());
+        sessionStorage.setItem(cacheKey, JSON.stringify(sourceData));
+        sessionStorage.setItem(`${cacheKey}_timestamp`, new Date().getTime().toString());
 
         setData(sourceData);
         setLastFetch(new Date().getTime());
@@ -47,7 +58,7 @@ const SourceOfApplication = () => {
     } catch (error) {
       console.error("Error fetching source data:", error);
     }
-  }, []);
+  }, [year, month]);
 
   useEffect(() => {
     fetchData();

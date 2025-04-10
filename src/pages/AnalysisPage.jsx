@@ -8,8 +8,7 @@ import {
   FiPieChart,
   FiMaximize2,
   FiMinimize2,
-  FiUserCheck,
-  FiCalendar
+  FiCalendar,
 } from "react-icons/fi"
 import {
   Chart as ChartJS,
@@ -65,9 +64,33 @@ const Skeleton = ({ className = "" }) => {
 }
 
 const AnalysisPage = () => {
-  const [expandedCard, setExpandedCard] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [year, setYear] = useState(new Date().getFullYear().toString());
+  const [expandedCard, setExpandedCard] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [year, setYear] = useState(new Date().getFullYear().toString())
+  const [month, setMonth] = useState("") // Add this line for month state
+
+  // Add this array for month options
+  const monthOptions = [
+    { value: "", label: "All Months" },
+    { value: "1", label: "January" },
+    { value: "2", label: "February" },
+    { value: "3", label: "March" },
+    { value: "4", label: "April" },
+    { value: "5", label: "May" },
+    { value: "6", label: "June" },
+    { value: "7", label: "July" },
+    { value: "8", label: "August" },
+    { value: "9", label: "September" },
+    { value: "10", label: "October" },
+    { value: "11", label: "November" },
+    { value: "12", label: "December" },
+  ]
+
+  // Add this array for year options (current year and 4 previous years)
+  const yearOptions = Array.from({ length: 5 }, (_, i) => {
+    const yearValue = (new Date().getFullYear() - i).toString()
+    return { value: yearValue, label: yearValue }
+  })
 
   // State for all dashboard data
   const [summaryData, setSummaryData] = useState(null)
@@ -80,28 +103,34 @@ const AnalysisPage = () => {
   const [interviewSchedule, setInterviewSchedule] = useState([])
   const [timeToHire, setTimeToHire] = useState([])
 
-  const internalHires = 30;
-  const externalHires = 70;
+  const internalHires = 30
+  const externalHires = 70
 
-  const overallRate = 10;
+  const overallRate = 10
   const monthlyRates = {
     January: 5,
     February: 10,
     March: 15,
-  };
+  }
 
-  const totalApplications = 100;
+  const totalApplications = 100
   const months = [
     { name: "January", count: 30 },
     { name: "February", count: 40 },
     { name: "March", count: 30 },
-  ];
+  ]
 
   // Fetch all dashboard data
   const fetchDashboardData = async () => {
     setLoading(true)
 
     try {
+      // Build query parameters for filtering
+      const queryParams = new URLSearchParams()
+      if (year) queryParams.append("year", year)
+      if (month) queryParams.append("month", month)
+      const queryString = queryParams.toString()
+
       // Replace fetch calls with axios calls
       const [
         summaryResponse,
@@ -114,15 +143,15 @@ const AnalysisPage = () => {
         interviewResponse,
         timeResponse,
       ] = await Promise.all([
-        api.get("/analytics/dashboard/summary"),
-        api.get("/analytics/dashboard/status-distribution"),
-        api.get("/analytics/dashboard/source-distribution"),
-        api.get(`/analytics/dashboard/monthly-trends?year=${year}`),
-        api.get("/analytics/dashboard/job-positions"),
-        api.get("/analytics/dashboard/recent-applicants"),
-        api.get("/analytics/dashboard/hiring-funnel"),
-        api.get("/analytics/dashboard/interview-schedule"),
-        api.get("/analytics/dashboard/time-to-hire"),
+        api.get(`/analytics/dashboard/summary?${queryString}`),
+        api.get(`/analytics/dashboard/status-distribution?${queryString}`),
+        api.get(`/analytics/dashboard/source-distribution?${queryString}`),
+        api.get(`/analytics/dashboard/monthly-trends?year=${year}`), // Keep this one year-only
+        api.get(`/analytics/dashboard/job-positions?${queryString}`),
+        api.get(`/analytics/dashboard/recent-applicants?${queryString}`),
+        api.get(`/analytics/dashboard/hiring-funnel?${queryString}`),
+        api.get(`/analytics/dashboard/interview-schedule?${queryString}`),
+        api.get(`/analytics/dashboard/time-to-hire?${queryString}`),
       ])
 
       // Update state with fetched data (axios puts response in .data)
@@ -145,7 +174,7 @@ const AnalysisPage = () => {
   // Fetch data on component mount
   useEffect(() => {
     fetchDashboardData()
-  }, [year])
+  }, [year, month]) // Add month to dependency array
 
   const requisitionData = [
     { month: "January", closed: 12, passed: 3, onProgress: 0 },
@@ -160,46 +189,47 @@ const AnalysisPage = () => {
     { month: "October", closed: 0, passed: 0, onProgress: 21 },
     { month: "November", closed: 4, passed: 0, onProgress: 4 },
     { month: "December", closed: 0, passed: 0, onProgress: 1 },
-  ];
+  ]
 
-  const sourceData = sourceDistribution.length > 0 ? 
-    sourceDistribution.map(item => ({ name: item.applied_source, value: item.count })) : 
-    [
-      { name: "Referral", value: 50 },
-      { name: "Website", value: 30 },
-      { name: "Caravan", value: 20 },
-    ];
+  const sourceData =
+    sourceDistribution.length > 0
+      ? sourceDistribution.map((item) => ({ name: item.applied_source, value: item.count }))
+      : [
+          { name: "Referral", value: 50 },
+          { name: "Website", value: 30 },
+          { name: "Caravan", value: 20 },
+        ]
 
   // Function to handle card expansion
   const toggleCardExpand = (id) => {
-    const newExpandedState = expandedCard === id ? null : id;
-    setExpandedCard(newExpandedState);
+    const newExpandedState = expandedCard === id ? null : id
+    setExpandedCard(newExpandedState)
 
     // Toggle body scroll lock when card is expanded
-    document.body.style.overflow = newExpandedState ? 'hidden' : 'auto';
-  };
+    document.body.style.overflow = newExpandedState ? "hidden" : "auto"
+  }
 
   // Card component with expansion functionality
   const Card = ({ id, title, icon, children, className = "" }) => {
-    const isExpanded = expandedCard === id;
-    const isAnyCardExpanded = expandedCard !== null;
-    const shouldHide = isAnyCardExpanded && !isExpanded;
+    const isExpanded = expandedCard === id
+    const isAnyCardExpanded = expandedCard !== null
+    const shouldHide = isAnyCardExpanded && !isExpanded
 
     return (
       <div
         className={`
         rounded-xl bg-white/80 backdrop-blur-sm transition-all duration-300 ${className}
-        ${isExpanded ?
-            'fixed top-[10%] left-[10%] right-[10%] bottom-[10%] max-w-5xl mx-auto z-50' :
-            'h-auto min-h-[12rem] xs:min-h-[13rem] sm:min-h-[15rem]'}
-        ${shouldHide ? 'opacity-0 pointer-events-none' : 'opacity-100'}
+        ${
+          isExpanded
+            ? "fixed top-[10%] left-[10%] right-[10%] bottom-[10%] max-w-5xl mx-auto z-50"
+            : "h-auto min-h-[12rem] xs:min-h-[13rem] sm:min-h-[15rem]"
+        }
+        ${shouldHide ? "opacity-0 pointer-events-none" : "opacity-100"}
       `}
         style={{
-          boxShadow: isExpanded ?
-            '0 10px 25px rgba(0, 0, 0, 0.1)' :
-            '0 4px 12px rgba(0, 0, 0, 0.03)',
-          transition: 'opacity 0.3s ease, transform 0.3s ease',
-          transform: shouldHide ? 'scale(0.95)' : 'scale(1)'
+          boxShadow: isExpanded ? "0 10px 25px rgba(0, 0, 0, 0.1)" : "0 4px 12px rgba(0, 0, 0, 0.03)",
+          transition: "opacity 0.3s ease, transform 0.3s ease",
+          transform: shouldHide ? "scale(0.95)" : "scale(1)",
         }}
       >
         <div className="flex items-center justify-between p-2 xs:p-3 sm:p-4 border-b border-opacity-10 border-gray-200">
@@ -212,23 +242,26 @@ const AnalysisPage = () => {
             className="p-1.5 rounded-full hover:bg-gray-100 text-gray-500 transition-colors"
             aria-label={isExpanded ? "Minimize" : "Expand"}
           >
-            {isExpanded ?
-              <FiMinimize2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> :
+            {isExpanded ? (
+              <FiMinimize2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            ) : (
               <FiMaximize2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            }
+            )}
           </button>
         </div>
         <div
-          className={`p-2 xs:p-3 sm:p-4 ${isExpanded ? 'h-[calc(100%-60px)] overflow-y-auto' :
-            'h-[calc(100%-40px)] xs:h-[calc(100%-44px)] sm:h-[calc(100%-56px)] custom-scrollbar'
-            }`}
-          style={{ overflowY: 'auto' }}
+          className={`p-2 xs:p-3 sm:p-4 ${
+            isExpanded
+              ? "h-[calc(100%-60px)] overflow-y-auto"
+              : "h-[calc(100%-40px)] xs:h-[calc(100%-44px)] sm:h-[calc(100%-56px)] custom-scrollbar"
+          }`}
+          style={{ overflowY: "auto" }}
         >
           {children}
         </div>
       </div>
-    );
-  };
+    )
+  }
 
   // Prepare data for monthly trends chart
   const monthlyTrendsChartData = {
@@ -255,25 +288,21 @@ const AnalysisPage = () => {
 
   // Wrapper for chart cards to make them expandable
   const ChartCard = ({ id, title, subtitle, icon, children }) => {
-    const isExpanded = expandedCard === id;
-    const isAnyCardExpanded = expandedCard !== null;
-    const shouldHide = isAnyCardExpanded && !isExpanded;
+    const isExpanded = expandedCard === id
+    const isAnyCardExpanded = expandedCard !== null
+    const shouldHide = isAnyCardExpanded && !isExpanded
 
     return (
       <div
         className={`
           bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300
-          ${isExpanded ?
-              'fixed top-[10%] left-[10%] right-[10%] bottom-[10%] max-w-5xl mx-auto z-50' :
-              'h-auto'}
-          ${shouldHide ? 'opacity-0 pointer-events-none' : 'opacity-100'}
+          ${isExpanded ? "fixed top-[10%] left-[10%] right-[10%] bottom-[10%] max-w-5xl mx-auto z-50" : "h-auto"}
+          ${shouldHide ? "opacity-0 pointer-events-none" : "opacity-100"}
         `}
         style={{
-          boxShadow: isExpanded ?
-            '0 10px 25px rgba(0, 0, 0, 0.1)' :
-            '0 4px 12px rgba(0, 0, 0, 0.03)',
-          transition: 'opacity 0.3s ease, transform 0.3s ease',
-          transform: shouldHide ? 'scale(0.95)' : 'scale(1)'
+          boxShadow: isExpanded ? "0 10px 25px rgba(0, 0, 0, 0.1)" : "0 4px 12px rgba(0, 0, 0, 0.03)",
+          transition: "opacity 0.3s ease, transform 0.3s ease",
+          transform: shouldHide ? "scale(0.95)" : "scale(1)",
         }}
       >
         <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-200">
@@ -289,15 +318,14 @@ const AnalysisPage = () => {
             className="p-1.5 rounded-full hover:bg-gray-100 text-gray-500 transition-colors"
             aria-label={isExpanded ? "Minimize" : "Expand"}
           >
-            {isExpanded ?
-              <FiMinimize2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> :
+            {isExpanded ? (
+              <FiMinimize2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            ) : (
               <FiMaximize2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            }
+            )}
           </button>
         </div>
-        <div className={`p-4 sm:p-6 ${isExpanded ? 'h-[calc(100%-70px)] overflow-y-auto' : ''}`}>
-          {children}
-        </div>
+        <div className={`p-4 sm:p-6 ${isExpanded ? "h-[calc(100%-70px)] overflow-y-auto" : ""}`}>{children}</div>
       </div>
     )
   }
@@ -332,42 +360,90 @@ const AnalysisPage = () => {
         }
       `}</style>
 
+      {/* Filter controls */}
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <div className="flex items-center gap-2">
+          <FiCalendar className="text-primary h-4 w-4" />
+          <span className="text-sm font-medium">Filters:</span>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <select
+            value={year}
+            onChange={(e) => setYear(e.target.value)}
+            className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
+          >
+            {yearOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={month}
+            onChange={(e) => setMonth(e.target.value)}
+            className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
+          >
+            {monthOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+
+          <button
+            onClick={() => {
+              setYear(new Date().getFullYear().toString())
+              setMonth("")
+              fetchDashboardData()
+            }}
+            className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded-md flex items-center gap-1 transition-colors"
+          >
+            <FiRefreshCw className="h-3.5 w-3.5" />
+            Reset
+          </button>
+        </div>
+      </div>
+
       {/* Overlay for expanded card */}
       {expandedCard && (
         <div
           className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center min-h-screen"
           onClick={() => {
-            setExpandedCard(null);
-            document.body.style.overflow = 'auto';
+            setExpandedCard(null)
+            document.body.style.overflow = "auto"
           }}
         />
       )}
 
       {/* Top row with 4 equal cards */}
-      <div className={`grid grid-cols-1 gap-3 xs:gap-4 sm:gap-5 md:gap-6 sm:grid-cols-2 lg:grid-cols-4 ${expandedCard ? 'z-0' : ''}`}>
-        <Card id="applications" title="Applications Received" icon={<FiUsers className="h-4 w-4 sm:h-5 sm:w-5" />}>
-          <ApplicationReceived totalApplications={totalApplications} months={months} />
+      <div
+        className={`grid grid-cols-1 gap-3 xs:gap-4 sm:gap-5 md:gap-6 sm:grid-cols-2 lg:grid-cols-4 ${expandedCard ? "z-0" : ""}`}
+      >
+          <Card id="applications" title="Applications Received" icon={<FiUsers className="h-4 w-4 sm:h-5 sm:w-5" />}>
+          <ApplicationReceived totalApplications={totalApplications} months={months} year={year} month={month}/>
         </Card>
 
         <Card id="positions" title="Top Job Positions" icon={<FiBriefcase className="h-4 w-4 sm:h-5 sm:w-5" />}>
-          <TopJobPositions jobPositions={jobPositions} loading={loading} />
+        <TopJobPositions jobPositions={jobPositions} loading={loading} year={year} month={month} />
         </Card>
 
         <Card id="hires" title="Internal vs External Hires" icon={<FiRefreshCw className="h-4 w-4 sm:h-5 sm:w-5" />}>
-          <InternalVsExternalHires internalHires={internalHires} externalHires={externalHires} />
+          <InternalVsExternalHires internalHires={internalHires} externalHires={externalHires} year={year} month={month}/>
         </Card>
 
         <Card id="dropoff" title="Candidate Drop-off Rate" icon={<FiTrendingDown className="h-4 w-4 sm:h-5 sm:w-5" />}>
-          <CandidateDropOffRate overallRate={overallRate} monthlyRates={monthlyRates} />
+          <CandidateDropOffRate overallRate={overallRate} monthlyRates={monthlyRates} year={year} month={month} />
         </Card>
       </div>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Monthly Trends Chart */}
-        <ChartCard 
-          id="monthlyTrends" 
-          title="Monthly Applicant Trends" 
+        <ChartCard
+          id="monthlyTrends"
+          title="Monthly Applicant Trends"
           subtitle="Applications and hires by month"
           icon={<FiBarChart2 className="h-4 w-4 sm:h-5 sm:w-5" />}
         >
@@ -403,9 +479,9 @@ const AnalysisPage = () => {
         </ChartCard>
 
         {/* Hiring Funnel Chart */}
-        <ChartCard 
-          id="hiringFunnel" 
-          title="Hiring Funnel" 
+        <ChartCard
+          id="hiringFunnel"
+          title="Hiring Funnel"
           subtitle="Applicants at each stage of the hiring process"
           icon={<FiUsers className="h-4 w-4 sm:h-5 sm:w-5" />}
         >
@@ -415,30 +491,22 @@ const AnalysisPage = () => {
             </div>
           ) : (
             <div className="h-[300px]">
-              <HiringFunnelChart data={hiringFunnel} loading={loading} />
+              <TopJobPositions jobPositions={jobPositions} loading={loading} year={year} month={month} />
             </div>
           )}
         </ChartCard>
       </div>
 
       {/* Bottom row with 2 cards */}
-      <div className={`grid grid-cols-1 gap-3 xs:gap-4 sm:gap-5 md:gap-6 lg:grid-cols-3 ${expandedCard ? 'z-0' : ''}`}>
+      <div className={`grid grid-cols-1 gap-3 xs:gap-4 sm:gap-5 md:gap-6 lg:grid-cols-3 ${expandedCard ? "z-0" : ""}`}>
         <div className="lg:col-span-2">
-          <Card
-            id="requisition"
-            title="Requisition Analysis"
-            icon={<FiBarChart2 className="h-4 w-4 sm:h-5 sm:w-5" />}
-          >
-            <ApplicantStatusChart data={requisitionData} />
+          <Card id="requisition" title="Requisition Analysis" icon={<FiBarChart2 className="h-4 w-4 sm:h-5 sm:w-5" />}>
+          <ApplicantStatusChart data={requisitionData} year={year} month={month} />
           </Card>
         </div>
         <div>
-          <Card
-            id="source"
-            title="Source of Applications"
-            icon={<FiPieChart className="h-4 w-4 sm:h-5 sm:w-5" />}
-          >
-            <SourceOfApplication data={sourceData} />
+          <Card id="source" title="Source of Applications" icon={<FiPieChart className="h-4 w-4 sm:h-5 sm:w-5" />}>
+          <SourceOfApplication data={sourceData} year={year} month={month} />
           </Card>
         </div>
       </div>
@@ -493,7 +561,7 @@ const AnalysisPage = () => {
             </div>
           )}
         </ChartCard>
-        
+
         {/* Job Position Analytics */}
         <ChartCard
           id="positionAnalytics"
@@ -556,7 +624,7 @@ const AnalysisPage = () => {
         </ChartCard>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default AnalysisPage;
+export default AnalysisPage

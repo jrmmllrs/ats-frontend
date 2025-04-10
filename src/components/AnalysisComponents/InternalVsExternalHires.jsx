@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { FaInfoCircle } from "react-icons/fa";
 import api from "../../api/axios";
 
-const InternalVsExternalHires = () => {
+const InternalVsExternalHires = ({ year, month }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -16,8 +16,9 @@ const InternalVsExternalHires = () => {
       setIsLoading(true);
       
       // Check if we have valid cached data
-      const cachedDataString = sessionStorage.getItem('internalExternalData');
-      const cachedTimeString = sessionStorage.getItem('internalExternalDataTimestamp');
+      const cacheKey = `internalExternalData_${year}_${month}`;
+      const cachedDataString = sessionStorage.getItem(cacheKey);
+      const cachedTimeString = sessionStorage.getItem(`${cacheKey}_timestamp`);
       
       if (!forceRefresh && cachedDataString && cachedTimeString) {
         const cachedTime = parseInt(cachedTimeString);
@@ -36,7 +37,17 @@ const InternalVsExternalHires = () => {
       }
       
       // If no valid cache or force refresh, fetch from API
-      const response = await api.get("/analytic/metrics");
+      let url = `/analytic/metrics`;
+
+      // Add year and month filters
+      if (year !== "all" && year !== "") {
+        url += (url.includes("?") ? "&" : "?") + `year=${year}`;
+      }
+      if (month !== "all" && month !== "") {
+        url += (url.includes("?") ? "&" : "?") + `month=${month}`;
+      }
+      
+      const response = await api.get(url);
 
       if (response.data && response.data.internalExternalHires) {
         const { internal, external, internalRate, externalRate } = response.data.internalExternalHires;
@@ -57,8 +68,8 @@ const InternalVsExternalHires = () => {
           external: externalObj
         };
         
-        sessionStorage.setItem('internalExternalData', JSON.stringify(dataToCache));
-        sessionStorage.setItem('internalExternalDataTimestamp', new Date().getTime().toString());
+        sessionStorage.setItem(cacheKey, JSON.stringify(dataToCache));
+        sessionStorage.setItem(`${cacheKey}_timestamp`, new Date().getTime().toString());
         
         setInternalData(internalObj);
         setExternalData(externalObj);
@@ -70,7 +81,7 @@ const InternalVsExternalHires = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [year, month]);
 
   // Use effect for the initial fetch
   useEffect(() => {

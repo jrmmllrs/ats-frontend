@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { FaInfoCircle } from "react-icons/fa";
 import api from "../../api/axios";
 
-const CandidateDropOffRate = () => {
+const CandidateDropOffRate = ({ year, month }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -16,8 +16,9 @@ const CandidateDropOffRate = () => {
       setIsLoading(true);
       
       // Check if we have valid cached data
-      const cachedDataString = sessionStorage.getItem('dropOffRateData');
-      const cachedTimeString = sessionStorage.getItem('dropOffRateDataTimestamp');
+      const cacheKey = `dropOffRateData_${year}_${month}`;
+      const cachedDataString = sessionStorage.getItem(cacheKey);
+      const cachedTimeString = sessionStorage.getItem(`${cacheKey}_timestamp`);
       
       if (!forceRefresh && cachedDataString && cachedTimeString) {
         const cachedTime = parseInt(cachedTimeString);
@@ -36,7 +37,17 @@ const CandidateDropOffRate = () => {
       }
       
       // If no valid cache or force refresh, fetch from API
-      const response = await api.get("/analytic/metrics");
+      let url = `/analytic/metrics`;
+
+      // Add year and month filters
+      if (year !== "all" && year !== "") {
+        url += (url.includes("?") ? "&" : "?") + `year=${year}`;
+      }
+      if (month !== "all" && month !== "") {
+        url += (url.includes("?") ? "&" : "?") + `month=${month}`;
+      }
+      
+      const response = await api.get(url);
       
       if (response.data && response.data.dropOffRate) {
         const { overallDropOffRate, monthlyDropOffs } = response.data.dropOffRate;
@@ -62,8 +73,8 @@ const CandidateDropOffRate = () => {
           monthlyRates: formattedMonthlyRates
         };
         
-        sessionStorage.setItem('dropOffRateData', JSON.stringify(dataToCache));
-        sessionStorage.setItem('dropOffRateDataTimestamp', new Date().getTime().toString());
+        sessionStorage.setItem(cacheKey, JSON.stringify(dataToCache));
+        sessionStorage.setItem(`${cacheKey}_timestamp`, new Date().getTime().toString());
         
         setLastFetch(new Date().getTime());
       }
@@ -73,7 +84,7 @@ const CandidateDropOffRate = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [year, month]);
 
   // Use effect for the initial fetch
   useEffect(() => {

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { FaInfoCircle } from "react-icons/fa";
 import api from "../../api/axios";
 
-const TopJobPositions = () => {
+const TopJobPositions = ({ year, month }) => { // Receive year and month props
   const [showTooltip, setShowTooltip] = useState(false);
   const [jobPositions, setJobPositions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -15,8 +15,9 @@ const TopJobPositions = () => {
       setIsLoading(true);
       
       // Check if we have valid cached data
-      const cachedDataString = sessionStorage.getItem('topJobsData');
-      const cachedTimeString = sessionStorage.getItem('topJobsDataTimestamp');
+      const cacheKey = `topJobsData_${year}_${month}`;
+      const cachedDataString = sessionStorage.getItem(cacheKey);
+      const cachedTimeString = sessionStorage.getItem(`${cacheKey}_timestamp`);
       
       if (!forceRefresh && cachedDataString && cachedTimeString) {
         const cachedTime = parseInt(cachedTimeString);
@@ -34,7 +35,17 @@ const TopJobPositions = () => {
       }
       
       // If no valid cache or force refresh, fetch from API
-      const response = await api.get("/analytic/metrics");
+      let url = `/analytic/metrics`;
+
+      // Add year and month filters
+      if (year !== "all") {
+        url += (url.includes("?") ? "&" : "?") + `year=${year}`;
+      }
+      if (month !== "all") {
+        url += (url.includes("?") ? "&" : "?") + `month=${month}`;
+      }
+      
+      const response = await api.get(url);
       
       if (response.data && response.data.topJobs && response.data.topJobs.formattedTopJobs) {
         // Transform the data to match our component's expected format
@@ -45,8 +56,8 @@ const TopJobPositions = () => {
         }));
         
         // Store in session storage with timestamp
-        sessionStorage.setItem('topJobsData', JSON.stringify(formattedJobs));
-        sessionStorage.setItem('topJobsDataTimestamp', new Date().getTime().toString());
+        sessionStorage.setItem(cacheKey, JSON.stringify(formattedJobs));
+        sessionStorage.setItem(`${cacheKey}_timestamp`, new Date().getTime().toString());
         
         setJobPositions(formattedJobs);
         setLastFetch(new Date().getTime());
@@ -57,7 +68,7 @@ const TopJobPositions = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [year, month]);
 
   // Use effect for the initial fetch
   useEffect(() => {
