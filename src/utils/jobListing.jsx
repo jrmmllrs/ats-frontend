@@ -47,3 +47,11 @@ export const updateJob = async (jobData) => {
         console.error('Error Updating Job: ', error);
     } 
 }
+
+export const addJob = async  (jobData) => {
+    try {
+        await api.post(`/jobs`, jobData);
+    } catch (error) {
+        console.error('Error Adding Job: ', error);
+    }
+}

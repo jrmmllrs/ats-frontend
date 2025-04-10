@@ -1,36 +1,67 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import JobsTable from "../components/JobsTable";
 import { FaGear, FaPlus } from "react-icons/fa6";
 import IndustriesModal from "../components/Modals/IndustriesModal";
 import { set } from "date-fns";
-import { searchJobs } from "../utils/jobListing";
+import { addJob, fetchCloseJobsCount, fetchOpenJobsCount, fetchJobs, searchJobs } from "../utils/jobListing";
 import jobStore from "../context/jobListingStore";
+import setupStore from "../context/setupStore";
+import industriesStore from "../context/industriesStore";
+import useUserStore from "../context/userStore";
+import JobCountStore from "../context/jobsCountStore";
 
 const JobList = () => {
+    const { setOpenJobsCount, setCloseJobsCount } = JobCountStore();
+    const { user } = useUserStore();
     const [searchVal, setSearchVal] = useState("");
     const [isAddJobModalOpen, setIsAddJobModalOpen] = useState(false);
+    const { industries, setIndustries } = industriesStore();
     const [jobData, setJobData] = useState({
         title: "",
-        industry: "",
+        industryId: "",
         description: "",
         minSalary: "",
         maxSalary: "",
         employmentType: "Full-time",
-        setup: "On-site",
+        setup: "",
         responsibilities: "",
         requirements: "",
         preferredQualifications: "",
-        status: "Open",
-        visibility: "Public",
+        isOpen: "1",
+        isShown: "1",
+        userId: user.user_id,
     });
+    const { setupData, setSetupData } = setupStore();
     const { jobsData, setJobsData, isGearModalOpen, setIsGearModalOpen } = jobStore();
 
-    const handleChange = (e) => {
+    useEffect(() => {
+        if (industries.length > 0) {
+            setJobData((prevJobData) => ({
+                ...prevJobData,
+                industryId: industries[0].industryId,
+            }));
+        }
+    }, [industries]);
+
+    useEffect(() => {
+        if (setupData.length > 0) {
+            setJobData((prevJobData) => ({
+                ...prevJobData,
+                setupId: setupData[0].setupId,
+            }));
+        }
+    }, [industries]);
+
+    const handleChange = (e) => {  
         setJobData({ ...jobData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        await addJob(jobData);
+        await fetchJobs(setJobsData);
+        await fetchCloseJobsCount(setCloseJobsCount)
+        await fetchOpenJobsCount(setOpenJobsCount);
         console.log("Job Data Submitted:", jobData);
         setIsAddJobModalOpen(false);
     };
@@ -98,14 +129,16 @@ const JobList = () => {
                                 {/* Industry */}
                                 <div>
                                     <label className="block">Industry</label>
-                                    <input
-                                        type="text"
-                                        name="industry"
-                                        value={jobData.industry}
-                                        onChange={handleChange}
-                                        className="w-full p-2 border border-gray-light rounded-md"
-                                        required
-                                    />
+                                    <select 
+                                    name="industryId" 
+                                    value={jobData.industryId}
+                                    onChange={handleChange}
+                                    className="w-full p-2 border border-gray-light rounded-md"
+                                    >
+                                        {industries.map((industry, index) => (
+                                            <option key={index} value={industry.industryId}>{industry.industryName}</option>
+                                        ))}
+                                    </select>
                                 </div>
                             </div>
 
@@ -169,14 +202,14 @@ const JobList = () => {
                                 <div>
                                     <label className="block">Setup</label>
                                     <select
-                                        name="setup"
-                                        value={jobData.setup}
+                                        name="setupId"
+                                        value={jobData.setupId}
                                         onChange={handleChange}
                                         className="w-full p-2 border border-gray-light rounded-md"
                                     >
-                                        <option value="On-site">On-site</option>
-                                        <option value="Remote">Remote</option>
-                                        <option value="Hybrid">Hybrid</option>
+                                        {setupData.map((setup, index) => (
+                                            <option key={index} value={setup.setupId}>{setup.setupName}</option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>
@@ -221,13 +254,12 @@ const JobList = () => {
                                 <div>
                                     <label className="block">Status</label>
                                     <select
-                                        name="status"
-                                        value={jobData.status}
+                                        name="isOpen"
                                         onChange={handleChange}
                                         className="w-full p-2 border border-gray-light rounded-md"
                                     >
-                                        <option value="Open">Open</option>
-                                        <option value="Closed">Closed</option>
+                                        <option value="1">Open</option>
+                                        <option value="0">Closed</option>
                                     </select>
                                 </div>
 
@@ -235,13 +267,12 @@ const JobList = () => {
                                 <div>
                                     <label className="block">Visibility</label>
                                     <select
-                                        name="visibility"
-                                        value={jobData.visibility}
+                                        name="isShown"
                                         onChange={handleChange}
                                         className="w-full p-2 border border-gray-light rounded-md"
                                     >
-                                        <option value="show">Shown</option>
-                                        <option value="hide">Hidden</option>
+                                        <option value="1">Shown</option>
+                                        <option value="0">Hidden</option>
                                     </select>
                                 </div>
                             </div>
