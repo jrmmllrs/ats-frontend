@@ -77,7 +77,6 @@ const JobsTable = ({ onSelectApplicant }) => {
                 <DataTable
                     pointerOnHover
                     highlightOnHover
-                    fixedHeader
                     fixedHeaderScrollHeight="50vh"
                     responsive
                     columns={columns}
