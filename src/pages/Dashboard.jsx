@@ -80,14 +80,15 @@ const SummarySection = ({ onRefresh }) => {
   }, [onRefresh])
 
   const handleCardClick = (tab) => {
-    // if (tab === "interviews") {
-    //   navigate("/ats", {
-    //     state: {
-    //       view: "dashboard",
-    //     }
-    //   });
-    //   return;
-    // }
+    if (tab === "interviews") {
+      navigate("/ats", {
+        state: {
+          view: "dashboard",
+          activeTab: "pending",
+        }
+      });
+      return;
+    }
 
     navigate("/ats", {
       state: {
@@ -118,8 +119,8 @@ const SummarySection = ({ onRefresh }) => {
       </div>
 
       <div
-        // onClick={() => }
-        className="bg-white rounded-2xl border border-gray-200"
+        onClick={() => handleCardClick("analytics")}
+        className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
       >
         <div className="p-6 flex flex-col">
           <span className="body-regular text-gray-500">Hired</span>
