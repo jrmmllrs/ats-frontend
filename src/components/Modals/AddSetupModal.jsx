@@ -1,17 +1,32 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import useUserStore from "../../context/userStore";
+import { addSetup } from "../../utils/setupUtils";
+import setupStore from "../../context/setupStore";
 
-const AddSetupModal = ({ onClose, onSave }) => {
-    const [setupData, setSetupData] = useState({
+const AddSetupModal = ({ onClose }) => {
+    const { setSetupData } = setupStore();
+    const { user } = useUserStore();
+    const [setup, setsetup] = useState({
         setup_name: "",
+        userId: "",
     });
 
+    useEffect(() => {
+        if (user) {
+            setsetup((prev) => ({
+                ...prev,
+                userId: user.user_id,
+            }))
+        }
+    },[user]);
+
     const handleChange = (e) => {
-        setSetupData({ ...setupData, [e.target.name]: e.target.value });
+        setsetup({ ...setup, [e.target.name]: e.target.value });
     };
 
     const handleSubmit = (e) => {
-        e.preventDefault();
-        onSave(setupData);
+        e.preventDefault();  
+        addSetup(setSetupData, setup);
         onClose();
     };
 
@@ -30,8 +45,7 @@ const AddSetupModal = ({ onClose, onSave }) => {
                         <label className="block text-gray-700">Setup Name</label>
                         <input
                             type="text"
-                            name="setup_name"
-                            value={setupData.setup_name}
+                            name="setupName"
                             onChange={handleChange}
                             className="w-full p-2 border border-gray-300 rounded-md"
                             required
