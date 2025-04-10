@@ -67,7 +67,7 @@ const JobList = () => {
     };
 
     return (
-        <div className="rounded-3xl bg-white mx-10 p-6 pb-1 border border-gray-light">
+        <div className="rounded-3xl bg-white p-6 pb-1 border border-gray-light">
             {/* Header Section */}
             <div className="mb-4 flex items-center justify-between gap-2">
                 <h1 className="headline font-semibold text-gray-dark">Job List</h1>

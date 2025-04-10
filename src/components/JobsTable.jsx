@@ -23,7 +23,7 @@ const JobsTable = ({ onSelectApplicant }) => {
             await fetchJobs(setJobsData);
             await fetchSetups(setSetupData);
             await fetchIndustries(setIndustries);
-        }    
+        }
         getJobsData();
     }, [])
 
@@ -39,18 +39,18 @@ const JobsTable = ({ onSelectApplicant }) => {
             await updateJob(jobData);
             await fetchJobs(setJobsData);
             await fetchCloseJobsCount(setCloseJobsCount);
-            await fetchOpenJobsCount(setOpenJobsCount); 
+            await fetchOpenJobsCount(setOpenJobsCount);
             setIsAddJobModalOpen(false);
         } catch (error) {
             console.error('Error updating job:', error);
         }
     };
-    
+
 
     const handleChange = (e) => {
         setJobData({ ...jobData, [e.target.name]: e.target.value });
-    }; 
-    
+    };
+
 
     const columns = [
         { name: 'Title', selector: row => row.jobTitle, sortable: true },
@@ -71,7 +71,8 @@ const JobsTable = ({ onSelectApplicant }) => {
                 <DataTable
                     pointerOnHover
                     highlightOnHover
-                    fixedHeaderScrollHeight="60vh"
+                    fixedHeader
+                    fixedHeaderScrollHeight="50vh"
                     responsive
                     columns={columns}
                     data={jobsData}
@@ -116,11 +117,11 @@ const JobsTable = ({ onSelectApplicant }) => {
                                 {/* Industry */}
                                 <div>
                                     <label className="block">Industry</label>
-                                    <select 
-                                    name="industryId" 
-                                    value={jobData.industryId}
-                                    onChange={handleChange}
-                                    className="w-full p-2 border border-gray-light rounded-md"
+                                    <select
+                                        name="industryId"
+                                        value={jobData.industryId}
+                                        onChange={handleChange}
+                                        className="w-full p-2 border border-gray-light rounded-md"
                                     >
                                         {industries.map((industry, index) => (
                                             <option key={index} value={industry.industryId}>{industry.industryName}</option>

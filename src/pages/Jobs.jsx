@@ -23,8 +23,6 @@ const Jobs = () => {
         }
     }
 
-
-
     useEffect(() => {
         const getCounts = async () => {
             await fetchIndustriesCount(setIndustriesCount);
@@ -35,8 +33,8 @@ const Jobs = () => {
     }, [])
 
     return (
-        <div className="flex-col items-center justify-center mx-20">
-            <section className="m-10 grid grid-cols-3 grid-rows-[7rem] gap-10">
+        <div className="flex-col items-center justify-center">
+            <section className="mb-5 grid grid-cols-3 grid-rows-[7rem] gap-5">
                 {/* <div
                     onClick={() => alert("applicants")}
                     className="rounded-md grid place-content-center cursor-pointer bg-white border border-gray-light"
@@ -46,21 +44,21 @@ const Jobs = () => {
                 </div> */}
                 <div
                     onClick={() => setIsGearModalOpen(true)}      //nyenyenyenyenyenye
-                    className="rounded-2xl grid place-content-center cursor-pointer bg-white border border-gray-light"
+                    className="rounded-2xl grid place-content-center cursor-pointer bg-white border border-gray-light hover:bg-teal-soft transition duration-300 ease-in-out"
                 >
                     <span className="text-3xl text-center">{industriesCount}</span>
                     <div className="text-sm text-gray-500 text-center">Industries</div>
                 </div>
                 <div
                     onClick={() => handleTabClick("open")}
-                    className={`rounded-2xl grid place-content-center cursor-pointer bg-white border border-gray-light ${activeTab === "open" ? "border-teal-soft border-2" : ""}`}
+                    className={`rounded-2xl grid place-content-center cursor-pointer bg-white border border-gray-light ${activeTab === "open" ? "border-teal-soft border-2" : ""} hover:bg-teal-soft transition duration-300 ease-in-out`}
                 >
                     <span className="text-3xl text-center">{openJobsCount}</span>
                     <div className="text-sm text-gray-500 text-center">Open Jobs</div>
                 </div>
                 <div
                     onClick={() => handleTabClick("close")}
-                    className={`rounded-2xl grid place-content-center cursor-pointer bg-white border border-gray-light ${activeTab === "close" ? "border-teal-soft border-2" : ""}`}
+                    className={`rounded-2xl grid place-content-center cursor-pointer bg-white border border-gray-light ${activeTab === "close" ? "border-teal-soft border-2" : ""} hover:bg-teal-soft transition duration-300 ease-in-out`}
                 >
                     <span className="text-3xl text-center">{closeJobsCount}</span>
                     <div className="text-sm text-gray-500 text-center">Closed Jobs</div>
