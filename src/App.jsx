@@ -6,6 +6,7 @@ import AddApplicantForm from "./pages/AddApplicantForm";
 import PrivateRoute from "./context/PrivateRoute";
 import PublicRoute from "./context/PublicRoute";
 import FullOfSuite from "./pages/FullOfSuite";
+import NotFound from "./pages/NotFound";
 
 function App() {
   return (
@@ -16,7 +17,8 @@ function App() {
         </Route>
         <Route path="/add-applicant" element={<PrivateRoute element={<AddApplicantForm />} />} />
         <Route path="/login" element={<PublicRoute element={<LoginPage />} />} />
-        <Route path="*" element={<Navigate to="/login" />} />
+        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="*" element={<NotFound />} />
         <Route path="/fullofsuite" element={<PublicRoute element={<FullOfSuite />} />} />
       </Routes>
     </BrowserRouter>
