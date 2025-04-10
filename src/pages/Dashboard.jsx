@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { act, useEffect, useState } from "react"
 import { FiUsers, FiUserCheck, FiCalendar, FiBriefcase, FiRefreshCw } from "react-icons/fi"
 
 import api from "../api/axios"
@@ -79,10 +79,19 @@ const SummarySection = ({ onRefresh }) => {
     }
   }, [onRefresh])
 
-  const handleCardClick = () => {
+  const handleCardClick = (tab) => {
+    // if (tab === "interviews") {
+    //   navigate("/ats", {
+    //     state: {
+    //       view: "dashboard",
+    //     }
+    //   });
+    //   return;
+    // }
+
     navigate("/ats", {
       state: {
-        view: "listings",
+        view: tab,
       }
     });
   }
@@ -90,7 +99,7 @@ const SummarySection = ({ onRefresh }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
       <div
-        onClick={() => handleCardClick()}
+        onClick={() => handleCardClick("listings")}
         className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
       >
         <div className="p-6 flex flex-col">
@@ -109,8 +118,8 @@ const SummarySection = ({ onRefresh }) => {
       </div>
 
       <div
-        onClick={() => alert("applicants")}
-        className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
+        // onClick={() => }
+        className="bg-white rounded-2xl border border-gray-200"
       >
         <div className="p-6 flex flex-col">
           <span className="body-regular text-gray-500">Hired</span>
@@ -128,7 +137,7 @@ const SummarySection = ({ onRefresh }) => {
       </div>
 
       <div
-        onClick={() => alert("applicants")}
+        // onClick={() => handleCardClick("interviews")}
         className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
       >
         <div className="p-6 flex flex-col">
@@ -147,7 +156,7 @@ const SummarySection = ({ onRefresh }) => {
       </div>
 
       <div
-        onClick={() => alert("jobs")}
+        onClick={() => handleCardClick("jobs")}
         className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
       >
         <div className="p-6 flex flex-col">
