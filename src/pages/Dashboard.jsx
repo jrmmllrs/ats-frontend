@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { act, useEffect, useState } from "react"
 import { FiUsers, FiUserCheck, FiCalendar, FiBriefcase, FiRefreshCw } from "react-icons/fi"
 
 import api from "../api/axios"
@@ -7,6 +7,7 @@ import PendingApplicantConfirmationModal from "../components/Modals/PendingAppli
 import RecentTable from "../components/RecentTable"
 import PendingTable from "../components/PendingTable"
 import InterviewTable from "../components/InterviewTable"
+import { useNavigate } from "react-router-dom"
 
 // Helper function to format dates TO BE REMOVED
 const formatDate = (dateString) => {
@@ -48,10 +49,12 @@ const Skeleton = ({ className = "" }) => {
 }
 
 // Summary Cards Section
-const SummarySection = ({ onRefresh }) => {
+const SummarySection = ({ onRefresh, setActiveTab }) => {
   const [summaryData, setSummaryData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const navigate = useNavigate();
+
 
   const fetchSummaryData = async () => {
     setLoading(true)
@@ -77,11 +80,24 @@ const SummarySection = ({ onRefresh }) => {
     }
   }, [onRefresh])
 
+  const handleCardClick = (tab) => {
+    if (tab === "interviews") {
+      setActiveTab(tab)
+      return;
+    }
+
+    navigate("/ats", {
+      state: {
+        view: tab,
+      }
+    });
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
       <div
-        onClick={() => alert("applicants")}
-        className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
+        onClick={() => handleCardClick("listings")}
+        className="bg-white rounded-2xl border border-gray-200 cursor-pointer hover:bg-teal-soft transition duration-200 ease-in-out"
       >
         <div className="p-6 flex flex-col">
           <span className="body-regular text-gray-500">Total Applicants</span>
@@ -99,8 +115,8 @@ const SummarySection = ({ onRefresh }) => {
       </div>
 
       <div
-        onClick={() => alert("applicants")}
-        className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
+        onClick={() => handleCardClick("analytics")}
+        className="bg-white rounded-2xl border border-gray-200 cursor-pointer hover:bg-teal-soft transition duration-200 ease-in-out"
       >
         <div className="p-6 flex flex-col">
           <span className="body-regular text-gray-500">Hired</span>
@@ -118,8 +134,8 @@ const SummarySection = ({ onRefresh }) => {
       </div>
 
       <div
-        onClick={() => alert("applicants")}
-        className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
+        onClick={() => handleCardClick("interviews")}
+        className="bg-white rounded-2xl border border-gray-200 cursor-pointer hover:bg-teal-soft transition duration-200 ease-in-out"
       >
         <div className="p-6 flex flex-col">
           <span className="body-regular text-gray-500">In Interview Process</span>
@@ -137,8 +153,8 @@ const SummarySection = ({ onRefresh }) => {
       </div>
 
       <div
-        onClick={() => alert("jobs")}
-        className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
+        onClick={() => handleCardClick("jobs")}
+        className="bg-white rounded-2xl border border-gray-200 cursor-pointer hover:bg-teal-soft transition duration-200 ease-in-out"
       >
         <div className="p-6 flex flex-col">
           <span className="body-regular text-gray-500">Open Positions</span>
@@ -403,7 +419,7 @@ export default function Dashboard() {
         </div>
 
         {/* Summary Cards */}
-        <SummarySection onRefresh={refreshCounter} />
+        <SummarySection onRefresh={refreshCounter} setActiveTab={setActiveTab} />
 
         <div className=" gap-6">
           <div className="bg-white rounded-2xl border border-gray-200">
