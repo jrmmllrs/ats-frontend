@@ -64,7 +64,7 @@ const JobsTable = ({ onSelectApplicant }) => {
         { name: 'Employment Type', selector: row => row.employmentType, sortable: true },
         { name: 'Status', selector: row => row.isOpen == "1" ? "Open" : "Closed", sortable: true },
         { name: 'Setup', selector: row => row.setupName, sortable: true },
-        { name: 'Visibility', selector: row => row.isShown == "1" ? "Shown" : "Hidden", sortable: true }
+        // { name: 'Visibility', selector: row => row.isShown == "1" ? "Shown" : "Hidden", sortable: true }
     ];
 
     return (
@@ -80,7 +80,8 @@ const JobsTable = ({ onSelectApplicant }) => {
                     fixedHeaderScrollHeight="50vh"
                     responsive
                     columns={columns}
-                    data={jobsData}
+                    // data={jobsData}
+                    data={jobsData.filter(job => job.isShown == "1")}
                     onRowClicked={handleJobRowClick}
                     pagination
                     progressPending={!jobsData.length}
