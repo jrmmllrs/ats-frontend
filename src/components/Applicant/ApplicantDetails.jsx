@@ -92,9 +92,11 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
       const backendStatus = Object.keys(statusMapping).find(key => statusMapping[key] === newStatus);
       let data = {
         "progress_id": applicant.progress_id,
+        "applicant_id": applicant.applicant_id, 
         "status": backendStatus,
         "user_id": user.user_id,
-        "change_date": isDateApplicable ? selectedDate : "N/A"
+        "change_date": isDateApplicable ? selectedDate : "N/A",
+        "previous_status": previousBackendStatus, 
       };
 
       try {
