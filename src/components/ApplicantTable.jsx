@@ -47,9 +47,13 @@ const ApplicantTable = ({ onSelectApplicant }) => {
   };
 
   const confirmStatusChange = async () => {
+
     if (!pendingStatusChange) return;
     
     const { id, progress_id, newStatus, currentStatus } = pendingStatusChange;
+
+    console.log(id);
+    
     
     // Close date picker
     setShowDatePicker(false);
@@ -61,9 +65,11 @@ const ApplicantTable = ({ onSelectApplicant }) => {
     try {
       const data = {
         "progress_id": progress_id,
+        "applicant_id": id, 
         "status": newStatus,
         "user_id": user.user_id,
-        "change_date": isDateApplicable ? selectedDate : "N/A"
+        "change_date": isDateApplicable ? selectedDate : "N/A", 
+        "previous_status": currentStatus, 
       };
       
       await api.put(`/applicant/update/status`, data);
