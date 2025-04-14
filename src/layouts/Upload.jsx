@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react"
-import axios from "axios"
 import * as XLSX from "xlsx"
 import { FiUpload, FiX, FiCheck, FiChevronLeft, FiChevronRight, FiAlertCircle, FiInfo } from "react-icons/fi"
 import useUserStore from "../context/userStore" // Import the user store
+import api from "../api/axios" // Import the API instance
 
 // Assuming ReviewApplicants is imported from a separate file
 import ReviewApplicants from "../components/Applicant/ReviewApplicants"
@@ -23,15 +23,14 @@ function Upload({ onClose }) {
   useEffect(() => {
     const fetchPositions = async () => {
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL || "http://localhost:3000"}/company/positions`
-        );
-        if (response.data && response.data.length > 0) {
+        const response = await api.get("/company/positions");
+        
+        if (response.data?.positions && Array.isArray(response.data.positions)) {
+          setPositions(response.data.positions);
+        } else if (Array.isArray(response.data)) {
           setPositions(response.data);
-          console.log("Fetched positions:", response.data);
         }
       } catch (error) {
-        console.error("Error fetching positions:", error);
         setMessage({ type: "error", text: "Failed to fetch positions" });
       }
     };
@@ -58,20 +57,28 @@ function Upload({ onClose }) {
   const findPositionIdByName = (positionName) => {
     if (!positionName || !positions.length) return null;
     
-    // Case-insensitive search
+    // Case-insensitive search by title
     const position = positions.find(
-      pos => pos.name && pos.name.toLowerCase() === positionName.toLowerCase()
+      pos => pos.title && pos.title.toLowerCase() === positionName.toLowerCase()
     );
     
     // If exact match not found, try partial match
     if (!position) {
       const partialMatch = positions.find(
-        pos => pos.name && positionName.toLowerCase().includes(pos.name.toLowerCase())
+        pos => pos.title && (
+          positionName.toLowerCase().includes(pos.title.toLowerCase()) ||
+          pos.title.toLowerCase().includes(positionName.toLowerCase())
+        )
       );
-      return partialMatch ? partialMatch.id : null;
+      
+      if (partialMatch) {
+        return partialMatch.job_id;
+      }
+      
+      return null;
     }
     
-    return position ? position.id : null;
+    return position.job_id;
   }
 
   const excelDateToJSDate = (serial) => {
@@ -95,9 +102,8 @@ function Upload({ onClose }) {
     const positionName = excelRow.position_applied || excelRow.position || "";
     const positionId = findPositionIdByName(positionName);
     
-    if (positionName && !positionId) {
-      console.log(`Position not found for: "${positionName}"`);
-    }
+    // Get default position ID if available
+    const defaultPositionId = positions.length > 0 ? positions[0].job_id : null;
     
     return {
       first_name: excelRow.first_name || excelRow.firstName || "",
@@ -108,7 +114,7 @@ function Upload({ onClose }) {
         typeof excelRow.birth_date === "number"
           ? excelDateToJSDate(excelRow.birth_date).toISOString().split("T")[0]
           : excelRow.birth_date || excelRow.birthDate || null,
-      discovered_at: excelRow.discovered_at || "Unknown",
+      discovered_at: excelRow.discovered_at || "Excel Upload",
       email: excelRow.email || excelRow.email_1 || "",
       email_1: excelRow.email || excelRow.email_1 || "",
       email_2: excelRow.email_2 || "",
@@ -116,9 +122,12 @@ function Upload({ onClose }) {
       contactNo: excelRow.contact_no || excelRow.contactNo || excelRow.mobile_number_1 || "",
       mobile_number_1: excelRow.contact_no || excelRow.contactNo || excelRow.mobile_number_1 || "",
       mobile_number_2: excelRow.mobile_number_2 || "",
-      position_id: positionId || (positions.length > 0 ? positions[0].id : "default-position-id"),
-      position_name: positionName, // Store the original position name for reference
+      // Key change: Backend expects 'position' property for mapping according to your backend code
+      position: positionName, // This is what the backend uses to look up the ID
+      position_id: positionId || defaultPositionId, // Include the ID we've already found 
+      position_name: positionName, // Keep for reference
       applied_source: excelRow.source || "Excel Upload",
+      source: excelRow.source || "Excel Upload", // Add this as backend might use it
       created_by: user?.user_id || excelRow.created_by || "system",
       updated_by: user?.user_id || excelRow.updated_by || "system",
       cv_link: excelRow.cv_link || null,
@@ -134,8 +143,8 @@ function Upload({ onClose }) {
       const formData = new FormData()
       formData.append("applicants", formattedApplicants)
 
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL || "http://localhost:3000"}/applicants/add/upload`,
+      const response = await api.post(
+        "/applicants/add/upload",
         formData,
         {
           headers: {
@@ -144,8 +153,6 @@ function Upload({ onClose }) {
         },
       )
 
-      console.log("Backend response:", response.data)
-
       if (response.data.flagged && response.data.flagged.length > 0) {
         setFlaggedApplicants(response.data.flagged)
         setReviewing(true)
@@ -153,8 +160,6 @@ function Upload({ onClose }) {
         setMessage({ type: "success", text: response.data.message })
       }
     } catch (error) {
-      console.error("Upload error:", error)
-      console.error("Error details:", error.response?.data)
       setMessage({
         type: "error",
         text: error.response?.data?.message || "Error uploading applicants",
@@ -199,11 +204,9 @@ function Upload({ onClose }) {
       }
 
       const mappedApplicants = jsonData.map(mapExcelDataToApplicant)
-      console.log("Mapped applicants:", mappedApplicants)
       setApplicants(mappedApplicants)
       await forwardToBackend(mappedApplicants)
     } catch (error) {
-      console.error("File processing error:", error)
       setMessage({ type: "error", text: "Error processing Excel file" })
     }
   }
@@ -215,10 +218,10 @@ function Upload({ onClose }) {
 
       // Find position ID if it wasn't found during initial mapping
       let positionId = acceptedApplicant.position_id;
-      if (acceptedApplicant.position_name && (!positionId || positionId === "default-position-id")) {
-        positionId = findPositionIdByName(acceptedApplicant.position_name);
+      if (acceptedApplicant.position && (!positionId || positionId === "default-position-id")) {
+        positionId = findPositionIdByName(acceptedApplicant.position);
         if (!positionId && positions.length > 0) {
-          positionId = positions[0].id; // Fallback to first position if none found
+          positionId = positions[0].job_id; // Use job_id instead of id
         }
       }
 
@@ -235,19 +238,18 @@ function Upload({ onClose }) {
           cv_link: acceptedApplicant.cv_link,
           discovered_at: acceptedApplicant.discovered_at,
           referrer_id: acceptedApplicant.referrer_id,
-          created_by: user?.id || acceptedApplicant.created_by || "system",
-          updated_by: user?.id || acceptedApplicant.updated_by || "system",
+          created_by: user?.user_id || acceptedApplicant.created_by || "system",
+          updated_by: user?.user_id || acceptedApplicant.updated_by || "system",
           company_id: acceptedApplicant.company_id,
           position_id: positionId,
+          position: acceptedApplicant.position, // Include original position name
           test_result: acceptedApplicant.test_result,
           date_applied: acceptedApplicant.date_applied,
         }),
       }
 
-      console.log("Accepted applicant payload:", payload)
-
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL || "http://localhost:3000"}/applicants/add`,
+      const response = await api.post(
+        "/applicants/add",
         payload,
         {
           headers: {
@@ -267,7 +269,6 @@ function Upload({ onClose }) {
         }
       }
     } catch (error) {
-      console.error("Error accepting applicant:", error)
       setMessage({
         type: "error",
         text: error.response?.data?.message || "Error saving accepted applicant",

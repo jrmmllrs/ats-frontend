@@ -50,7 +50,7 @@ function ReviewApplicants({ applicants, currentIndex, onNext, onPrevious, onAcce
 
               <div className="bg-white p-3 rounded-md">
                 <p className="font-medium text-[#008080]">Date Applied:</p>
-                <p className="text-gray-700">{applicant.discovered_at || "Not specified"}</p>
+                <p className="text-gray-700">{applicant.date_applied || "Not specified"}</p>
               </div>
 
               <div className="bg-white p-3 rounded-md">
