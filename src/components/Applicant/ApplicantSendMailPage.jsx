@@ -26,6 +26,8 @@ import {
 import api from "../../api/axios";
 import ConfirmationModal from "../Modals/ConfirmationModal";
 import SendMailToast from "../../assets/SendMailToast";
+import BulletList from "@tiptap/extension-bullet-list";
+import { bulletList } from "@tiptap/pm/schema-list";
 
 function ApplicantSendMailPage({ applicant }) {
   const [subject, setSubject] = useState(
@@ -45,7 +47,7 @@ function ApplicantSendMailPage({ applicant }) {
     extensions: [
       StarterKit,
       Underline,
-      Strike,
+      BulletList,
       CodeBlock,
       Blockquote,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
@@ -100,7 +102,7 @@ function ApplicantSendMailPage({ applicant }) {
       const jsonContent = generateJSON(template.body, [
         StarterKit,
         Underline,
-        Strike,
+        bulletList,
         CodeBlock,
         Blockquote,
         TextAlign.configure({ types: ["heading", "paragraph"] }),
@@ -337,10 +339,17 @@ function ApplicantSendMailPage({ applicant }) {
             className="h-6 w-6 cursor-pointer"
             onClick={() => editor.chain().focus().toggleUnderline().run()}
           />
+
           <ListBulletIcon
-            className="h-6 w-6 cursor-pointer"
+            className={`h-6 w-6 cursor-pointer ${editor.isActive("bulletList") ? "text-teal-600" : "text-gray-600"
+              }`}
             onClick={() => editor.chain().focus().toggleBulletList().run()}
           />
+          {/* <ListBulletIcon
+            className="h-6 w-6 cursor-pointer"
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+          /> */}
+
           <Bars3BottomLeftIcon
             className="h-6 w-6 cursor-pointer"
             onClick={() => editor.chain().focus().setTextAlign("left").run()}
