@@ -8,7 +8,6 @@ import { searchApplicant } from "../utils/applicantDataUtils";
 import moment from "moment";
 
 export const useStages = () => {
-  //const [stages, setStages] = useState(initialStages);
   const { stages, setStages } = statusCounterStore();
   const okay = ["sd", "ds"];
 
