@@ -4,7 +4,7 @@ export const initialStages = [
     count: 0,
     statuses: [
       { name: "Unprocessed", count: 0, selected: false, value: "UNPROCESSED" },
-      { name: "Pre-screening", count: 0, selected: false, value: "PRE-SCREENING" },
+      { name: "Pre-Screening", count: 0, selected: false, value: "PRE_SCREENING" },
       { name: "Test Sent", count: 0, selected: false, value: "TEST_SENT" },
     ],
     selected: false,
