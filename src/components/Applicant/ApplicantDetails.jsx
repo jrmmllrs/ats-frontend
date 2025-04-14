@@ -411,7 +411,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                   Discussion
                 </button>
               )}
-              {user.feature_names && user.feature_names["60c834d5-fa4b-11ef-a725-0af0d960a833"] === "Send Email" && (
+              {user.feature_names && user.feature_names["d878490d-e446-454c-83fa-7828d7782bf8"] === "Send Mail" && (
                 <button
                   className={`px-4 py-1 rounded-md ${activeTab === 'sendMail'
                     ? 'bg-[#008080] text-white'
@@ -458,4 +458,4 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   );
 }
 
-export default ApplicantDetails;
+export default ApplicantDetails; 
