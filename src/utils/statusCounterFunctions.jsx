@@ -26,7 +26,7 @@ export const filterCounter = async (position, setStages, initialStages, setPosit
   if (position != "All") {
     counts = await api.get(`/counter/?position=${position}`);
   }
-  else{
+  else {
     counts = await api.get(`/counter`);
   }
 
@@ -59,14 +59,14 @@ export const clearSelections = (stages, setStages, setSelectedStatuses, clearSta
 
   fetchCounts(setStages, initialStages);
 
-  if (search === "") {        
+  if (search === "") {
     dateFilterType === 'month' ?
-    filterApplicants("All", setApplicantData, [], moment(dateFilter).format("MMMM"), dateFilterType) :
-    filterApplicants("All", setApplicantData, [], moment(dateFilter).format("YYYY"), dateFilterType)
+      filterApplicants("All", setApplicantData, [], moment(dateFilter).format("MMMM"), dateFilterType) :
+      filterApplicants("All", setApplicantData, [], moment(dateFilter).format("YYYY"), dateFilterType)
   }
   else {
-    dateFilterType === 'month' ? 
-    searchApplicant(search, setApplicantData, "All", [], dateFilterType, moment(dateFilter).format("MMMM")):
-    searchApplicant(search, setApplicantData, "All", [],  dateFilterType, moment(dateFilter).format("YYYY"));
+    dateFilterType === 'month' ?
+      searchApplicant(search, setApplicantData, "All", [], dateFilterType, moment(dateFilter).format("MMMM")) :
+      searchApplicant(search, setApplicantData, "All", [], dateFilterType, moment(dateFilter).format("YYYY"));
   }
 };
