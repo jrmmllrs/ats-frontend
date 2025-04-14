@@ -38,8 +38,6 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   const [showStatusHistoryModal, setShowStatusHistoryModal] = useState(false);
 
   useEffect(() => {
-    console.log(applicant.status);
-    console.log(statuses);
 
     if (applicant && applicant.status) {
       setStatus(statusMapping[applicant.status] || '');
