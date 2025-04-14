@@ -405,7 +405,8 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
           {/* Tabs */}
           <div className="mt-auto pt-5 flex justify-end">
             <div className="flex gap-2 bg-teal-soft p-1 rounded-md">
-              {user.feature_names && user.feature_names["60c8341f-fa4b-11ef-a725-0af0d960a833"] === "Interview Notes" && (
+              {/* Service ID */}
+              {user.feature_names && user.feature_names["999b8e93-ca9a-4aa0-9242-5cf1e289a205"] === "Interview Notes" && (
                 <button
                   className={`px-4 py-1 rounded-md ${activeTab === 'discussion'
                     ? 'bg-[#008080] text-white'
@@ -437,17 +438,17 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
 
       </div>
 
-{/* Toast Messages */}
-<div className="fixed top-4 right-4 space-y-2">
-  {toasts.map(toast => (
-    <Toast
-      key={toast.id}
-      toast={toast}
-      undoStatusUpdate={undoStatusUpdate}
-      removeToast={removeToast}
-    />
-  ))}
-</div>
+      {/* Toast Messages */}
+      <div className="fixed top-4 right-4 space-y-2">
+        {toasts.map(toast => (
+          <Toast
+            key={toast.id}
+            toast={toast}
+            undoStatusUpdate={undoStatusUpdate}
+            removeToast={removeToast}
+          />
+        ))}
+      </div>
       {isEditFormOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
           <div className="bg-white w-full h-full overflow-auto lg:ml-72 pointer-events-auto">

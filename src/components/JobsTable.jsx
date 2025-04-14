@@ -8,8 +8,9 @@ import setupStore from '../context/setupStore';
 import industriesStore from '../context/industriesStore';
 import { fetchSetups } from '../utils/setupUtils';
 import { fetchIndustries } from '../utils/industriesUtils';
+import { FaTrash } from "react-icons/fa";
 
-const JobsTable = ({ onSelectApplicant }) => {
+const JobsTable = () => {
     const { jobsData, setJobsData, activeTab, setActiveTab } = jobStore();
     const [toasts, setToasts] = useState([]);
     const [isAddJobModalOpen, setIsAddJobModalOpen] = useState(false);
@@ -17,6 +18,8 @@ const JobsTable = ({ onSelectApplicant }) => {
     const [jobData, setJobData] = useState({});
     const { setupData, setSetupData } = setupStore();
     const { industries, setIndustries } = industriesStore();
+    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+
 
     useEffect(() => {
         const getJobsData = async () => {
@@ -31,7 +34,6 @@ const JobsTable = ({ onSelectApplicant }) => {
         setJobData(row)
         setIsAddJobModalOpen(true);
     };
-
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -64,7 +66,7 @@ const JobsTable = ({ onSelectApplicant }) => {
         { name: 'Employment Type', selector: row => row.employmentType, sortable: true },
         { name: 'Status', selector: row => row.isOpen == "1" ? "Open" : "Closed", sortable: true },
         { name: 'Setup', selector: row => row.setupName, sortable: true },
-        { name: 'Visibility', selector: row => row.isShown == "1" ? "Shown" : "Hidden", sortable: true }
+        // { name: 'Visibility', selector: row => row.isShown == "1" ? "Shown" : "Hidden", sortable: true }
     ];
 
     return (
@@ -80,7 +82,7 @@ const JobsTable = ({ onSelectApplicant }) => {
                     fixedHeaderScrollHeight="50vh"
                     responsive
                     columns={columns}
-                    data={jobsData}
+                    data={jobsData.filter(job => job.isShown == "1")}
                     onRowClicked={handleJobRowClick}
                     pagination
                     progressPending={!jobsData.length}
@@ -101,8 +103,17 @@ const JobsTable = ({ onSelectApplicant }) => {
             {/* Edit Job Modal */}
             {isAddJobModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white p-6 rounded-lg text-gray-dark border border-gray-light w-full max-w-[50vw] ml-70">
-                        <h2 className="headline mb-4">Edit Job</h2>
+                    <div className="bg-white p-4 rounded-lg text-gray-dark border border-gray-light w-full max-w-[50vw] ml-70">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="headline">Edit Job</h2>
+                            <button
+                                onClick={() => setIsDeleteConfirmOpen(true)}
+                                className="p-1 rounded hover:bg-red-100 transition-colors cursor-pointer"
+                                title="Delete Job"
+                            >
+                                <FaTrash className="size-4 text-red-500 hover:text-red-600" />
+                            </button>
+                        </div>
 
                         <form onSubmit={handleSubmit} className="space-y-4 body-regular">
                             <div className="grid grid-cols-2 gap-4">
@@ -259,12 +270,12 @@ const JobsTable = ({ onSelectApplicant }) => {
 
                                 {/* Visibility */}
                                 <div>
-                                    <label className="block">Visibility</label>
+                                    {/* <label className="block">Visibility</label> */}
                                     <select
                                         name="isShown"
                                         value={jobData.isShown}
                                         onChange={handleChange}
-                                        className="w-full p-2 border border-gray-light rounded-md"
+                                        className="w-full p-2 border border-gray-light rounded-md hidden"
                                     >
                                         <option value="1">Shown</option>
                                         <option value="0">Hidden</option>
@@ -287,8 +298,61 @@ const JobsTable = ({ onSelectApplicant }) => {
                             </div>
                         </form>
                     </div>
+                </div >
+            )}
+            {isDeleteConfirmOpen && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black/50 p-4 z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-sm w-full shadow-lg">
+                        <h2 className="text-lg font-semibold mb-4">Confirm Delete</h2>
+                        <p className="mb-6">Are you sure you want to Delete this job?</p>
+                        <div className="flex justify-end space-x-2">
+                            <button
+                                onClick={() => setIsDeleteConfirmOpen(false)}
+                                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-100"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    try {
+                                        const updatedJob = {
+                                            ...jobData,
+                                            isShown: "0",
+                                            isOpen: "0",
+                                        };
+                                        await updateJob(updatedJob);
+                                        if (activeTab === "open") {
+                                            getOpenJobs(setJobsData);
+                                        } else if (activeTab === "close") {
+                                            getCloseJobs(setJobsData);
+                                        } else {
+                                            fetchJobs(setJobsData);
+                                        }
+                                        await fetchCloseJobsCount(setCloseJobsCount);
+                                        await fetchOpenJobsCount(setOpenJobsCount);
+                                        setIsAddJobModalOpen(false);
+                                        setIsDeleteConfirmOpen(false);
+                                        setToasts(prev => [
+                                            ...prev,
+                                            {
+                                                id: Date.now(),
+                                                message: "Job hidden successfully",
+                                                type: "success",
+                                            },
+                                        ]);
+                                    } catch (error) {
+                                        console.error("Error hiding job:", error);
+                                    }
+                                }}
+                                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                            >
+                                Yes, Delete
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
+
         </>
     );
 };
