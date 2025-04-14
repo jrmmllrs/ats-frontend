@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react"
 import axios from "axios"
 import * as XLSX from "xlsx"
 import { FiUpload, FiX, FiCheck, FiChevronLeft, FiChevronRight, FiAlertCircle, FiInfo } from "react-icons/fi"
+import useUserStore from "../context/userStore" // Import the user store
 
 // Assuming ReviewApplicants is imported from a separate file
 import ReviewApplicants from "../components/Applicant/ReviewApplicants"
@@ -15,6 +16,28 @@ function Upload({ onClose }) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [dragActive, setDragActive] = useState(false)
   const fileInputRef = useRef(null)
+  const [positions, setPositions] = useState([]) // Store all positions
+  const { user } = useUserStore() // Get current user from store
+
+  // Fetch available positions from the API
+  useEffect(() => {
+    const fetchPositions = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL || "http://localhost:3000"}/company/positions`
+        );
+        if (response.data && response.data.length > 0) {
+          setPositions(response.data);
+          console.log("Fetched positions:", response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching positions:", error);
+        setMessage({ type: "error", text: "Failed to fetch positions" });
+      }
+    };
+
+    fetchPositions();
+  }, []);
 
   useEffect(() => {
     if (!reviewing) {
@@ -29,6 +52,26 @@ function Upload({ onClose }) {
     setFlaggedApplicants([])
     setReviewing(false)
     setCurrentIndex(0)
+  }
+
+  // Function to find position ID by name
+  const findPositionIdByName = (positionName) => {
+    if (!positionName || !positions.length) return null;
+    
+    // Case-insensitive search
+    const position = positions.find(
+      pos => pos.name && pos.name.toLowerCase() === positionName.toLowerCase()
+    );
+    
+    // If exact match not found, try partial match
+    if (!position) {
+      const partialMatch = positions.find(
+        pos => pos.name && positionName.toLowerCase().includes(pos.name.toLowerCase())
+      );
+      return partialMatch ? partialMatch.id : null;
+    }
+    
+    return position ? position.id : null;
   }
 
   const excelDateToJSDate = (serial) => {
@@ -48,6 +91,14 @@ function Upload({ onClose }) {
   }
 
   const mapExcelDataToApplicant = (excelRow) => {
+    // Try to find position ID by name from the Excel data
+    const positionName = excelRow.position_applied || excelRow.position || "";
+    const positionId = findPositionIdByName(positionName);
+    
+    if (positionName && !positionId) {
+      console.log(`Position not found for: "${positionName}"`);
+    }
+    
     return {
       first_name: excelRow.first_name || excelRow.firstName || "",
       middle_name: excelRow.middle_name || excelRow.middleName || "",
@@ -65,10 +116,11 @@ function Upload({ onClose }) {
       contactNo: excelRow.contact_no || excelRow.contactNo || excelRow.mobile_number_1 || "",
       mobile_number_1: excelRow.contact_no || excelRow.contactNo || excelRow.mobile_number_1 || "",
       mobile_number_2: excelRow.mobile_number_2 || "",
-      position_id: excelRow.position_id || "default-position-id",
-      applied_source: excelRow.applied_source || "Excel Upload",
-      created_by: excelRow.created_by || "system",
-      updated_by: excelRow.updated_by || "system",
+      position_id: positionId || (positions.length > 0 ? positions[0].id : "default-position-id"),
+      position_name: positionName, // Store the original position name for reference
+      applied_source: excelRow.source || "Excel Upload",
+      created_by: user?.user_id || excelRow.created_by || "system",
+      updated_by: user?.user_id || excelRow.updated_by || "system",
       cv_link: excelRow.cv_link || null,
     }
   }
@@ -147,6 +199,7 @@ function Upload({ onClose }) {
       }
 
       const mappedApplicants = jsonData.map(mapExcelDataToApplicant)
+      console.log("Mapped applicants:", mappedApplicants)
       setApplicants(mappedApplicants)
       await forwardToBackend(mappedApplicants)
     } catch (error) {
@@ -159,6 +212,15 @@ function Upload({ onClose }) {
     try {
       setIsUploading(true)
       const acceptedApplicant = flaggedApplicants[index].applicant
+
+      // Find position ID if it wasn't found during initial mapping
+      let positionId = acceptedApplicant.position_id;
+      if (acceptedApplicant.position_name && (!positionId || positionId === "default-position-id")) {
+        positionId = findPositionIdByName(acceptedApplicant.position_name);
+        if (!positionId && positions.length > 0) {
+          positionId = positions[0].id; // Fallback to first position if none found
+        }
+      }
 
       // Create payload similar to AddApplicantForm.jsx
       const payload = {
@@ -173,17 +235,16 @@ function Upload({ onClose }) {
           cv_link: acceptedApplicant.cv_link,
           discovered_at: acceptedApplicant.discovered_at,
           referrer_id: acceptedApplicant.referrer_id,
-          created_by: acceptedApplicant.created_by,
-          updated_by: acceptedApplicant.updated_by,
+          created_by: user?.id || acceptedApplicant.created_by || "system",
+          updated_by: user?.id || acceptedApplicant.updated_by || "system",
           company_id: acceptedApplicant.company_id,
-          position_id: acceptedApplicant.position_id,
+          position_id: positionId,
           test_result: acceptedApplicant.test_result,
           date_applied: acceptedApplicant.date_applied,
         }),
       }
 
       console.log("Accepted applicant payload:", payload)
-
 
       const response = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL || "http://localhost:3000"}/applicants/add`,
