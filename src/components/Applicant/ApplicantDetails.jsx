@@ -6,24 +6,26 @@ import Toast from '../../assets/Toast';
 import { FaCakeCandles, FaFileLines } from 'react-icons/fa6';
 import AddApplicantForm from '../../pages/AddApplicantForm';
 import { statusMapping } from '../../hooks/statusMapping';
+import { useApplicantData } from '../../hooks/useApplicantData';
 
-const statuses = [
-  "Test Sent",
-  "Interview Schedule Sent",
-  "First Interview",
-  "Second Interview",
-  "Third Interview",
-  "Fourth Interview",
-  "Follow Up Interview",
-  "For Job Offer",
-  "Job Offer Rejected",
-  "Job Offer Accepted",
-  "Withdrew Application",
-  "Blacklisted",
-  "Not Fit",
-];
+// const statuses = [
+//   "Test Sent",
+//   "Interview Schedule Sent",
+//   "First Interview",
+//   "Second Interview",
+//   "Third Interview",
+//   "Fourth Interview",
+//   "Follow Up Interview",
+//   "For Job Offer",
+//   "Job Offer Rejected",
+//   "Job Offer Accepted",
+//   "Withdrew Application",
+//   "Blacklisted",
+//   "Not Fit",
+// ];
 
 function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate }) {
+  const { statuses } = useApplicantData();
   const [status, setStatus] = useState('');
   const [toasts, setToasts] = useState([]);
   const { user } = useUserStore();
@@ -36,6 +38,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   const [showStatusHistoryModal, setShowStatusHistoryModal] = useState(false);
 
   useEffect(() => {
+
     if (applicant && applicant.status) {
       setStatus(statusMapping[applicant.status] || '');
 
@@ -271,14 +274,14 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
             <div className="flex items-center">
               <select
                 className="border body-regular border-gray-light h-8 rounded-md cursor-pointer"
-                value={status}
+                value={applicant.status}
                 onChange={handleStatusChange}
                 disabled={toasts.length > 0 || showDatePicker} // Disable when there are active toasts or date picker is open
               >
                 <option value="" disabled>Select status</option>
                 {statuses.map((statusOption) => (
                   <option key={statusOption} value={statusOption}>
-                    {statusOption}
+                    {statusOption.toLowerCase().split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                   </option>
                 ))}
               </select>

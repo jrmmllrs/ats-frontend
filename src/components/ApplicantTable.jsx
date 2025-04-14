@@ -73,6 +73,8 @@ const ApplicantTable = ({ onSelectApplicant }) => {
       };
       
       await api.put(`/applicant/update/status`, data);
+
+      console.log(data);
       
       // Update local state and show toast notification
       addToast(applicant, statusMapping[newStatus] || newStatus, statusMapping);
@@ -136,7 +138,7 @@ const ApplicantTable = ({ onSelectApplicant }) => {
         >
           {statuses.map(status => (
             <option key={status} value={status}>
-              {statusMapping[status] || status}
+              {status.toLowerCase().split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
             </option>
           ))}
         </select>
