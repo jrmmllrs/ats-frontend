@@ -5,13 +5,18 @@ import Toast from '../assets/Toast';
 import industriesStore from '../context/industriesStore';
 import { fetchIndustries } from '../utils/industriesUtils';
 import moment from 'moment';
+import AddIndustryModal from './Modals/AddIndustryModal';
 
 const IndustriesTable = ({ onSelectApplicant }) => {
     const { industries, setIndustries } = industriesStore();
+    const [industry, setIndustry] = useState({});
+    const [isEditIndustryModalOpen, setIsEditIndustryModalOpen] = useState(false);
     const [toasts, setToasts] = useState([]);
 
     const handleJobRowClick = (row) => {
-        alert("clicked");
+        console.log(row);
+        setIndustry(row);
+        setIsEditIndustryModalOpen(true);
     };
 
     const columns = [
@@ -41,6 +46,10 @@ const IndustriesTable = ({ onSelectApplicant }) => {
                     progressComponent={<LoadingComponent />}
                 />
             )}
+
+            {
+                isEditIndustryModalOpen ? <AddIndustryModal onClose={() => setIsEditIndustryModalOpen(false)} industry={industry}/> : ""
+            }
 
             {/* <div className="fixed top-4 right-4 space-y-2">
                 {toasts.map(toast => (
