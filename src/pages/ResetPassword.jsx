@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import api from '../api/axios';
+import { useNavigate } from 'react-router-dom';
 
 function ResetPassword() {
     const [step, setStep] = useState(1); // 1 = Request, 2 = OTP, 3 = New Password
@@ -12,6 +13,7 @@ function ResetPassword() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const navigate = useNavigate(); 
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -40,6 +42,8 @@ function ResetPassword() {
             });
             if (res.data.proceed) {
                 setSuccess('OTP verified');
+                console.log(res.data);
+                
                 setStep(3);
             }
         } catch (err) {
@@ -60,6 +64,7 @@ function ResetPassword() {
             setSuccess('Password reset successful!');
             setStep(1);
             setFormData({ user_email: '', otp_code: '', newPassword: '' });
+            navigate('/login'); 
         } catch (err) {
             setError(err.response?.data?.error || 'Failed to reset password');
         } finally {
