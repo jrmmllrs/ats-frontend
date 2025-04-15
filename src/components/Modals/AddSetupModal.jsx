@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import useUserStore from "../../context/userStore";
-import { addSetup } from "../../utils/setupUtils";
+import { addSetup, editSetup } from "../../utils/setupUtils";
 import setupStore from "../../context/setupStore";
 
-const AddSetupModal = ({ onClose }) => {
+const AddSetupModal = ({ onClose, setupName, setupId }) => {
     const { setSetupData } = setupStore();
     const { user } = useUserStore();
     const [setup, setsetup] = useState({
@@ -14,9 +14,9 @@ const AddSetupModal = ({ onClose }) => {
     useEffect(() => {
         if (user) {
             setsetup((prev) => ({
-                ...prev,
+                setup_name: setupName ? setupName : "",
                 userId: user.user_id,
-            }))
+            }))  
         }
     },[user]);
 
@@ -26,7 +26,7 @@ const AddSetupModal = ({ onClose }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();  
-        addSetup(setSetupData, setup);
+        setupName ? editSetup(setSetupData, setup, setupId) : addSetup(setSetupData, setup);
         onClose();
     };
 
@@ -35,7 +35,7 @@ const AddSetupModal = ({ onClose }) => {
             <div className="rounded-3xl bg-white mx-10 p-6 body-regular border border-gray-light w-[400px]">
                 {/* Header */}
                 <div className="flex items-center justify-between pb-1 border-b-2 border-gray-light">
-                    <h1 className="headline font-semibold text-gray-dark">Add New Setup</h1>
+                    <h1 className="headline font-semibold text-gray-dark">{setupName ? "Edit" : "Add New Setup"}</h1>
                 </div>
 
                 {/* Form */}
@@ -45,7 +45,8 @@ const AddSetupModal = ({ onClose }) => {
                         <label className="block text-gray-700">Setup Name</label>
                         <input
                             type="text"
-                            name="setupName"
+                            name="setup_name"
+                            value={setup.setup_name}
                             onChange={handleChange}
                             className="w-full p-2 border border-gray-300 rounded-md"
                             required

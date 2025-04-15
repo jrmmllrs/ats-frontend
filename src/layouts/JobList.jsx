@@ -264,7 +264,7 @@ const JobList = () => {
                                 </div>
 
                                 {/* Visibility */}
-                                <div>
+                                {/* <div>
                                     <label className="block">Visibility</label>
                                     <select
                                         name="isShown"
@@ -274,7 +274,7 @@ const JobList = () => {
                                         <option value="1">Shown</option>
                                         <option value="0">Hidden</option>
                                     </select>
-                                </div>
+                                </div> */}
                             </div>
 
                             {/* Buttons */}

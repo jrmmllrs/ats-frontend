@@ -4,13 +4,20 @@ import Toast from '../assets/Toast';
 import setupStore from '../context/setupStore';
 import { fetchSetups } from '../utils/setupUtils';
 import moment from 'moment';
+import AddSetupModal from './Modals/AddSetupModal';
 
 const SetupTable = ({ onSelectApplicant }) => {
     const { setupData, setSetupData } = setupStore(); 
+    const [setupName, setSetupName] = useState("");
+    const [setupId, setSetupId] = useState("")
     const [toasts, setToasts] = useState([]);
+    const [isEditSetupModalOpen, setIsEditSetupModalOpen] = useState(false);
 
     const handleJobRowClick = (row) => {
-        alert("clicked");
+        setSetupName(row.setupName)
+        setSetupId(row.setupId)
+        console.log(row);
+       setIsEditSetupModalOpen(true);
     };
 
     const columns = [
@@ -39,6 +46,10 @@ const SetupTable = ({ onSelectApplicant }) => {
                     progressComponent={<LoadingComponent />}
                 />
             )}
+
+            {
+                isEditSetupModalOpen ? <AddSetupModal onClose={() => setIsEditSetupModalOpen(false)} setupName={setupName} setupId={setupId}/> : null
+            }
 
             {/* <div className="fixed top-4 right-4 space-y-2">
                 {toasts.map(toast => (
