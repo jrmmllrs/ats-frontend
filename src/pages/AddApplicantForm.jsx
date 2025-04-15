@@ -48,7 +48,7 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
   const [pendingSubmit, setPendingSubmit] = useState(false)
   const user = useUserStore((state) => state.user)
   const [modalType, setModalType] = useState(null) // 'submit' or 'cancel'
-
+  const [cvAttatchement, setcvAttatchement] = useState(); 
 
 
   // Determine if we're editing or adding based on initialData
@@ -207,6 +207,35 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
       }))
     }
   }
+
+  const handleCVAttachementChange  = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      console.log(e.target.files[0]);
+      const file = e.target.files[0]; 
+      handleUploadCV(file); 
+    }else {
+      console.log('file unsuccessfully read');
+    }
+  }
+
+  const handleUploadCV = async (file) => {
+      const formdata = new FormData(); 
+      formdata.append('file', file); 
+      formdata.append('company_id', user.company_id); 
+
+      await api.post("/upload/gdrive/cv", formdata).then((response) => {
+        console.log('response', response);
+        
+        setFormData((prev) => ({
+          ...prev, 
+          cvLink: response.data.fileUrl
+        }))
+      }).catch((error) => {
+        console.log(error);
+      })
+  }
+
+
 
   const handleRemovePhone = (index) => {
     setFormData((prev) => {
@@ -624,11 +653,9 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
                   </label>
                   <div className="relative">
                     <input
-                      type="url"
+                      type="file"
                       name="cvLink"
-                      placeholder="cv.link@drive.com"
-                      value={formData.cvLink}
-                      onChange={handleChange}
+                      onChange={handleCVAttachementChange}
                       onBlur={handleBlur}
                       className="w-full p-2 border border-gray-light rounded-md focus:outline-none pl-10 body-regular"
                     />
