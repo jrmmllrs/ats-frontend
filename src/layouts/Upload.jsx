@@ -114,7 +114,7 @@ function Upload({ onClose }) {
         typeof excelRow.birth_date === "number"
           ? excelDateToJSDate(excelRow.birth_date).toISOString().split("T")[0]
           : excelRow.birth_date || excelRow.birthDate || null,
-      discovered_at: excelRow.discovered_at || "Excel Upload",
+      discovered_at: excelRow.discovered_at || "",
       email: excelRow.email || excelRow.email_1 || "",
       email_1: excelRow.email || excelRow.email_1 || "",
       email_2: excelRow.email_2 || "",
@@ -126,8 +126,8 @@ function Upload({ onClose }) {
       position: positionName, // This is what the backend uses to look up the ID
       position_id: positionId || defaultPositionId, // Include the ID we've already found 
       position_name: positionName, // Keep for reference
-      applied_source: excelRow.source || "Excel Upload",
-      source: excelRow.source || "Excel Upload", // Add this as backend might use it
+      applied_source: excelRow.source || "",
+      source: excelRow.source || "", // Add this as backend might use it
       created_by: user?.user_id || excelRow.created_by || "system",
       updated_by: user?.user_id || excelRow.updated_by || "system",
       cv_link: excelRow.cv_link || null,
