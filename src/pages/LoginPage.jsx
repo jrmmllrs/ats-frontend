@@ -185,7 +185,11 @@ export default function LoginPage() {
               </button>
             </form>
 
-            <Link to="/reset-password"> <div className="flex justify-center items-center text-sm underline pt-3">Forgot password</div></Link>
+            <div className="text-center">
+                <Link to="/reset-password" className="text-sm text-teal-600 hover:text-teal-700 hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
           </div>
         </div>
 
