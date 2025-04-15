@@ -92,7 +92,8 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
 
     // Update the applicant status in the backend
     if (applicant && applicant.applicant_id) {
-      const backendStatus = Object.keys(statusMapping).find(key => statusMapping[key] === newStatus);
+      //const backendStatus = Object.keys(statusMapping).find(key => statusMapping[key] === newStatus);
+      const backendStatus = newStatus;
       let data = {
         "progress_id": applicant.progress_id,
         "applicant_id": applicant.applicant_id, 

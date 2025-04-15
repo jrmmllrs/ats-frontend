@@ -1,5 +1,5 @@
 export const statusMapping = { 
-    "NONE": "White Listed",
+    "NONE": "None",
     "UNPROCESSED": "Unprocessed",
     "PRE_SCREENING": "Pre-Screening",
     "TEST_SENT": "Test Sent",
