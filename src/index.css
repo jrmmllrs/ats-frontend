@@ -21,29 +21,24 @@
   font-family: var(--font-sans);
   font-size: var(--text-large);
   font-weight: 600;
-  /* color: var(--color-gray-dark); */
 }
 .headline {
   font-family: var(--font-sans);
   font-size: var(--text-medium);
   font-weight: 600;
-  /* color: var(--color-gray-dark); */
 }
 .body-bold {
   font-family: var(--font-sans);
   font-size: var(--text-small);
   font-weight: 600;
-  /* color: var(--color-gray-dark); */
 }
 .body-regular {
   font-family: var(--font-sans);
   font-size: var(--text-small);
   font-weight: 400;
-  /* color: var(--color-gray-dark); */
 }
 .body-tiny {
   font-family: var(--font-sans);
   font-size: var(--text-xsmall);
   font-weight: 400;
-  /* color: var(--color-gray-dark); */
 }
