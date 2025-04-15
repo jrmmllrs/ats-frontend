@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import api from '../api/axios';
 
 function ResetPassword() {
     const [step, setStep] = useState(1); // 1 = Request, 2 = OTP, 3 = New Password
@@ -20,7 +21,7 @@ function ResetPassword() {
     const handleRequestReset = async () => {
         setLoading(true);
         try {
-            const res = await axios.post('/api/password/resset-request', { user_email: formData.user_email });
+            const res = api.post('/password/reset-request', { user_email: formData.user_email });
             setSuccess('OTP sent to your email');
             setStep(2);
         } catch (err) {
@@ -33,7 +34,7 @@ function ResetPassword() {
     const handleVerifyOTP = async () => {
         setLoading(true);
         try {
-            const res = await axios.post('/api/password/verify-otp', {
+            const res = await api.post('/password/verify-otp', {
                 user_email: formData.user_email,
                 otp_code: formData.otp_code,
             });
@@ -51,7 +52,7 @@ function ResetPassword() {
     const handleResetPassword = async () => {
         setLoading(true);
         try {
-            const res = await axios.post('/api/password/reset-password', {
+            const res = await api.post('/password/reset-password', {
                 user_email: formData.user_email,
                 otp_code: formData.otp_code,
                 newPassword: formData.newPassword,
