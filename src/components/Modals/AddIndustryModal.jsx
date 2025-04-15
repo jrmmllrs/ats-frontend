@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { FaTimes } from "react-icons/fa";
-import { addIndustry } from "../../utils/industriesUtils";
+import { addIndustry, editIndustry } from "../../utils/industriesUtils";
 import industriesStore from "../../context/industriesStore";
 import useUserStore from "../../context/userStore";
 
-const AddIndustryModal = ({ onClose }) => {
+const AddIndustryModal = ({ onClose, industry }) => {
     const { setIndustries } = industriesStore();
     const { user } = useUserStore();
     const [industryData, setIndustryData] = useState({
@@ -16,7 +16,8 @@ const AddIndustryModal = ({ onClose }) => {
     useEffect(() => {
         if (user) {
             setIndustryData((prev) => ({
-                ...prev,
+                industryName: industry ? industry.industryName : "",
+                assessmentUrl: industry ? industry.assessmentUrl : "",
                 userId: user.user_id,
             }))
         }
@@ -28,7 +29,7 @@ const AddIndustryModal = ({ onClose }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        await addIndustry(setIndustries, industryData);
+        industry ? await editIndustry(setIndustries, industryData, industry.industryId) : await addIndustry(setIndustries, industryData);
         onClose();
     };
 
@@ -37,7 +38,7 @@ const AddIndustryModal = ({ onClose }) => {
             <div className="rounded-3xl bg-white mx-10 p-6 body-regular border border-gray-light w-[400px]">
                 {/* Header */}
                 <div className="flex items-center justify-between pb-1 border-b-2 border-gray-light">
-                    <h1 className="headline font-semibold text-gray-dark">Add New Industry</h1>
+                    <h1 className="headline font-semibold text-gray-dark">{industry ? "Edit Industry" : "Add New Industry"}</h1>
                 </div>
 
                 {/* Form */}
@@ -48,6 +49,7 @@ const AddIndustryModal = ({ onClose }) => {
                         <input
                             type="text"
                             name="industryName"
+                            value={industryData.industryName}
                             onChange={handleChange}
                             className="w-full p-2 border border-gray-300 rounded-md"
                             required
@@ -60,6 +62,7 @@ const AddIndustryModal = ({ onClose }) => {
                         <input
                             type="text"
                             name="assessmentUrl"
+                            value={industryData.assessmentUrl}
                             onChange={handleChange}
                             className="w-full p-2 border border-gray-300 rounded-md"
                         />
