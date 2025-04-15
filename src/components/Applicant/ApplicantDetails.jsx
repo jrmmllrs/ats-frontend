@@ -252,10 +252,10 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
               Test Result
             </a>
           </div>
-          <div className="mt-1 flex items-center">
+          <div className="mt-1 flex items-censter">
             <FaAddressCard className="mr-2 h-4 w-4" />
             <a
-              href={applicant.resume_url}
+              href={applicant.cv_link}
               target="_blank"
               rel="noopener noreferrer"
               className="underline block mt-1 cursor-pointer"
