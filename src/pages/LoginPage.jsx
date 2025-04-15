@@ -193,7 +193,7 @@ export default function LoginPage() {
             <p className="text-gray-600 text-center font-medium mb-3">Test Credentials</p>
             <div className="space-y-4">
               {[
-                { email: "testuser@example.com", password: "password", label: "Test User" },
+                { email: "percy@fullsuite.ph", password: "password", label: "Test User" },
                 { email: "jun.zaragosa@fullsuite.ph", password: "password", label: "HR User" },
                 { email: "ats_interviewer@example.com", password: "password", label: "Interviewer" },
               ].map((cred, index) => (
