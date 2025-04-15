@@ -112,7 +112,7 @@ function ApplicantSendMailPage({ applicant }) {
 
     // Payload
     const data = {
-      company_id: "468eb32f-f8c1-11ef-a725-0af0d960a833",
+      company_id  : user.company_id,
       title: templateTitle, // Use the user-provided title
       subject: subject,
       body: emailContent,
