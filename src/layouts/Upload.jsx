@@ -111,9 +111,9 @@ function Upload({ onClose }) {
       last_name: excelRow.last_name || excelRow.lastName || "",
       gender: excelRow.gender || "",
       birth_date:
-        typeof excelRow.birth_date === "number"
-          ? excelDateToJSDate(excelRow.birth_date).toISOString().split("T")[0]
-          : excelRow.birth_date || excelRow.birthDate || null,
+      typeof excelRow.birth_date === "number"
+        ? excelDateToJSDate(excelRow.birth_date).toISOString().split("T")[0]
+        : excelRow.birth_date || excelRow.birthDate || null,
       discovered_at: excelRow.discovered_at || "",
       email: excelRow.email || excelRow.email_1 || "",
       email_1: excelRow.email || excelRow.email_1 || "",
@@ -122,7 +122,7 @@ function Upload({ onClose }) {
       contactNo: excelRow.contact_no || excelRow.contactNo || excelRow.mobile_number_1 || "",
       mobile_number_1: excelRow.contact_no || excelRow.contactNo || excelRow.mobile_number_1 || "",
       mobile_number_2: excelRow.mobile_number_2 || "",
-      // Key change: Backend expects 'position' property for mapping according to your backend code
+      status: (excelRow.status || "").toUpperCase().replace(/ /g, "_"),
       position: positionName, // This is what the backend uses to look up the ID
       position_id: positionId || defaultPositionId, // Include the ID we've already found 
       position_name: positionName, // Keep for reference
@@ -142,6 +142,7 @@ function Upload({ onClose }) {
       const formattedApplicants = JSON.stringify(applicants)
       const formData = new FormData()
       formData.append("applicants", formattedApplicants)
+    
 
       const response = await api.post(
         "/applicants/add/upload",
