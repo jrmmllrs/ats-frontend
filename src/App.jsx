@@ -7,6 +7,7 @@ import PrivateRoute from "./context/PrivateRoute";
 import PublicRoute from "./context/PublicRoute";
 import FullOfSuite from "./pages/FullOfSuite";
 import NotFound from "./pages/NotFound";
+import ResetPassword from "./pages/ResetPassword";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="*" element={<NotFound />} />
         <Route path="/fullofsuite" element={<PublicRoute element={<FullOfSuite />} />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
     </BrowserRouter>
   );

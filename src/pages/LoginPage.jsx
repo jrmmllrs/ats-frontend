@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FiMail, FiLock, FiEye, FiEyeOff, FiUser, FiCopy } from "react-icons/fi";
 import api from "../api/axios";
 import Cookies from "js-cookie";
-
+import { Link } from "react-router-dom";
 export default function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -184,6 +184,8 @@ export default function LoginPage() {
                 )}
               </button>
             </form>
+
+            <Link to="/reset-password"> <div className="flex justify-center items-center text-sm underline pt-3">Forgot password</div></Link>
           </div>
         </div>
 
