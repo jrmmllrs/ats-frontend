@@ -1,13 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { FiSend } from "react-icons/fi";
 import MessageBox from "./MessageBox"; // Adjust path if needed
 import moment from "moment";
 import api from "../api/axios";
 import useUserStore from "../context/userStore";
+import { SlOptionsVertical } from "react-icons/sl";
 
 const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
     const [noteBody, setNoteBody] = useState("");
     const { user } = useUserStore();
+    const dropdownRef = useRef(null);
+    const [isOpen, setIsOpen] = useState(false);
 
     const handleSubmit = () => {
         const data = {
@@ -45,6 +48,34 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
                         <p className="text-gray-dark body-regular">Date</p>
                         <input type="date" className="border border-gray-light body-regular rounded-sm ml-2 p-1" value={moment(interview.date_of_interview).format("YYYY-MM-DD")} readOnly />
                     </div>
+                </div>
+                <div className="relative inline-block text-left" ref={dropdownRef}>
+                    <button className="flex items-center rounded-md bg-white p-1 m-3 text-sm text-teal hover:bg-gray-light cursor-pointer"
+                        onClick={() => setIsOpen(!isOpen)}>
+                        <SlOptionsVertical className="h-4 w-4 text-teal" />
+                    </button>
+                    {isOpen && (
+                        <div className="absolute right-2 z-10 mt-2 w-min origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-hidden curssor-pointer">
+                            <button
+                                className="block text-center w-full body-regular px-2 py-2 text-gray-dark hover:bg-gray-100"
+                                onClick={() => alert('Edit Interview')}
+                            >
+                                Edit
+                            </button>
+                            <button
+                                className="block text-center w-full body-regular px-2 py-2 text-gray-dark hover:bg-gray-100"
+                                onClick={() => alert('Delete Interview')}
+                            >
+                                Delete
+                            </button>
+                            <button
+                                className="block text-center w-full body-regular px-2 py-2 text-gray-dark hover:bg-gray-100"
+                                onClick={() => alert('Export Interview')}
+                            >
+                                Export
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
