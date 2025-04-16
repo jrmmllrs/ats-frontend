@@ -320,6 +320,13 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                     onChange={handleDateChange}
                     disabled={!isDateApplicable}
                   />
+                  {pendingStatus == "Test Sent" && (
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                   Chaging the status to 'Test Sent' will automatically send test assessement to applicant.
+                  </label>
+                  )}
+
+                  
                 </div>
 
                 <div className="flex justify-end gap-2">
