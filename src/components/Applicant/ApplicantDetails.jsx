@@ -401,8 +401,8 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
           )}
 
           <div className="grid grid-cols-3 gap-3 pl-5 flex-grow">
-            <div className="text-teal">Discovered FutSuite at</div>
-            <div className="col-span-2">{applicant.discovered_at || 'Not specified'}</div>
+            {/* <div className="text-teal">Discovered FutSuite at</div>
+            <div className="col-span-2">{applicant.discovered_at || 'Not specified'}</div> */}
             <div className="text-teal">Applied for</div>
             <div className="col-span-2">{applicant.job_title || 'Not specified'}</div>
             <div className="text-teal">Applied on</div>
