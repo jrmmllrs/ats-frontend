@@ -109,7 +109,12 @@ function Upload({ onClose }) {
     const hours = Math.floor(total_seconds / (60 * 60));
     const minutes = Math.floor(total_seconds / 60) % 60;
 
-    return new Date(date_info.getFullYear(), date_info.getMonth(), date_info.getDate(), hours, minutes, seconds);
+    // Adjust for timezone offset
+    const jsDate = new Date(
+      Date.UTC(date_info.getFullYear(), date_info.getMonth(), date_info.getDate(), hours, minutes, seconds)
+    );
+
+    return jsDate;
   };
 
   const mapExcelDataToApplicant = (excelRow) => {
@@ -121,6 +126,10 @@ function Upload({ onClose }) {
     const defaultPositionId = positions.length > 0 ? positions[0].job_id : null;
 
     return {
+      date_applied:
+        typeof excelRow.date_applied === "number"
+          ? excelDateToJSDate(excelRow.date_applied).toISOString().split("T")[0]
+          : excelRow.date_applied || null,
       first_name: excelRow.first_name || excelRow.firstName || "",
       middle_name: excelRow.middle_name || excelRow.middleName || "",
       last_name: excelRow.last_name || excelRow.lastName || "",
