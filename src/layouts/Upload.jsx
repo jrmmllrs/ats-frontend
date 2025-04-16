@@ -31,7 +31,7 @@ function Upload({ onClose }) {
   useEffect(() => {
     const fetchPositions = async () => {
       try {
-        const response = await api.get("/company/positions");
+        const response = await api.get("/company/positions/all");
 
         if (response.data?.positions && Array.isArray(response.data.positions)) {
           setPositions(response.data.positions);
