@@ -59,6 +59,7 @@ function ApplicantSendMailPage({ applicant }) {
       .get("/email/templates")
       .then((response) => {
         setTemplates(response.data.templates);
+        console.log("Templates fetched successfully:", response.data.templates);
       })
       .catch((error) => console.error("Error fetching data:", error.message));
   };
@@ -84,7 +85,7 @@ function ApplicantSendMailPage({ applicant }) {
   const handleTemplateSelect = (e) => {
     const selectedTitle = e.target.value;
     const template = templates.find((t) => t.title === selectedTitle);
-
+    console.log("Selected template:", template);
     if (template) {
       setSelectedTemplate(selectedTitle);
       setSubject(template.subject); // Update the subject
@@ -93,7 +94,7 @@ function ApplicantSendMailPage({ applicant }) {
       const jsonContent = generateJSON(template.body, [
         StarterKit,
         Underline,
-        bulletList,
+        BulletList,
         CodeBlock,
         Blockquote,
         TextAlign.configure({ types: ["heading", "paragraph"] }),
@@ -101,6 +102,8 @@ function ApplicantSendMailPage({ applicant }) {
 
       editor?.commands.setContent(jsonContent); // Update the editor content
       setEmailContent(template.body);
+
+
     }
   };
 
