@@ -63,6 +63,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   const handleStatusChange = (e) => {
     const newStatus = e.target.value;
     setPendingStatus(newStatus);
+    console.log('pending status: ', newStatus);
 
     // Show date picker when status is changed
     setShowDatePicker(true);
@@ -96,11 +97,11 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
       const backendStatus = newStatus;
       let data = {
         "progress_id": applicant.progress_id,
-        "applicant_id": applicant.applicant_id, 
+        "applicant_id": applicant.applicant_id,
         "status": backendStatus,
         "user_id": user.user_id,
         "change_date": isDateApplicable ? selectedDate : "N/A",
-        "previous_status": previousBackendStatus, 
+        "previous_status": previousBackendStatus,
       };
 
       try {
@@ -320,13 +321,18 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                     onChange={handleDateChange}
                     disabled={!isDateApplicable}
                   />
-                  {pendingStatus == "Test Sent" && (
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                   Chaging the status to 'Test Sent' will automatically send test assessement to applicant.
-                  </label>
+                  {pendingStatus === "TEST_SENT" && (
+                    <div className="mt-3 p-3 bg-blue-50 border-l-4 border-blue-500 rounded">
+                      <p className="text-sm font-medium text-blue-800 flex items-start">
+                        <svg className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z" clipRule="evenodd" />
+                        </svg>
+                        Changing the status to 'Test Sent' will automatically send test assessment to applicant.
+                      </p>
+                    </div>
                   )}
 
-                  
+
                 </div>
 
                 <div className="flex justify-end gap-2">
