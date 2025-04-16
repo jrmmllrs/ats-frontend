@@ -316,6 +316,7 @@ function Upload({ onClose }) {
 
       const payload = {
         applicant: JSON.stringify({
+          date_applied: acceptedApplicant.date_applied,
           first_name: acceptedApplicant.first_name,
           middle_name: acceptedApplicant.middle_name,
           last_name: acceptedApplicant.last_name,
@@ -332,7 +333,6 @@ function Upload({ onClose }) {
           position_id: positionId,
           position: acceptedApplicant.position,
           test_result: acceptedApplicant.test_result,
-          date_applied: acceptedApplicant.date_applied,
         }),
       };
 
