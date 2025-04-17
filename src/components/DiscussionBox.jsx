@@ -5,12 +5,14 @@ import moment from "moment";
 import api from "../api/axios";
 import useUserStore from "../context/userStore";
 import { SlOptionsVertical } from "react-icons/sl";
+// Removed jsPDF and autoTable imports
 
 const DiscussionBox = ({ applicant, discussion, fetchDiscussionInterview }) => {
     const [noteBody, setNoteBody] = useState("");
     const { user } = useUserStore();
     const dropdownRef = useRef(null);
     const [isOpen, setIsOpen] = useState(false);
+    // Removed isExporting state
 
     const handleSubmit = () => {
         const data = {
@@ -29,6 +31,8 @@ const DiscussionBox = ({ applicant, discussion, fetchDiscussionInterview }) => {
             console.log(error.message);
         })
     }
+    // Removed handleExport function
+    // Removed generatePDF function
 
     return (
         <div className="border border-gray-light rounded-lg bg-white">
@@ -54,12 +58,7 @@ const DiscussionBox = ({ applicant, discussion, fetchDiscussionInterview }) => {
                             >
                                 Delete
                             </button>
-                            <button
-                                className="block text-center w-full body-regular px-2 py-2 text-gray-dark hover:bg-gray-100"
-                                onClick={() => alert('Export Interview')}
-                            >
-                                Export
-                            </button>
+                            {/* Removed export button */}
                         </div>
                     )}
                 </div>
