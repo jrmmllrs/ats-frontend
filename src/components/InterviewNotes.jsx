@@ -1,10 +1,12 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { FiSend } from "react-icons/fi";
+import { SlOptionsVertical } from "react-icons/sl";
+import { IoMdClose } from "react-icons/io";
+import { FiDownload } from "react-icons/fi";
 import MessageBox from "./MessageBox";
 import moment from "moment";
 import api from "../api/axios";
 import useUserStore from "../context/userStore";
-import { SlOptionsVertical } from "react-icons/sl";
 import { jsPDF } from "jspdf";
 
 const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
@@ -13,6 +15,48 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
     const dropdownRef = useRef(null);
     const [isOpen, setIsOpen] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
+    const [showPreviewModal, setShowPreviewModal] = useState(false);
+    const [pdfPreviewUrl, setPdfPreviewUrl] = useState(null);
+    const [pdfFileName, setPdfFileName] = useState("");
+    const [pdfDocument, setPdfDocument] = useState(null);
+
+    useEffect(() => {
+        if (showPreviewModal) {
+            // Disable scrolling on the body
+            document.body.style.overflow = 'hidden';
+        } else {
+            // Re-enable scrolling when modal is closed
+            document.body.style.overflow = 'auto';
+        }
+
+        // Cleanup function to ensure scroll is re-enabled when component unmounts
+        return () => {
+            document.body.style.overflow = 'auto';
+        };
+    }, [showPreviewModal]);
+
+
+    useEffect(() => {
+        // Close dropdown when clicking outside
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
+
+    // Clean up PDF preview URL when the modal is closed
+    useEffect(() => {
+        if (!showPreviewModal && pdfPreviewUrl) {
+            URL.revokeObjectURL(pdfPreviewUrl);
+            setPdfPreviewUrl(null);
+        }
+    }, [showPreviewModal]);
 
     const handleSubmit = () => {
         const data = {
@@ -20,7 +64,7 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
             note_type: "FIRST INTERVIEW",
             note_body: noteBody,
             noted_by: user.user_id
-        }
+        };
 
         api.post('/interview/note', data).then((response) => {
             //trigger the change of the source data
@@ -29,8 +73,8 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
             fetchDiscussionInterview();
         }).catch((error) => {
             console.log(error.message);
-        })
-    }
+        });
+    };
 
     const handleExport = async () => {
         setIsExporting(true);
@@ -46,7 +90,18 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
                 throw new Error("No valid interview data returned from the server");
             }
 
-            generatePDF(formattedResults, applicantData[0]);
+            // Generate PDF but don't save it automatically
+            const { pdfDoc, fileName } = generatePDF(formattedResults, applicantData[0], false);
+            setPdfDocument(pdfDoc);
+            setPdfFileName(fileName);
+
+            // Convert PDF to blob and create URL for preview
+            const blob = pdfDoc.output('blob');
+            const url = URL.createObjectURL(blob);
+            setPdfPreviewUrl(url);
+
+            // Show the preview modal
+            setShowPreviewModal(true);
         } catch (error) {
             console.error("Error exporting interview:", error);
             alert(`Failed to export interview: ${error.message}`);
@@ -56,8 +111,13 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
         }
     };
 
+    const handleDownloadPdf = () => {
+        if (pdfDocument) {
+            pdfDocument.save(pdfFileName);
+        }
+    };
 
-    const generatePDF = (interviews, applicantInfo) => {
+    const generatePDF = (interviews, applicantInfo, autoSave = true) => {
         try {
             // Initialize PDF document
             const doc = new jsPDF({
@@ -161,12 +221,10 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
                         doc.text(formattedDate, pageWidth - margin, currentY, { align: "right" });
                     }
 
-
                     // Interviewer name and Feedback header
                     doc.setFontSize(18);    // Increased from 14
                     doc.setFont(primaryFont, "regular");
                     doc.setTextColor(40, 40, 40); // Darker text
-
 
                     currentY += lineHeight + 4;
 
@@ -245,13 +303,21 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
                 }
             }
 
-            // Save the PDF
+            // Generate filename
             const fileName = `${fullName.replace(/\s+/g, "_")}_Interview_Report_${moment().format("YYYYMMDD")}.pdf`;
-            doc.save(fileName);
+
+            // Save PDF automatically if requested
+            if (autoSave) {
+                doc.save(fileName);
+            }
+
+            // Return the PDF document and filename
+            return { pdfDoc: doc, fileName };
 
         } catch (error) {
             console.error("Error generating PDF:", error);
             alert("Failed to generate PDF. Please check console for details.");
+            return { pdfDoc: null, fileName: "" };
         }
     };
 
@@ -260,7 +326,7 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
             {/* Box Label */}
             <div className="flex border-b border-gray-light text-gray-dark">
                 <div className="flex-1 p-3 pl-5 border-r border-gray-light">
-                    <p className=" display">Interview Notes And Feedback</p>
+                    <p className="display">Interview Notes And Feedback</p>
                 </div>
                 <div className="flex-1 py-3 px-5 space-y-2">
                     <div className="flex items-center gap-2">
@@ -278,7 +344,7 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
                         <SlOptionsVertical className="h-4 w-4 text-teal" />
                     </button>
                     {isOpen && (
-                        <div className="absolute right-2 z-10 mt-2 w-min origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-hidden curssor-pointer">
+                        <div className="absolute right-2 z-10 mt-2 w-min origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-hidden cursor-pointer">
                             <button
                                 className="block text-center w-full body-regular px-2 py-2 text-gray-dark hover:bg-gray-100"
                                 onClick={() => alert('Edit Interview')}
@@ -316,11 +382,11 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
                 </div>
 
                 {/* Message input */}
-                <div className=" flex items-center gap-2">
+                <div className="flex items-center gap-2">
                     <textarea
                         value={noteBody}
                         onChange={(e) => setNoteBody(e.target.value)}
-                        rows="1 "
+                        rows="1"
                         className="w-full p-2.5 body-regular text-gray-dark bg-white rounded-lg border border-gray-light focus:ring-blue-500 focus:border-blue-500" placeholder="Type your message..."></textarea>
                     <button
                         onClick={handleSubmit}
@@ -329,6 +395,55 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
                     </button>
                 </div>
             </div>
+
+            {showPreviewModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+                    style={{ overflow: 'hidden' }}>
+                    <div className="bg-white rounded-lg shadow-xl w-4/5 h-5/6 flex flex-col max-h-[90vh] overflow-hidden">
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-light">
+                            <h2 className="text-xl font-semibold text-gray-800">PDF Preview</h2>
+                            <button
+                                onClick={() => setShowPreviewModal(false)}
+                                className="text-gray-500 hover:text-gray-700"
+                            >
+                                <IoMdClose className="h-6 w-6" />
+                            </button>
+                        </div>
+
+                        {/* PDF Preview */}
+                        <div className="flex-1 overflow-hidden p-4">
+                            {pdfPreviewUrl ? (
+                                <iframe
+                                    src={pdfPreviewUrl}
+                                    className="w-full h-full border border-gray-light rounded"
+                                    title="PDF Preview"
+                                />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                    <p className="text-gray-500">Loading preview...</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="px-6 py-4 border-t border-gray-light flex justify-end">
+                            <button
+                                onClick={() => setShowPreviewModal(false)}
+                                className="px-4 py-2 mr-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleDownloadPdf}
+                                className="px-4 py-2 bg-teal text-white rounded hover:bg-teal-dark flex items-center"
+                            >
+                                <FiDownload className="mr-2" /> Download PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
