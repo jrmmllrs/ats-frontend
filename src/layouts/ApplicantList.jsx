@@ -76,7 +76,7 @@ export default function ApplicantList({
                   className="block text-center w-full body-regular px-2 py-2 text-gray-dark hover:bg-gray-100"
                   onClick={() => {
                     handleExportClick();
-                    exportToExcel(dateFilterType, exportValue, 'Business Operations Associate', ["NONE", "TEST_SENT"]);
+                    exportToExcel(dateFilterType, exportValue, positionFilter, status);
                   }}
                 >
                   Excel
@@ -91,8 +91,8 @@ export default function ApplicantList({
                       <ExportToPdf
                         dateFilter={dateFilterType}
                         dateFilterValue={exportValue}
-                        position="Business Operations Associate"
-                        status={["NONE", "TEST_SENT"]}
+                        position={positionFilter}
+                        status={status}
                       />
                     }
                     fileName="table.pdf"
