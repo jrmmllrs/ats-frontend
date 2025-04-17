@@ -26,6 +26,12 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   const [showSkipWarningModal, setShowSkipWarningModal] = useState(false);
   const [skippedStatuses, setSkippedStatuses] = useState([]);
 
+  // For status history hover
+  const [hoverIndex, setHoverIndex] = useState(null);
+  const [skippedStatusesByHistory, setSkippedStatusesByHistory] = useState({});
+  const [skippedStatusPosition, setSkippedStatusPosition] = useState({ top: 0, left: 0 });
+  const [currentSkippedStatuses, setCurrentSkippedStatuses] = useState([]);
+
   //blacklisted info
   const [blacklistedType, setBlacklistedType] = useState(null);
   const [reason, setReason] = useState(null);
@@ -46,13 +52,32 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   const fetchStatusHistory = async (progressId) => {
     try {
       const response = await api.get(`/applicant/status-history/${progressId}`);
-      setStatusHistory(response.data);
+      const history = response.data;
+      setStatusHistory(history);
+
+      // Calculate skipped statuses for each history entry
+      const skippedMap = {};
+
+      history.forEach((record, index) => {
+        if (record.previous_status && record.new_status) {
+          const prevIndex = statuses.indexOf(record.previous_status);
+          const newIndex = statuses.indexOf(record.new_status);
+
+          if (newIndex > prevIndex + 1) {
+            // Get the skipped statuses
+            const skipped = statuses.slice(prevIndex + 1, newIndex);
+            if (skipped.length > 0) {
+              skippedMap[index] = skipped;
+            }
+          }
+        }
+      });
+
+      setSkippedStatusesByHistory(skippedMap);
     } catch (error) {
       console.error("Error fetching status history:", error);
     }
   };
-
-
 
   // Function to check if statuses are being skipped
   const checkForSkippedStatuses = (currentStatus, newStatus) => {
@@ -243,6 +268,35 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
 
   const toggleStatusHistoryModal = () => {
     setShowStatusHistoryModal(!showStatusHistoryModal);
+    // Reset skipped status hover when closing modal
+    if (showStatusHistoryModal) {
+      setHoverIndex(null);
+    }
+  };
+
+  // Handle hover on status history row
+  const handleRowMouseEnter = (index, event) => {
+    if (skippedStatusesByHistory[index]) {
+      // Calculate position for the hover modal - outside the status history modal
+      // Get the modal element position
+      const historyModal = document.querySelector('.status-history-modal');
+      if (historyModal) {
+        const rect = historyModal.getBoundingClientRect();
+
+        // Position the skipped status modal to the right of the history modal
+        setSkippedStatusPosition({
+          top: event.clientY, // Use the mouse Y position
+          left: rect.right + 10, // Place it 10px to the right of the history modal
+        });
+      }
+
+      setHoverIndex(index);
+      setCurrentSkippedStatuses(skippedStatusesByHistory[index]);
+    }
+  };
+
+  const handleRowMouseLeave = () => {
+    setHoverIndex(null);
   };
 
   return (
@@ -451,9 +505,6 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                       </div>
                     </div>
                   )}
-
-
-
                 </div>
 
                 <div className="flex justify-end gap-2">
@@ -477,7 +528,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
           {/* Status History Modal */}
           {showStatusHistoryModal && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="bg-white p-6 rounded-lg shadow-lg w-[600px] max-w-[90vw] max-h-[90vh] flex flex-col">
+              <div className="status-history-modal bg-white p-6 rounded-lg shadow-lg w-[600px] max-w-[90vw] max-h-[90vh] flex flex-col">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-medium text-teal">Status History</h3>
                   <button
@@ -501,7 +552,12 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                     </thead>
                     <tbody>
                       {statusHistory.map((record, index) => (
-                        <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                        <tr
+                          key={index}
+                          className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${skippedStatusesByHistory[index] ? 'cursor-pointer' : ''}`}
+                          onMouseEnter={(e) => handleRowMouseEnter(index, e)}
+                          onMouseLeave={handleRowMouseLeave}
+                        >
                           <td className="px-4 py-2">
                             {record.change_date === "N/A"
                               ? 'N/A'
@@ -510,7 +566,18 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                                 : 'N/A'}
                           </td>
                           <td className="px-4 py-2">{record.previous_status ? formatStatusForDisplay(record.previous_status) : 'Initial Status'}</td>
-                          <td className="px-4 py-2">{formatStatusForDisplay(record.new_status)}</td>
+                          <td className="px-4 py-2">
+                            <div className="flex items-center">
+                              {formatStatusForDisplay(record.new_status)}
+                              {skippedStatusesByHistory[index] && (
+                                <span className="ml-2 text-amber-500">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                  </svg>
+                                </span>
+                              )}
+                            </div>
+                          </td>
                           <td className="px-4 py-2">{record.user_name || record.changed_by}</td>
                         </tr>
                       ))}
@@ -518,6 +585,30 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                   </table>
                 </div>
               </div>
+
+              {/* Skipped Statuses Modal - Positioned outside the status history modal */}
+              {hoverIndex !== null && currentSkippedStatuses.length > 0 && (
+                <div
+                  className="fixed bg-white border border-gray-200 shadow-lg rounded-lg p-4 z-60"
+                  style={{
+                    // top: `${skippedStatusPosition.top}px`,
+                    left: `${skippedStatusPosition.left}px`,
+                    maxWidth: '300px'
+                  }}
+                >
+                  <div className="font-medium text-amber-600 mb-2 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    Skipped Statuses
+                  </div>
+                  <ul className="list-disc pl-5 text-gray-700">
+                    {currentSkippedStatuses.map((status, i) => (
+                      <li key={i} className="py-1">{formatStatusForDisplay(status)}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
 
