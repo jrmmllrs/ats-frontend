@@ -80,6 +80,8 @@ const ApplicantTable = ({ onSelectApplicant }) => {
         "user_id": user.user_id,
         "change_date": isDateApplicable ? selectedDate : "N/A",
         "previous_status": currentStatus,
+        "blacklisted_type": blacklistedType,
+        "reason": reason,
       };
 
       await api.put(`/applicant/update/status`, data);
