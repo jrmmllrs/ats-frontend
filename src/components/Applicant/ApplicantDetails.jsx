@@ -222,15 +222,19 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
         <h2 className="display">
           {`${applicant.first_name || ''} ${applicant.middle_name || ''} ${applicant.last_name || ''}`}
         </h2>
-        <div className="pl-5 flex flex-col flex-grow">
-          <div className="mt-2 flex items-center flex-shrink-0">
-            <FaUser className="mr-2 h-4 w-4" />
-            {applicant.gender || 'Not specified'}
-          </div>
-          <div className="mt-1 flex items-center">
-            <FaCakeCandles className="mr-2 h-4 w-4" />
-            {applicant.birth_date ? new Date(applicant.birth_date).toLocaleDateString() : 'No birth date'}
-          </div>
+        <div className="pl-5 pt-2 flex flex-col flex-grow">
+          {applicant.gender && (
+            <div className="mt-2 flex items-center flex-shrink-0">
+              <FaUser className="mr-2 h-4 w-4" />
+              {applicant.gender}
+            </div>
+          )}
+          {applicant.birth_date && (
+            <div className="mt-1 flex items-center">
+              <FaCakeCandles className="mr-2 h-4 w-4" />
+              {new Date(applicant.birth_date).toLocaleDateString()}
+            </div>
+          )}
           {applicant.email_1 ? <div className="mt-1 flex items-center">
             <FaEnvelope className="mr-2 h-4 w-4 flex-shrink-0" />
             {applicant.email_1}
