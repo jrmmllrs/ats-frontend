@@ -27,6 +27,12 @@ const ApplicantTable = ({ onSelectApplicant }) => {
   const [isDateApplicable, setIsDateApplicable] = useState(true);
   const [pendingStatusChange, setPendingStatusChange] = useState(null);
 
+  //blacklisted info
+  const [blacklistedType, setBlacklistedType] = useState(null);
+  const [reason, setReason] = useState(null);
+
+
+
   const handleStatusChange = (id, progress_id, newStatus, currentStatus) => {
     // Store the pending status change
     setPendingStatusChange({
@@ -74,6 +80,8 @@ const ApplicantTable = ({ onSelectApplicant }) => {
         "user_id": user.user_id,
         "change_date": isDateApplicable ? selectedDate : "N/A",
         "previous_status": currentStatus,
+        "blacklisted_type": blacklistedType,
+        "reason": reason,
       };
 
       await api.put(`/applicant/update/status`, data);
@@ -196,8 +204,46 @@ const ApplicantTable = ({ onSelectApplicant }) => {
                     <svg className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z" clipRule="evenodd" />
                     </svg>
-                    Changing the status to 'Test Sent' will automatically send test assessment to applicant.
+                    Changing the status to Test Sent will automatically send test assessment to applicant.
                   </p>
+                </div>
+              )}
+
+              {pendingStatusChange.newStatus === "BLACKLISTED" && (
+                <div className="space-y-4 pt-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Blacklisted Type
+                    </label>
+                    <select
+                      value={blacklistedType}
+                      onChange={(e) => setBlacklistedType(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    >
+                      <option value="">Select type</option>
+                      <option value="SOFT">Soft</option>
+                      <option value="HARD">Hard</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Reason for Blacklist
+                    </label>
+                    <select
+                      value={reason}
+                      onChange={(e) => setReason(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    >
+                      <option value="">Select reason</option>
+                      <option value="DID_NOT_TAKE_TEST">Did not take test</option>
+                      <option value="NO_SHOW">No show</option>
+                      <option value="CULTURE_MISMATCH">Culture mismatch</option>
+                      <option value="EXPECTED_SALARY_MISMATCH">Expected salary mismatch</option>
+                      <option value="WORKING_SCHEDULE_MISMATCH">Working schedule mismatch</option>
+                      <option value="OTHER_REASONS">Other reasons</option>
+                    </select>
+                  </div>
                 </div>
               )}
 
