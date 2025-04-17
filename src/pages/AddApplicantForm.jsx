@@ -56,7 +56,6 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
 
   useEffect(() => {
     if (initialData) {
-      console.log("Initial data:", initialData)
       const mappedData = {
         applicantId: initialData.applicant_id,
         firstName: initialData.first_name || "",
@@ -81,11 +80,11 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
     }
   }, [initialData])
 
-  useEffect(() => {
+  useEffect(() => {   
     if (formData.firstName || formData.lastName || formData.email || formData.phone) {
       checkForDuplicates()
     }
-  }, [formData.firstName, formData.lastName, formData.email, formData.phone])
+  }, [formData.firstName, formData.lastName, formData.email, formData.phone, formData.additionalEmails, formData.additionalPhones])
 
   useEffect(() => {
     const fetchPositions = async () => {
@@ -179,12 +178,15 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
     }
   }
 
-  const handleRemoveEmail = (index) => {
-    setFormData((prev) => {
-      const newEmails = prev.additionalEmails.filter((_, i) => i !== index)
-      return { ...prev, additionalEmails: newEmails }
-    })
-  }
+  const handleRemoveEmail = async (index) => {
+    
+    await setFormData((prev) => {
+      const newEmails = [...prev.additionalEmails];
+      newEmails[index] = '';
+      return { ...prev, additionalEmails: newEmails };
+    });
+    checkForDuplicates();
+  };
 
   const handleAddPhone = () => {
     // Check if we already have empty fields that aren't displayed
@@ -240,34 +242,34 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
       })
   }
 
-
-
-  const handleRemovePhone = (index) => {
-    setFormData((prev) => {
-      const newPhones = prev.additionalPhones.filter((_, i) => i !== index)
-      return { ...prev, additionalPhones: newPhones }
-    })
+  const handleRemovePhone = async (index) => {
+    await setFormData((prev) => {
+      const newPhones = [...prev.additionalPhones];
+      newPhones[index] = '';
+      return { ...prev, additionalPhones: newPhones };
+    });
+    checkForDuplicates();
   }
-  const handleChange = (e) => {
+  const handleChange = async(e) => {
     const { name, value } = e.target
     if (name.startsWith("additionalEmail")) {
       const index = Number.parseInt(name.split("_")[1], 10)
-      setFormData((prev) => {
+      await setFormData((prev) => {
         const newEmails = [...prev.additionalEmails]
         newEmails[index] = value
         return { ...prev, additionalEmails: newEmails }
       })
     } else if (name.startsWith("additionalPhone")) {
       const index = Number.parseInt(name.split("_")[1], 10)
-      setFormData((prev) => {
+      await setFormData((prev) => {
         const newPhones = [...prev.additionalPhones]
         newPhones[index] = value
         return { ...prev, additionalPhones: newPhones }
       })
     } else {
-      setFormData((prev) => ({ ...prev, [name]: value }))
+      await setFormData((prev) => ({ ...prev, [name]: value }))
     }
-    checkForDuplicates()
+    checkForDuplicates();
   }
   const handleBlur = () => {
     checkForDuplicates()
