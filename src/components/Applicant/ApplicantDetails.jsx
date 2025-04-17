@@ -37,6 +37,12 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   const [pendingStatus, setPendingStatus] = useState('');
   const [showStatusHistoryModal, setShowStatusHistoryModal] = useState(false);
 
+  //blacklisted info
+  const [blacklistedType, setBlacklistedType] = useState(null);
+  const [reason, setReason] = useState(null);
+
+
+
   useEffect(() => {
 
     if (applicant && applicant.status) {
@@ -102,6 +108,8 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
         "user_id": user.user_id,
         "change_date": isDateApplicable ? selectedDate : "N/A",
         "previous_status": previousBackendStatus,
+        "blacklisted_type": blacklistedType,
+        "reason": reason
       };
 
       try {
@@ -331,6 +339,37 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                       </p>
                     </div>
                   )}
+
+                  {pendingStatus === "BLACKLISTED" && (
+                    <div className="space-y-4 pt-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Blacklisted Type
+                        </label>
+                        <input
+                          type="text"
+                          value={blacklistedType}
+                          onChange={(e) => setBlacklistedType(e.target.value)}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                          placeholder="Enter type"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Reason for Blacklist
+                        </label>
+                        <input
+                          type="text"
+                          value={reason}
+                          onChange={(e) => setReason(e.target.value)}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                          placeholder="Enter reason"
+                        />
+                      </div>
+                    </div>
+                  )}
+
 
 
                 </div>
