@@ -6,7 +6,7 @@ const getFilteredApplicants = async (dateFilter, dateFilterValue, position, stat
     if (dateFilter && dateFilterValue) {
         params.append(dateFilter, dateFilterValue);
     }
-    
+
     if (position) {
         params.append("position", position);
     }
@@ -15,9 +15,9 @@ const getFilteredApplicants = async (dateFilter, dateFilterValue, position, stat
         status.forEach(s => params.append("status", s));
     }
 
-    const result = await api.get(`/applicants/filter?${params.toString()}`);
+    const result = await api.get(`/applicants/filter/for-excel-export?${params.toString()}`);
     console.log("result in get", result);
-    
+
     return result.data;
 };
 
