@@ -8,21 +8,6 @@ import AddApplicantForm from '../../pages/AddApplicantForm';
 import { statusMapping } from '../../hooks/statusMapping';
 import { useApplicantData } from '../../hooks/useApplicantData';
 
-// const statuses = [
-//   "Test Sent",
-//   "Interview Schedule Sent",
-//   "First Interview",
-//   "Second Interview",
-//   "Third Interview",
-//   "Fourth Interview",
-//   "Follow Up Interview",
-//   "For Job Offer",
-//   "Job Offer Rejected",
-//   "Job Offer Accepted",
-//   "Withdrew Application",
-//   "Blacklisted",
-//   "Not Fit",
-// ];
 
 function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate }) {
   const { statuses } = useApplicantData();
@@ -37,14 +22,15 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   const [pendingStatus, setPendingStatus] = useState('');
   const [showStatusHistoryModal, setShowStatusHistoryModal] = useState(false);
 
+  // Skip status warning modal
+  const [showSkipWarningModal, setShowSkipWarningModal] = useState(false);
+  const [skippedStatuses, setSkippedStatuses] = useState([]);
+
   //blacklisted info
   const [blacklistedType, setBlacklistedType] = useState(null);
   const [reason, setReason] = useState(null);
 
-
-
   useEffect(() => {
-
     if (applicant && applicant.status) {
       setStatus(statusMapping[applicant.status] || '');
 
@@ -66,12 +52,38 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
     }
   };
 
+
+
+  // Function to check if statuses are being skipped
+  const checkForSkippedStatuses = (currentStatus, newStatus) => {
+    const currentIndex = statuses.indexOf(currentStatus);
+    const newIndex = statuses.indexOf(newStatus);
+
+    // Only check forward progression (not backward)
+    if (newIndex > currentIndex + 1) {
+      // Get the skipped statuses
+      const skipped = statuses.slice(currentIndex + 1, newIndex);
+      return skipped;
+    }
+    return [];
+  };
+
   const handleStatusChange = (e) => {
     const newStatus = e.target.value;
     setPendingStatus(newStatus);
-    console.log('pending status: ', newStatus);
 
-    // Show date picker when status is changed
+    // Check if any statuses are being skipped
+    if (applicant && applicant.status) {
+      const skipped = checkForSkippedStatuses(applicant.status, newStatus);
+
+      if (skipped.length > 0) {
+        setSkippedStatuses(skipped);
+        setShowSkipWarningModal(true);
+        return;
+      }
+    }
+
+    // If no statuses are skipped, proceed normally
     setShowDatePicker(true);
 
     // Set default date to today
@@ -89,6 +101,26 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
     setIsDateApplicable(e.target.checked);
   };
 
+  const proceedWithStatusChange = () => {
+    // Close the warning modal
+    setShowSkipWarningModal(false);
+
+    // Proceed with the date picker
+    setShowDatePicker(true);
+
+    // Set default date to today
+    const today = new Date();
+    const formattedDate = today.toISOString().split('T')[0];
+    setSelectedDate(formattedDate);
+    setIsDateApplicable(true);
+  };
+
+  const cancelSkipStatusChange = () => {
+    // Reset pending status and close warning modal
+    setPendingStatus('');
+    setShowSkipWarningModal(false);
+  };
+
   const confirmStatusChange = async () => {
     const newStatus = pendingStatus;
     const previousStatus = status; // Store previous status
@@ -99,7 +131,6 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
 
     // Update the applicant status in the backend
     if (applicant && applicant.applicant_id) {
-      //const backendStatus = Object.keys(statusMapping).find(key => statusMapping[key] === newStatus);
       const backendStatus = newStatus;
       let data = {
         "progress_id": applicant.progress_id,
@@ -202,7 +233,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
 
   // Format status for display
   const formatStatusForDisplay = (statusKey) => {
-    return statusMapping[statusKey] || statusKey;
+    return statusKey.toLowerCase().split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   };
 
   // Format date for display
@@ -316,6 +347,45 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
               </button>
             </div>
           </div>
+
+          {/* Status Skip Warning Modal */}
+          {showSkipWarningModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded-lg shadow-lg w-96 max-w-md">
+                <div className="flex items-center justify-center mb-4 text-amber-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-center mb-2">Warning: Skipping Status Steps</h3>
+                <p className="mb-4 text-gray-600">
+                  You are about to skip the following status steps:
+                </p>
+                <ul className="list-disc pl-5 mb-4 text-gray-600">
+                  {skippedStatuses.map((status, index) => (
+                    <li key={index}>{formatStatusForDisplay(status)}</li>
+                  ))}
+                </ul>
+                <p className="mb-4 text-gray-600">
+                  Are you sure you want to proceed with this status change?
+                </p>
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={cancelSkipStatusChange}
+                    className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={proceedWithStatusChange}
+                    className="px-4 py-2 bg-amber-500 text-white rounded hover:bg-amber-600"
+                  >
+                    Proceed Anyway
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Date picker modal */}
           {showDatePicker && (
@@ -452,8 +522,6 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
           )}
 
           <div className="grid grid-cols-3 gap-3 pl-5 flex-grow">
-            {/* <div className="text-teal">Discovered FutSuite at</div>
-            <div className="col-span-2">{applicant.discovered_at || 'Not specified'}</div> */}
             <div className="text-teal">Applied for</div>
             <div className="col-span-2">{applicant.job_title || 'Not specified'}</div>
             <div className="text-teal">Applied on</div>
@@ -464,7 +532,6 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
             </div>
             <div className="text-teal">Applied from</div>
             <div className="col-span-2">{applicant.applied_source || 'Not specified'}</div>
-
           </div>
 
           {/* Tabs */}
@@ -529,4 +596,4 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   );
 }
 
-export default ApplicantDetails; 
+export default ApplicantDetails;
