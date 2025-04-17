@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo, useCallback } from "react";
 import api from "../../api/axios";
 import { FaInfoCircle } from "react-icons/fa";
 
-const ApplicationReceived = () => {
+const ApplicationReceived = ({ year, month }) => { // Receive year and month props
   const [totalApplications, setTotalApplications] = useState(0);
   const [monthsData, setMonthsData] = useState([]);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -12,8 +12,9 @@ const ApplicationReceived = () => {
   const fetchApplicationData = useCallback(async (forceRefresh = false) => {
     try {
       // Check if we have valid cached data
-      const cachedDataString = sessionStorage.getItem('applicationData');
-      const cachedTimeString = sessionStorage.getItem('applicationDataTimestamp');
+      const cacheKey = `applicationData_${year}_${month}`;
+      const cachedDataString = sessionStorage.getItem(cacheKey);
+      const cachedTimeString = sessionStorage.getItem(`${cacheKey}_timestamp`);
       
       if (!forceRefresh && cachedDataString && cachedTimeString) {
         const cachedTime = parseInt(cachedTimeString);
@@ -25,17 +26,28 @@ const ApplicationReceived = () => {
           const parsedData = JSON.parse(cachedDataString);
           setTotalApplications(parsedData.total);
           setMonthsData(parsedData.breakdown);
+          setLastFetch(cachedTime);
           return;
         }
       }
       
       // If no valid cache or force refresh, fetch from API
-      const response = await api.get("/analytic/metrics");
+      let url = `/analytic/metrics`;
+
+      // Add year and month filters
+      if (year !== "all" && year !== "") {
+        url += (url.includes("?") ? "&" : "?") + `year=${year}`;
+      }
+      if (month !== "all" && month !== "") {
+        url += (url.includes("?") ? "&" : "?") + `month=${month}`;
+      }
+      
+      const response = await api.get(url);
       const data = response.data.applicationsReceived;
 
       // Store in session storage with timestamp
-      sessionStorage.setItem('applicationData', JSON.stringify(data));
-      sessionStorage.setItem('applicationDataTimestamp', new Date().getTime().toString());
+      sessionStorage.setItem(cacheKey, JSON.stringify(data));
+      sessionStorage.setItem(`${cacheKey}_timestamp`, new Date().getTime().toString());
 
       setTotalApplications(data.total);
       setMonthsData(data.breakdown);
@@ -43,7 +55,7 @@ const ApplicationReceived = () => {
     } catch (error) {
       console.error("Error fetching application metrics:", error);
     }
-  }, []);
+  }, [year, month]);
 
   // Use effect for the initial fetch
   useEffect(() => {

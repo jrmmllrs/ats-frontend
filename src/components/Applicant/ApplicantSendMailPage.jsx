@@ -4,7 +4,6 @@ import useUserStore from '../../context/userStore';
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
-import Strike from "@tiptap/extension-strike";
 import CodeBlock from "@tiptap/extension-code-block";
 import Blockquote from "@tiptap/extension-blockquote";
 import { generateJSON } from "@tiptap/html"; // Import the utility to convert HTML to JSON
@@ -13,12 +12,6 @@ import {
   ItalicIcon,
   UnderlineIcon,
   ListBulletIcon,
-  NumberedListIcon,
-  StrikethroughIcon,
-  CodeBracketIcon,
-  ChatBubbleLeftRightIcon,
-  ArrowUturnLeftIcon,
-  ArrowUturnRightIcon,
   Bars3BottomLeftIcon,
   Bars3CenterLeftIcon,
   Bars3BottomRightIcon,
@@ -26,11 +19,11 @@ import {
 import api from "../../api/axios";
 import ConfirmationModal from "../Modals/ConfirmationModal";
 import SendMailToast from "../../assets/SendMailToast";
+import BulletList from "@tiptap/extension-bullet-list";
+import { bulletList } from "@tiptap/pm/schema-list";
 
 function ApplicantSendMailPage({ applicant }) {
-  const [subject, setSubject] = useState(
-    "Welcome to FullSuite – Preparing for Your Interviews and Assessment",
-  );
+  const [subject, setSubject] = useState("");
   const [attachments, setAttachments] = useState([]);
   const [emailContent, setEmailContent] = useState("");
   const [templates, setTemplates] = useState([]);
@@ -45,14 +38,14 @@ function ApplicantSendMailPage({ applicant }) {
     extensions: [
       StarterKit,
       Underline,
-      Strike,
+      BulletList,
       CodeBlock,
       Blockquote,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
     ],
     editorProps: {
       attributes: {
-        class: 'body-regular border border-gray-light rounded-lg prose prose-sm sm:prose lg:prose-lg xl:prose-2xl min-h-100 p-5 mx-auto focus:outline-none',
+        class: 'body-regular border border-gray-light rounded-lg min-h-100 p-5 mx-auto focus:outline-none',
       },
     },
     content: emailContent,
@@ -66,6 +59,7 @@ function ApplicantSendMailPage({ applicant }) {
       .get("/email/templates")
       .then((response) => {
         setTemplates(response.data.templates);
+        console.log("Templates fetched successfully:", response.data.templates);
       })
       .catch((error) => console.error("Error fetching data:", error.message));
   };
@@ -91,7 +85,7 @@ function ApplicantSendMailPage({ applicant }) {
   const handleTemplateSelect = (e) => {
     const selectedTitle = e.target.value;
     const template = templates.find((t) => t.title === selectedTitle);
-
+    console.log("Selected template:", template);
     if (template) {
       setSelectedTemplate(selectedTitle);
       setSubject(template.subject); // Update the subject
@@ -100,7 +94,7 @@ function ApplicantSendMailPage({ applicant }) {
       const jsonContent = generateJSON(template.body, [
         StarterKit,
         Underline,
-        Strike,
+        BulletList,
         CodeBlock,
         Blockquote,
         TextAlign.configure({ types: ["heading", "paragraph"] }),
@@ -108,6 +102,8 @@ function ApplicantSendMailPage({ applicant }) {
 
       editor?.commands.setContent(jsonContent); // Update the editor content
       setEmailContent(template.body);
+
+
     }
   };
 
@@ -119,7 +115,7 @@ function ApplicantSendMailPage({ applicant }) {
 
     // Payload
     const data = {
-      company_id: "468eb32f-f8c1-11ef-a725-0af0d960a833",
+      company_id  : user.company_id,
       title: templateTitle, // Use the user-provided title
       subject: subject,
       body: emailContent,
@@ -326,36 +322,46 @@ function ApplicantSendMailPage({ applicant }) {
       <div className="mb-5 rounded-xl border border-gray-200 bg-white p-3">
         <div className="mb-4 flex gap-3 rounded-lg bg-white">
           <BoldIcon
-            className="h-6 w-6 cursor-pointer"
+            className={`h-6 w-6 cursor-pointer ${editor.isActive("bold") ? "text-teal-600" : "text-gray-600"}`}
             onClick={() => editor.chain().focus().toggleBold().run()}
           />
           <ItalicIcon
-            className="h-6 w-6 cursor-pointer"
+            className={`h-6 w-6 cursor-pointer ${editor.isActive("italic") ? "text-teal-600" : "text-gray-600"}`}
             onClick={() => editor.chain().focus().toggleItalic().run()}
           />
           <UnderlineIcon
-            className="h-6 w-6 cursor-pointer"
+            className={`h-6 w-6 cursor-pointer ${editor.isActive("underline") ? "text-teal-600" : "text-gray-600"}`}
             onClick={() => editor.chain().focus().toggleUnderline().run()}
           />
+
           <ListBulletIcon
-            className="h-6 w-6 cursor-pointer"
+            className={`h-6 w-6 cursor-pointer ${editor.isActive("bulletList") ? "text-teal-600" : "text-gray-600"}`}
             onClick={() => editor.chain().focus().toggleBulletList().run()}
           />
+
           <Bars3BottomLeftIcon
-            className="h-6 w-6 cursor-pointer"
+            className={`h-6 w-6 cursor-pointer ${editor.isActive({ textAlign: 'left' }) ? "text-teal-600" : "text-gray-600"}`}
             onClick={() => editor.chain().focus().setTextAlign("left").run()}
           />
           <Bars3CenterLeftIcon
-            className="h-6 w-6 cursor-pointer"
+            className={`h-6 w-6 cursor-pointer ${editor.isActive({ textAlign: 'center' }) ? "text-teal-600" : "text-gray-600"}`}
             onClick={() => editor.chain().focus().setTextAlign("center").run()}
           />
           <Bars3BottomRightIcon
-            className="h-6 w-6 cursor-pointer"
+            className={`h-6 w-6 cursor-pointer ${editor.isActive({ textAlign: 'right' }) ? "text-teal-600" : "text-gray-600"}`}
             onClick={() => editor.chain().focus().setTextAlign("right").run()}
           />
+
         </div>
         <EditorContent
           editor={editor}
+          className="
+             [&_ul]:list-disc [&_ul]:pl-6
+             [&_ol]:list-decimal [&_ol]:pl-6
+             [&_em]:font-inherit
+             [&_strong]:font-avenir-black
+             [&_strong_em]:font-inherit
+             [&_em_strong]:font-inherit"
         />
       </div>
 

@@ -3,16 +3,15 @@ import { useState, useEffect } from 'react';
 import moment from 'moment';
 import { useNavigate } from 'react-router-dom';
 
-const RecentTable = ({ applicants, onSelectApplicant }) => {
-    const [recentApplicants, setApplicants] = useState(applicants || []);
+const InterviewTable = ({ applicants, onSelectApplicant }) => {
+    const [interviews, setInterviews] = useState(applicants || []);
     const navigate = useNavigate();
 
     useEffect(() => {
-        setApplicants(applicants || []);
+        setInterviews(applicants || []);
     }, [applicants]);
 
-
-
+ 
     const handleJobRowClick = (row) => {
         console.log("Clicked row:", row);
         if (onSelectApplicant) {
@@ -29,19 +28,21 @@ const RecentTable = ({ applicants, onSelectApplicant }) => {
             }
         });
     };
+
+
+
     const columns = [
-        { name: 'Name', selector: row => <NameCell row={row} /> },
-        { name: 'Email', selector: row => row.email_1 },
+        { name: 'Candidate', selector: row => `${row.first_name} ${row.last_name}` },
         { name: 'Position', selector: row => row.position },
-        { name: 'Status', selector: row => <StatusBadge status={row.status} /> },
-        { name: 'Applied Date', selector: row => moment(row.applied_date).format("LLL") },
+        { name: 'Interview Date', selector: row => moment(row.date_of_interview).format("LLL") },
+        { name: 'Interviewer', selector: row => row.interviewer_name },
     ];
 
     return (
         <>
-            {recentApplicants.length === 0 ? (
+            {interviews.length === 0 ? (
                 <div className="text-center text-lg font-semibold text-gray-600 mt-8">
-                    No recent applicants found.
+                    No upcoming interviews found.
                 </div>
             ) : (
                 <DataTable
@@ -51,8 +52,8 @@ const RecentTable = ({ applicants, onSelectApplicant }) => {
                     fixedHeaderScrollHeight="45vh"
                     responsive
                     columns={columns}
-                    data={recentApplicants}
-                    progressPending={!recentApplicants.length}
+                    data={interviews}
+                    progressPending={!interviews.length}
                     onRowClicked={handleJobRowClick}
                     progressComponent={<LoadingComponent />}
                 />
@@ -60,7 +61,6 @@ const RecentTable = ({ applicants, onSelectApplicant }) => {
         </>
     );
 };
-
 function LoadingComponent() {
     return (
         <div className="flex flex-col w-full space-y-2">
@@ -85,17 +85,10 @@ const StatusBadge = ({ status }) => {
     }
 
     return (
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full body-tiny ${color}`}>
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${color}`}>
             {status.replace(/_/g, " ")}
         </span>
     )
 }
 
-const NameCell = ({ row }) => {
-    const fullName = `${row.first_name} ${row.last_name}`;
-    return (
-        <span className="text-gray-dark body-regular">{fullName}</span>
-    );
-}
-
-export default RecentTable;
+export default InterviewTable;

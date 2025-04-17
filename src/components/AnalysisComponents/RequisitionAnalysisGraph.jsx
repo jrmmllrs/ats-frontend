@@ -21,37 +21,33 @@ ChartJS.register(
   Legend,
 );
 
-const ApplicantStatusChart = () => {
-  const [selectedRole, setSelectedRole] = useState("all");
-  const [selectedPeriod, setSelectedPeriod] = useState("month");
+const ApplicantStatusChart = ({ year, month }) => { // Receive year and month props
   const [showExportOptions, setShowExportOptions] = useState(false);
   const [requisitionData, setRequisitionData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [roles, setRoles] = useState([]);
   const [lastFetch, setLastFetch] = useState(0);
 
   // Generate a cache key based on the current filters
   const getCacheKey = useCallback(() => {
-    return `requisitionData_${selectedRole}_${selectedPeriod}`;
-  }, [selectedRole, selectedPeriod]);
+    return `requisitionData_year_${year}_month_${month}`;
+  }, [year, month]);
 
-  // Memoize the fetch function to maintain its identity between renders
   const fetchData = useCallback(async (forceRefresh = false) => {
     try {
       setLoading(true);
       const cacheKey = getCacheKey();
       const cacheTimeKey = `${cacheKey}_timestamp`;
-      
+
       // Check if we have valid cached data
       const cachedDataString = sessionStorage.getItem(cacheKey);
       const cachedTimeString = sessionStorage.getItem(cacheTimeKey);
-      
+
       if (!forceRefresh && cachedDataString && cachedTimeString) {
         const cachedTime = parseInt(cachedTimeString);
         const currentTime = new Date().getTime();
         const cacheAge = currentTime - cachedTime;
-        
+
         // Cache valid for 5 minutes (300000 ms)
         if (cacheAge < 300000) {
           const processedData = JSON.parse(cachedDataString);
@@ -61,36 +57,59 @@ const ApplicantStatusChart = () => {
           return;
         }
       }
-      
+
       // If no valid cache or force refresh, fetch from API
       let url = `/analytic/graphs/requisition`;
-      
-      // Add query parameters based on selections
-      if (selectedPeriod === "month") {
-        url += "?month=true";
-      } else if (selectedPeriod === "year") {
-        url += "?year=true";
+
+      // Build query parameters object based on the API's expected format
+      let params = {};
+
+      // Add year filter directly (not as filter_year)
+      if (year && year !== "all" && year !== "") {
+        params.year = year;
       }
-      
-      // Add position filter if not "all"
-      if (selectedRole !== "all") {
-        url += (url.includes("?") ? "&" : "?") + `position=${selectedRole}`;
+
+      // Add month filter directly (not as filter_month)
+      if (month && month !== "all" && month !== "") {
+        params.month = month;
       }
-      
-      const response = await api.get(url);
-      
-      // Ensure we have data for all months
-      let processedData = response.data.requisition;
-      
-      // If in month view, ensure all 12 months are present
-      if (selectedPeriod === "month") {
-        processedData = ensureAllMonthsPresent(processedData);
+
+      // Log the request details for debugging
+      console.log("Fetching requisition data with params:", params);
+
+      // Make the API request with params
+      const response = await api.get(url, { params });
+      console.log("API Response:", response.data);
+
+      // Use the data directly from the response
+      let processedData = response.data.requisition || [];
+
+      // If we have data but it's not showing proper labels for months, let's transform it
+      if (processedData.length > 0) {
+        // Ensure months have proper labels if they're numeric
+        processedData = processedData.map(item => {
+          // If label is just a number (month number), convert to month name
+          if (!isNaN(parseInt(item.label)) && parseInt(item.label) >= 1 && parseInt(item.label) <= 12) {
+            const monthNames = [
+              "January", "February", "March", "April", "May", "June",
+              "July", "August", "September", "October", "November", "December"
+            ];
+            const monthIndex = parseInt(item.label) - 1;
+            return {
+              ...item,
+              label: monthNames[monthIndex]
+            };
+          }
+          return item;
+        });
       }
-      
+
+      console.log("Processed data after modifications:", processedData);
+
       // Store in session storage with timestamp
       sessionStorage.setItem(cacheKey, JSON.stringify(processedData));
       sessionStorage.setItem(cacheTimeKey, new Date().getTime().toString());
-      
+
       setRequisitionData(processedData);
       setLastFetch(new Date().getTime());
       setError(null);
@@ -100,52 +119,7 @@ const ApplicantStatusChart = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedRole, selectedPeriod, getCacheKey]);
-  
-  // Function to ensure all months are present in the data
-  const ensureAllMonthsPresent = (data) => {
-    // Month names for reference
-    const monthNames = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
-    ];
-    
-    // Create a map of existing months
-    const monthMap = {};
-    data.forEach(item => {
-      if (item.month_num) {
-        monthMap[item.month_num] = item;
-      } else {
-        // Try to extract month number from label if it's a format like "January 2025"
-        const monthName = item.label.split(' ')[0];
-        const monthNum = monthNames.indexOf(monthName) + 1;
-        if (monthNum > 0) {
-          monthMap[monthNum] = item;
-        }
-      }
-    });
-    
-    // Fill in missing months
-    const year = new Date().getFullYear();
-    const result = [];
-    
-    for (let i = 1; i <= 12; i++) {
-      if (monthMap[i]) {
-        result.push(monthMap[i]);
-      } else {
-        result.push({
-          label: `${monthNames[i-1]}${selectedPeriod === "all" ? ` ${year}` : ''}`,
-          month_num: i,
-          year: selectedPeriod === "all" ? year : null,
-          closed: 0,
-          passed: 0,
-          onProgress: 0
-        });
-      }
-    }
-    
-    return result;
-  };
+  }, [year, month, getCacheKey]);
 
   // Use effect for the initial fetch and when filters change
   useEffect(() => {
@@ -176,9 +150,9 @@ const ApplicantStatusChart = () => {
   const options = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { 
-      legend: { 
-        display: true, 
+    plugins: {
+      legend: {
+        display: true,
         position: "right",
         labels: {
           usePointStyle: true,
@@ -188,7 +162,7 @@ const ApplicantStatusChart = () => {
       },
       tooltip: {
         callbacks: {
-          label: function(context) {
+          label: function (context) {
             const label = context.dataset.label || '';
             const value = context.parsed.y || 0;
             return `${label}: ${value}`;
@@ -196,20 +170,20 @@ const ApplicantStatusChart = () => {
         }
       }
     },
-    scales: { 
-      x: { 
+    scales: {
+      x: {
         stacked: true,
         grid: {
           display: false
         }
-      }, 
-      y: { 
+      },
+      y: {
         stacked: true,
         beginAtZero: true, // Ensures the y-axis begins at zero
         grid: {
           color: "rgba(0, 0, 0, 0.05)"
         }
-      } 
+      }
     },
   };
 
@@ -234,16 +208,10 @@ const ApplicantStatusChart = () => {
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h2 className="text-md font-semibold">Requisition Stats</h2>
- 
-          {/* Optional refresh button
-          <button 
-            onClick={() => fetchData(true)} 
-            className="text-xs text-blue-500 hover:underline ml-2"
-          >
-            Refresh
-          </button> */}
+
+
         </div>
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           <div className="relative">
             <button
               className="rounded bg-teal-600 px-3 py-1 text-sm text-white hover:bg-teal-700"
@@ -260,30 +228,9 @@ const ApplicantStatusChart = () => {
               </div>
             )}
           </div>
-
-          <select
-            value={selectedRole}
-            onChange={(e) => setSelectedRole(e.target.value)}
-            className="rounded border p-1 text-sm"
-          >
-            <option value="all">All Roles</option>
-            <option value="Software Engineer">Software Engineer</option>
-            <option value="Product Manager">Product Manager</option>
-            <option value="Data Analyst">Data Analyst</option>
-            <option value="UI/UX Designer">UI/UX Designer</option>
-          </select>
-          <select
-            value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value)}
-            className="rounded border p-1 text-sm"
-          >
-            <option value="month">By Month</option>
-            <option value="year">By Year</option>
-            <option value="all">All Time</option>
-          </select>
-        </div>
+        </div> */}
       </div>
-      
+
       {/* Show chart even if all values are zero (empty data check is for completely empty response) */}
       {requisitionData.length === 0 ? (
         <div className="flex h-64 w-full items-center justify-center">
@@ -294,7 +241,7 @@ const ApplicantStatusChart = () => {
           <Bar data={chartData} options={options} />
         </div>
       )}
-      
+
       <div className="mt-4">
         <div className="grid grid-cols-3 gap-4 text-center">
           <div className="rounded-md bg-gray-50 p-2">

@@ -1,17 +1,32 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import useUserStore from "../../context/userStore";
+import { addSetup, editSetup } from "../../utils/setupUtils";
+import setupStore from "../../context/setupStore";
 
-const AddSetupModal = ({ onClose, onSave }) => {
-    const [setupData, setSetupData] = useState({
+const AddSetupModal = ({ onClose, setupName, setupId }) => {
+    const { setSetupData } = setupStore();
+    const { user } = useUserStore();
+    const [setup, setsetup] = useState({
         setup_name: "",
+        userId: "",
     });
 
+    useEffect(() => {
+        if (user) {
+            setsetup((prev) => ({
+                setup_name: setupName ? setupName : "",
+                userId: user.user_id,
+            }))  
+        }
+    },[user]);
+
     const handleChange = (e) => {
-        setSetupData({ ...setupData, [e.target.name]: e.target.value });
+        setsetup({ ...setup, [e.target.name]: e.target.value });
     };
 
     const handleSubmit = (e) => {
-        e.preventDefault();
-        onSave(setupData);
+        e.preventDefault();  
+        setupName ? editSetup(setSetupData, setup, setupId) : addSetup(setSetupData, setup);
         onClose();
     };
 
@@ -20,7 +35,7 @@ const AddSetupModal = ({ onClose, onSave }) => {
             <div className="rounded-3xl bg-white mx-10 p-6 body-regular border border-gray-light w-[400px]">
                 {/* Header */}
                 <div className="flex items-center justify-between pb-1 border-b-2 border-gray-light">
-                    <h1 className="headline font-semibold text-gray-dark">Add New Setup</h1>
+                    <h1 className="headline font-semibold text-gray-dark">{setupName ? "Edit" : "Add New Setup"}</h1>
                 </div>
 
                 {/* Form */}
@@ -31,7 +46,7 @@ const AddSetupModal = ({ onClose, onSave }) => {
                         <input
                             type="text"
                             name="setup_name"
-                            value={setupData.setup_name}
+                            value={setup.setup_name}
                             onChange={handleChange}
                             className="w-full p-2 border border-gray-300 rounded-md"
                             required

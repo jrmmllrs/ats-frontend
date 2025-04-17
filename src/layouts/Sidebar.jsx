@@ -11,13 +11,21 @@ import { FaGear } from "react-icons/fa6";
 import useUserStore from "../context/userStore";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import profileUser from "../assets/profile-user.png";
 
-export default function Sidebar({ isOpen, onToggleSidebar, onSelectView }) {
+export default function Sidebar({ isOpen, onToggleSidebar, onSelectView, selectedView }) {
   const user = useUserStore((state) => state.user);
   const setUser = useUserStore((state) => state.setUser);
   const navigate = useNavigate();
-  const [currentView, setCurrentView] = useState("dashboard");
+  const [currentView, setCurrentView] = useState(selectedView || "dashboard");
+
+  // Synchronize with parent component's view state
+  useEffect(() => {
+    if (selectedView && selectedView !== currentView) {
+      setCurrentView(selectedView);
+    }
+  }, [selectedView]);
 
   const handleSelectView = (view) => {
     setCurrentView(view);
@@ -28,23 +36,23 @@ export default function Sidebar({ isOpen, onToggleSidebar, onSelectView }) {
   const handleLogout = () => {
     // Remove specific cookies
     Cookies.remove("token");
-    
+
     // Remove all cookies
     const allCookies = Cookies.get();
     Object.keys(allCookies).forEach(cookieName => {
       Cookies.remove(cookieName);
     });
-    
+
     // Clear localStorage items
     localStorage.removeItem("tabs");
     localStorage.removeItem("isNotificationRead");
-    
+
     // Clear sessionStorage items for all analytics components
     sessionStorage.clear();
-    
+
     // Clear user data from Zustand store
     setUser(null);
-    
+
     // Redirect to login page
     navigate("/login");
   };
@@ -76,7 +84,23 @@ export default function Sidebar({ isOpen, onToggleSidebar, onSelectView }) {
         <div>
           {/* User Info */}
           <div className="mb-6 flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-gray-300"></div>
+            <div className="h-10 w-10 rounded-full bg-white">
+              {user && user.profile_image ? (
+                <img
+                  src={user.profile_image}
+                  alt="User Profile"
+                  className="h-full w-full rounded-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center rounded-full bg-white">
+                  <img
+                    src={profileUser}
+                    alt="User Profile"
+                    className="h-full w-full rounded-full object-cover"
+                  />
+                </div>
+              )}
+            </div>
             <div>
               {user ? (
                 <>

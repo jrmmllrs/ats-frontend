@@ -1,4 +1,3 @@
-
 import { useEffect } from "react"
 import { FaExclamationTriangle, FaTimes, FaChevronLeft, FaChevronRight } from "react-icons/fa"
 
@@ -7,14 +6,41 @@ function ReviewApplicants({ applicants, currentIndex, onNext, onPrevious, onAcce
     onClose()
   }
 
-  useEffect(() => {
-    if (!applicants || applicants.length === 0) {
-      onClose()
-    }
-  }, [applicants, onClose])
+  // Remove the auto-close functionality when applicants are empty
+  // useEffect(() => {
+  //   if (!applicants || applicants.length === 0) {
+  //     onClose()
+  //   }
+  // }, [applicants, onClose])
 
+  // If no applicants, show a message instead of returning null
   if (!applicants || applicants.length === 0) {
-    return null
+    return (
+      <div className="bg-white rounded-lg w-full max-w-4xl p-6 shadow-lg">
+        <div className="flex justify-between items-center mb-6 border-b border-[#d9ebeb] pb-3">
+          <h2 className="text-2xl font-bold text-[#008080]">Review Applicants</h2>
+          <button
+            type="button"
+            className="text-[#66b2b2] hover:text-[#008080] transition-colors"
+            onClick={close}
+            aria-label="Close"
+          >
+            <FaTimes size={24} />
+          </button>
+        </div>
+        
+        <div className="py-8 text-center">
+          <p className="text-gray-600 mb-4">No applicants to review at this time.</p>
+          <button
+            type="button"
+            className="px-6 py-2 rounded-md bg-[#008080] text-white hover:bg-[#006666] font-medium transition-colors"
+            onClick={close}
+          >
+            Return to Upload
+          </button>
+        </div>
+      </div>
+    )
   }
 
   const { applicant, possibleDuplicates } = applicants[currentIndex]
@@ -50,7 +76,7 @@ function ReviewApplicants({ applicants, currentIndex, onNext, onPrevious, onAcce
 
               <div className="bg-white p-3 rounded-md">
                 <p className="font-medium text-[#008080]">Date Applied:</p>
-                <p className="text-gray-700">{applicant.discovered_at || "Not specified"}</p>
+                <p className="text-gray-700">{applicant.date_applied || "Not specified"}</p>
               </div>
 
               <div className="bg-white p-3 rounded-md">
@@ -169,4 +195,3 @@ function ReviewApplicants({ applicants, currentIndex, onNext, onPrevious, onAcce
 }
 
 export default ReviewApplicants
-

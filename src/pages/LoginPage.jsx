@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FiMail, FiLock, FiEye, FiEyeOff, FiUser, FiCopy } from "react-icons/fi";
 import api from "../api/axios";
 import Cookies from "js-cookie";
-
+import { Link } from "react-router-dom";
 export default function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -184,6 +184,12 @@ export default function LoginPage() {
                 )}
               </button>
             </form>
+
+            <div className="text-center">
+                <Link to="/reset-password" className="text-sm text-teal-600 hover:text-teal-700 hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
           </div>
         </div>
 
@@ -193,7 +199,7 @@ export default function LoginPage() {
             <p className="text-gray-600 text-center font-medium mb-3">Test Credentials</p>
             <div className="space-y-4">
               {[
-                { email: "testuser@example.com", password: "password", label: "Test User" },
+                { email: "percy@fullsuite.ph", password: "password", label: "Test User" },
                 { email: "jun.zaragosa@fullsuite.ph", password: "password", label: "HR User" },
                 { email: "ats_interviewer@example.com", password: "password", label: "Interviewer" },
               ].map((cred, index) => (

@@ -1,43 +1,135 @@
-import { useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import JobsTable from "../components/JobsTable";
 import { FaGear, FaPlus } from "react-icons/fa6";
 import IndustriesModal from "../components/Modals/IndustriesModal";
 import { set } from "date-fns";
-import { searchJobs } from "../utils/jobListing";
+import { addJob, fetchCloseJobsCount, fetchOpenJobsCount, fetchJobs, searchJobs } from "../utils/jobListing";
 import jobStore from "../context/jobListingStore";
+import setupStore from "../context/setupStore";
+import industriesStore from "../context/industriesStore";
+import useUserStore from "../context/userStore";
+import JobCountStore from "../context/jobsCountStore";
 
 const JobList = () => {
+    const { setOpenJobsCount, setCloseJobsCount } = JobCountStore();
+    const { user } = useUserStore();
     const [searchVal, setSearchVal] = useState("");
     const [isAddJobModalOpen, setIsAddJobModalOpen] = useState(false);
-    const [isGearModalOpen, setIsGearModalOpen] = useState(false);
+    const { industries, setIndustries } = industriesStore();
+    const descriptionRef = useRef(null);
+    const responsibilitiesRef = useRef(null);
+    const requirementsRef = useRef(null);
+    const preferredQualificationsRef = useRef(null);
+
     const [jobData, setJobData] = useState({
         title: "",
-        industry: "",
+        industryId: "",
         description: "",
-        minSalary: "",
-        maxSalary: "",
+        minSalary: "0",
+        maxSalary: "0",
         employmentType: "Full-time",
-        setup: "On-site",
+        setup: "",
         responsibilities: "",
         requirements: "",
         preferredQualifications: "",
-        status: "Open",
-        visibility: "Public",
+        isOpen: "1",
+        isShown: "1",
+        userId: user.user_id,
     });
-    const { jobsData, setJobsData } = jobStore();
+    const { setupData, setSetupData } = setupStore();
+    const { jobsData, setJobsData, isGearModalOpen, setIsGearModalOpen } = jobStore();
+
+    useEffect(() => {
+        if (industries.length > 0) {
+            setJobData((prevJobData) => ({
+                ...prevJobData,
+                industryId: industries[0].industryId,
+            }));
+        }
+    }, [industries]);
+
+    useEffect(() => {
+        const refs = [
+            descriptionRef,
+            responsibilitiesRef,
+            requirementsRef,
+            preferredQualificationsRef,
+        ];
+
+        refs.forEach((ref) => {
+            if (ref.current) {
+                ref.current.style.height = "auto";
+                ref.current.style.height = `${ref.current.scrollHeight}px`;
+            }
+        });
+    }, [
+        jobData.description,
+        jobData.responsibilities,
+        jobData.requirements,
+        jobData.preferredQualifications,
+    ]);
+
+
+    useEffect(() => {
+        if (setupData.length > 0) {
+            setJobData((prevJobData) => ({
+                ...prevJobData,
+                setupId: setupData[0].setupId,
+            }));
+        }
+    }, [industries]);
 
     const handleChange = (e) => {
         setJobData({ ...jobData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        await addJob(jobData);
+        await fetchJobs(setJobsData);
+        await fetchCloseJobsCount(setCloseJobsCount)
+        await fetchOpenJobsCount(setOpenJobsCount);
         console.log("Job Data Submitted:", jobData);
+
+        resetForm();
         setIsAddJobModalOpen(false);
     };
 
+    const resetForm = () => {
+        // Clear jobData to initial values
+        setJobData({
+            title: "",
+            industryId: industries[0]?.industryId || "",
+            description: "",
+            minSalary: "0",
+            maxSalary: "0",
+            employmentType: "Full-time",
+            setup: "",
+            responsibilities: "",
+            requirements: "",
+            preferredQualifications: "",
+            isOpen: "1",
+            isShown: "1",
+            userId: user.user_id,
+        });
+
+        // Clear the height of each ref
+        const refs = [
+            descriptionRef,
+            responsibilitiesRef,
+            requirementsRef,
+            preferredQualificationsRef,
+        ];
+        refs.forEach((ref) => {
+            if (ref.current) {
+                ref.current.style.height = "auto";
+            }
+        });
+    };
+
+
     return (
-        <div className="rounded-3xl bg-white mx-10 p-6 pb-1 border border-gray-light">
+        <div className="rounded-3xl bg-white p-6 pb-1 border border-gray-light">
             {/* Header Section */}
             <div className="mb-4 flex items-center justify-between gap-2">
                 <h1 className="headline font-semibold text-gray-dark">Job List</h1>
@@ -65,7 +157,8 @@ const JobList = () => {
                     type="text"
                     placeholder="Search jobs..."
                     className="w-full sm:w-1/2 md:w-1/4 p-2 body-regular focus:outline-teal border border-gray-300 rounded-md"
-                    onChange={(e) => {setSearchVal(e.target.value); searchJobs(e.target.value, setJobsData);
+                    onChange={(e) => {
+                        setSearchVal(e.target.value); searchJobs(e.target.value, setJobsData);
                     }}
                 />
             </div>
@@ -77,197 +170,218 @@ const JobList = () => {
 
             {/* Add Job Modal */}
             {isAddJobModalOpen && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white p-6 rounded-lg text-gray-dark border border-gray-light w-full max-w-[50vw] ml-70">
-                        <h2 className="headline mb-4">Add Job</h2>
 
-                        <form onSubmit={handleSubmit} className="space-y-4 body-regular">
-                            <div className="grid grid-cols-2 gap-4">
-                                {/* Job Title */}
+                <div className="fixed inset-0 bg-black/50 z-50 overflow-y-auto">
+                    <div className="flex items-center justify-center min-h-screen p-4">
+                        <div className="bg-white p-6 rounded-lg text-gray-dark border border-gray-light w-full max-w-3xl sm:max-w-2xl md:max-w-[80vw]">
+                            <h2 className="headline mb-4">Add Job</h2>
+
+                            <form onSubmit={handleSubmit} className="space-y-4 body-regular">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {/* Job Title */}
+                                    <div>
+                                        <label className="block">Job Title</label>
+                                        <input
+                                            type="text"
+                                            name="title"
+                                            value={jobData.title}
+                                            onChange={handleChange}
+                                            className="w-full p-2 border border-gray-light rounded-md"
+                                            required
+                                        />
+                                    </div>
+
+                                    {/* Industry */}
+                                    <div>
+                                        <label className="block">Industry</label>
+                                        <select
+                                            name="industryId"
+                                            value={jobData.industryId}
+                                            onChange={handleChange}
+                                            className="w-full p-2 border border-gray-light rounded-md"
+                                        >
+                                            {industries.map((industry, index) => (
+                                                <option key={index} value={industry.industryId}>
+                                                    {industry.industryName}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {/* Description */}
                                 <div>
-                                    <label className="block">Job Title</label>
-                                    <input
-                                        type="text"
-                                        name="title"
-                                        value={jobData.title}
-                                        onChange={handleChange}
-                                        className="w-full p-2 border border-gray-light rounded-md"
+                                    <label className="block">Description</label>
+                                    <textarea
+                                        ref={descriptionRef}
+                                        name="description"
+                                        value={jobData.description}
+                                        onChange={(e) => {
+                                            handleChange(e);
+                                            e.target.style.height = "auto";
+                                            e.target.style.height = `${e.target.scrollHeight}px`;
+                                        }}
+                                        className="w-full p-2 border border-gray-light rounded-md resize-none overflow-hidden"
                                         required
                                     />
                                 </div>
 
-                                {/* Industry */}
+
+                                {/* Salary */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block">Min Salary</label>
+                                        <input
+                                            type="number"
+                                            name="minSalary"
+                                            value={jobData.minSalary}
+                                            onChange={handleChange}
+                                            className="w-full p-2 border border-gray-light rounded-md"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block">Max Salary</label>
+                                        <input
+                                            type="number"
+                                            name="maxSalary"
+                                            value={jobData.maxSalary}
+                                            onChange={handleChange}
+                                            className="w-full p-2 border border-gray-light rounded-md"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Employment Type & Setup */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block">Employment Type</label>
+                                        <select
+                                            name="employmentType"
+                                            value={jobData.employmentType}
+                                            onChange={handleChange}
+                                            className="w-full p-2 border border-gray-light rounded-md"
+                                        >
+                                            <option value="Full-time">Full-time</option>
+                                            <option value="Part-time">Part-time</option>
+                                            <option value="Contract">Contract</option>
+                                            <option value="Internship">Internship</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block">Setup</label>
+                                        <select
+                                            name="setupId"
+                                            value={jobData.setupId}
+                                            onChange={handleChange}
+                                            className="w-full p-2 border border-gray-light rounded-md"
+                                        >
+                                            {setupData.map((setup, index) => (
+                                                <option key={index} value={setup.setupId}>
+                                                    {setup.setupName}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {/* Responsibilities */}
                                 <div>
-                                    <label className="block">Industry</label>
-                                    <input
-                                        type="text"
-                                        name="industry"
-                                        value={jobData.industry}
-                                        onChange={handleChange}
-                                        className="w-full p-2 border border-gray-light rounded-md"
+                                    <label className="block">Responsibilities</label>
+                                    <textarea
+                                        ref={responsibilitiesRef}
+                                        name="responsibilities"
+                                        value={jobData.responsibilities}
+                                        onChange={(e) => {
+                                            handleChange(e);
+                                            e.target.style.height = "auto";
+                                            e.target.style.height = `${e.target.scrollHeight}px`;
+                                        }}
+                                        className="w-full p-2 border border-gray-light rounded-md resize-none overflow-hidden"
                                         required
                                     />
+
                                 </div>
-                            </div>
 
-                            {/* Description */}
-                            <div>
-                                <label className="block">Description</label>
-                                <textarea
-                                    name="description"
-                                    value={jobData.description}
-                                    onChange={handleChange}
-                                    className="w-full p-2 border border-gray-light rounded-md"
-                                    required
-                                ></textarea>
-                            </div>
-
-                            {/* Min and Max Salary */}
-                            <div className="grid grid-cols-2 gap-4">
+                                {/* Requirements */}
                                 <div>
-                                    <label className="block">Min Salary</label>
-                                    <input
-                                        type="number"
-                                        name="minSalary"
-                                        value={jobData.minSalary}
-                                        onChange={handleChange}
-                                        className="w-full p-2 border border-gray-light rounded-md"
+                                    <label className="block">Requirements</label>
+                                    <textarea
+                                        ref={requirementsRef}
+                                        name="requirements"
+                                        value={jobData.requirements}
+                                        onChange={(e) => {
+                                            handleChange(e);
+                                            e.target.style.height = "auto";
+                                            e.target.style.height = `${e.target.scrollHeight}px`;
+                                        }}
+                                        className="w-full p-2 border border-gray-light rounded-md resize-none overflow-hidden"
                                         required
                                     />
+
                                 </div>
+
+                                {/* Preferred Qualifications */}
                                 <div>
-                                    <label className="block">Max Salary</label>
-                                    <input
-                                        type="number"
-                                        name="maxSalary"
-                                        value={jobData.maxSalary}
-                                        onChange={handleChange}
-                                        className="w-full p-2 border border-gray-light rounded-md"
-                                        required
+                                    <label className="block">Preferred Qualifications</label>
+                                    <textarea
+                                        ref={preferredQualificationsRef}
+                                        name="preferredQualifications"
+                                        value={jobData.preferredQualifications}
+                                        onChange={(e) => {
+                                            handleChange(e);
+                                            e.target.style.height = "auto";
+                                            e.target.style.height = `${e.target.scrollHeight}px`;
+                                        }}
+                                        className="w-full p-2 border border-gray-light rounded-md resize-none overflow-hidden"
                                     />
                                 </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-
-                                {/* Employment Type */}
-                                <div>
-                                    <label className="block">Employment Type</label>
-                                    <select
-                                        name="employmentType"
-                                        value={jobData.employmentType}
-                                        onChange={handleChange}
-                                        className="w-full p-2 border border-gray-light rounded-md"
-                                    >
-                                        <option value="Full-time">Full-time</option>
-                                        <option value="Part-time">Part-time</option>
-                                        <option value="Contract">Contract</option>
-                                        <option value="Internship">Internship</option>
-                                    </select>
-                                </div>
-
-                                {/* Setup */}
-                                <div>
-                                    <label className="block">Setup</label>
-                                    <select
-                                        name="setup"
-                                        value={jobData.setup}
-                                        onChange={handleChange}
-                                        className="w-full p-2 border border-gray-light rounded-md"
-                                    >
-                                        <option value="On-site">On-site</option>
-                                        <option value="Remote">Remote</option>
-                                        <option value="Hybrid">Hybrid</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            {/* Responsibilities */}
-                            <div>
-                                <label className="block">Responsibilities</label>
-                                <textarea
-                                    name="responsibilities"
-                                    value={jobData.responsibilities}
-                                    onChange={handleChange}
-                                    className="w-full p-2 border border-gray-light rounded-md"
-                                    required
-                                ></textarea>
-                            </div>
-
-                            {/* Requirements */}
-                            <div>
-                                <label className="block">Requirements</label>
-                                <textarea
-                                    name="requirements"
-                                    value={jobData.requirements}
-                                    onChange={handleChange}
-                                    className="w-full p-2 border border-gray-light rounded-md"
-                                    required
-                                ></textarea>
-                            </div>
-
-                            {/* Preferred Qualifications */}
-                            <div>
-                                <label className="block">Preferred Qualifications</label>
-                                <textarea
-                                    name="preferredQualifications"
-                                    value={jobData.preferredQualifications}
-                                    onChange={handleChange}
-                                    className="w-full p-2 border border-gray-light rounded-md"
-                                ></textarea>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
 
                                 {/* Status */}
-                                <div>
-                                    <label className="block">Status</label>
-                                    <select
-                                        name="status"
-                                        value={jobData.status}
-                                        onChange={handleChange}
-                                        className="w-full p-2 border border-gray-light rounded-md"
-                                    >
-                                        <option value="Open">Open</option>
-                                        <option value="Closed">Closed</option>
-                                    </select>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block">Status</label>
+                                        <select
+                                            name="isOpen"
+                                            onChange={handleChange}
+                                            className="w-full p-2 border border-gray-light rounded-md"
+                                        >
+                                            <option value="1">Open</option>
+                                            <option value="0">Closed</option>
+                                        </select>
+                                    </div>
                                 </div>
 
-                                {/* Visibility */}
-                                <div>
-                                    <label className="block">Visibility</label>
-                                    <select
-                                        name="visibility"
-                                        value={jobData.visibility}
-                                        onChange={handleChange}
-                                        className="w-full p-2 border border-gray-light rounded-md"
+                                {/* Buttons */}
+                                <div className="flex justify-end space-x-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            resetForm();
+                                            setIsAddJobModalOpen(false);
+                                        }}
+                                        className="px-4 py-2 bg-white border border-teal text-teal rounded-md cursor-pointer hover:bg-teal/20"
                                     >
-                                        <option value="show">Shown</option>
-                                        <option value="hide">Hidden</option>
-                                    </select>
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-4 py-2 bg-teal text-white rounded-md cursor-pointer hover:bg-teal/70"
+                                    >
+                                        Save Job
+                                    </button>
                                 </div>
-                            </div>
-
-                            {/* Buttons */}
-                            <div className="flex justify-end space-x-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsAddJobModalOpen(false)}
-                                    className="px-4 py-2 bg-white border border-teal text-teal rounded-md cursor-pointer hover:bg-teal/20"
-                                >
-                                    Cancel
-                                </button>
-                                <button type="submit" className="px-4 py-2 bg-teal text-white rounded-md cursor-pointer hover:bg-teal/70">
-                                    Save Job
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                            </form>
+                        </div>
+                    </div >
                 </div>
+
             )}
 
             {/* Gear Modal */}
             {isGearModalOpen && <IndustriesModal onClose={() => setIsGearModalOpen(false)} />}
-        </div>
+        </div >
     );
 };
 

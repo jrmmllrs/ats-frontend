@@ -1,36 +1,21 @@
 import DataTable from 'react-data-table-component';
 import { useState, useEffect } from 'react';
 import moment from 'moment';
-import { useNavigate } from 'react-router-dom';
 
-const RecentTable = ({ applicants, onSelectApplicant }) => {
-    const [recentApplicants, setApplicants] = useState(applicants || []);
-    const navigate = useNavigate();
+const PendingTable = ({ applicants, onSelectApplicant }) => {
+    const [pendingApplicants, setPendingApplicants] = useState(applicants || []);
 
     useEffect(() => {
-        setApplicants(applicants || []);
+        setPendingApplicants(applicants || []);
     }, [applicants]);
-
-
 
     const handleJobRowClick = (row) => {
         console.log("Clicked row:", row);
-        if (onSelectApplicant) {
-            onSelectApplicant(row);
-            return;
-        }
-
-        const applicantId = row.applicant_id || row.id;
-        // Use state to pass data instead of query parameters
-        navigate("/ats", {
-            state: {
-                view: "listings",
-                applicantId: applicantId
-            }
-        });
+        if (onSelectApplicant) onSelectApplicant(row); // optional callback
     };
+
     const columns = [
-        { name: 'Name', selector: row => <NameCell row={row} /> },
+        { name: 'Name', selector: row => `${row.first_name} ${row.last_name}` },
         { name: 'Email', selector: row => row.email_1 },
         { name: 'Position', selector: row => row.position },
         { name: 'Status', selector: row => <StatusBadge status={row.status} /> },
@@ -39,7 +24,7 @@ const RecentTable = ({ applicants, onSelectApplicant }) => {
 
     return (
         <>
-            {recentApplicants.length === 0 ? (
+            {pendingApplicants.length === 0 ? (
                 <div className="text-center text-lg font-semibold text-gray-600 mt-8">
                     No recent applicants found.
                 </div>
@@ -51,8 +36,8 @@ const RecentTable = ({ applicants, onSelectApplicant }) => {
                     fixedHeaderScrollHeight="45vh"
                     responsive
                     columns={columns}
-                    data={recentApplicants}
-                    progressPending={!recentApplicants.length}
+                    data={pendingApplicants}
+                    progressPending={!pendingApplicants.length}
                     onRowClicked={handleJobRowClick}
                     progressComponent={<LoadingComponent />}
                 />
@@ -85,17 +70,10 @@ const StatusBadge = ({ status }) => {
     }
 
     return (
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full body-tiny ${color}`}>
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${color}`}>
             {status.replace(/_/g, " ")}
         </span>
     )
 }
 
-const NameCell = ({ row }) => {
-    const fullName = `${row.first_name} ${row.last_name}`;
-    return (
-        <span className="text-gray-dark body-regular">{fullName}</span>
-    );
-}
-
-export default RecentTable;
+export default PendingTable;

@@ -1,10 +1,13 @@
-import { useEffect, useState } from "react"
+import { act, useEffect, useState } from "react"
 import { FiUsers, FiUserCheck, FiCalendar, FiBriefcase, FiRefreshCw } from "react-icons/fi"
 
 import api from "../api/axios"
 
 import PendingApplicantConfirmationModal from "../components/Modals/PendingApplicantConfirmationModal"
 import RecentTable from "../components/RecentTable"
+import PendingTable from "../components/PendingTable"
+import InterviewTable from "../components/InterviewTable"
+import { useNavigate } from "react-router-dom"
 
 // Helper function to format dates TO BE REMOVED
 const formatDate = (dateString) => {
@@ -16,27 +19,6 @@ const formatDate = (dateString) => {
     hour: "2-digit",
     minute: "2-digit",
   }).format(date)
-}
-
-// Status badge component TO BE MOVED IN THE RECENT TABLE
-const StatusBadge = ({ status }) => {
-  let color = "bg-gray-light text-gray-800"
-
-  if (status.includes("PASSED") || status.includes("ACCEPTED") || status === "COMPLETED") {
-    color = "bg-teal-light text-white"
-  } else if (status.includes("FAILED") || status.includes("REJECTED")) {
-    color = "bg-gray-light text-gray-dark"
-  } else if (status.includes("INTERVIEW") || status.includes("SENT") || status === "SUBMITTED") {
-    color = "bg-teal-soft text-teal"
-  } else if (status.includes("PENDING")) {
-    color = "bg-orange-100 text-gray-dark"
-  }
-
-  return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${color}`}>
-      {status.replace(/_/g, " ")}
-    </span>
-  )
 }
 
 // Custom Tabs component
@@ -67,10 +49,12 @@ const Skeleton = ({ className = "" }) => {
 }
 
 // Summary Cards Section
-const SummarySection = ({ onRefresh }) => {
+const SummarySection = ({ onRefresh, setActiveTab }) => {
   const [summaryData, setSummaryData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const navigate = useNavigate();
+
 
   const fetchSummaryData = async () => {
     setLoading(true)
@@ -96,11 +80,24 @@ const SummarySection = ({ onRefresh }) => {
     }
   }, [onRefresh])
 
+  const handleCardClick = (tab) => {
+    if (tab === "interviews") {
+      setActiveTab(tab)
+      return;
+    }
+
+    navigate("/ats", {
+      state: {
+        view: tab,
+      }
+    });
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
       <div
-        onClick={() => alert("applicants")}
-        className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
+        onClick={() => handleCardClick("listings")}
+        className="bg-white rounded-2xl border border-gray-200 cursor-pointer hover:bg-teal-soft transition duration-200 ease-in-out"
       >
         <div className="p-6 flex flex-col">
           <span className="body-regular text-gray-500">Total Applicants</span>
@@ -118,8 +115,8 @@ const SummarySection = ({ onRefresh }) => {
       </div>
 
       <div
-        onClick={() => alert("applicants")}
-        className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
+        onClick={() => handleCardClick("analytics")}
+        className="bg-white rounded-2xl border border-gray-200 cursor-pointer hover:bg-teal-soft transition duration-200 ease-in-out"
       >
         <div className="p-6 flex flex-col">
           <span className="body-regular text-gray-500">Hired</span>
@@ -137,8 +134,8 @@ const SummarySection = ({ onRefresh }) => {
       </div>
 
       <div
-        onClick={() => alert("applicants")}
-        className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
+        onClick={() => handleCardClick("interviews")}
+        className="bg-white rounded-2xl border border-gray-200 cursor-pointer hover:bg-teal-soft transition duration-200 ease-in-out"
       >
         <div className="p-6 flex flex-col">
           <span className="body-regular text-gray-500">In Interview Process</span>
@@ -156,8 +153,8 @@ const SummarySection = ({ onRefresh }) => {
       </div>
 
       <div
-        onClick={() => alert("jobs")}
-        className="bg-white rounded-2xl border border-gray-200 cursor-pointer"
+        onClick={() => handleCardClick("jobs")}
+        className="bg-white rounded-2xl border border-gray-200 cursor-pointer hover:bg-teal-soft transition duration-200 ease-in-out"
       >
         <div className="p-6 flex flex-col">
           <span className="body-regular text-gray-500">Open Positions</span>
@@ -210,7 +207,7 @@ const RecentApplicantsSection = ({ onRefresh }) => {
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Recent Applicants</h3>
+        <h3 className="headline text-gray-900">Recent Applicants</h3>
         <p className="body-tiny text-gray-400">Latest applicants in the system</p>
       </div>
 
@@ -288,9 +285,9 @@ const PendingApplicantsSection = ({ onRefresh }) => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Pending Applicants</h3>
-        <p className="body-regular text-gray-500">Applicants awaiting review</p>
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="headline text-gray-900">Pending Applicants</h3>
+        <p className="body-tiny text-gray-400">Applicants awaiting review</p>
       </div>
 
       {loading ? (
@@ -302,91 +299,39 @@ const PendingApplicantsSection = ({ onRefresh }) => {
       ) : error ? (
         <div className="p-4 text-red-500 text-center">{error}</div>
       ) : (
-        <div className="overflow-x-auto h-[400px]">
-          <table className="min-w-full divide-y divide-gray-200 table-fixed w-full">
-            <thead className="bg-gray-50 sticky top-0 z-10">
-              <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
-                  Name
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
-                  Email
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
-                  Position
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
-                  Status
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
-                  Applied Date
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {pendingApplicants.length > 0 ? (
-                pendingApplicants.map((applicant) => (
-                  <tr
-                    key={applicant.applicant_id}
-                    onClick={() => handleRowClick(applicant)}
-                    className="hover:bg-gray-50 cursor-pointer"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900">
-                        {`${applicant.first_name} ${applicant.middle_name ? applicant.middle_name + " " : ""}${applicant.last_name}`}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap body-regular text-gray-500">
-                      {applicant.email_1}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap body-regular text-gray-500">
-                      {applicant.position}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <StatusBadge status={applicant.status} />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap body-regular text-gray-500">
-                      {formatDate(applicant.applied_date)}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="5" className="px-6 py-4 text-center body-regular text-gray-500">
-                    No pending applicants found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <PendingTable
+          applicants={pendingApplicants}
+          onSelectApplicant={handleRowClick}
+        />
       )}
 
       {/* Confirmation Modal */}
-      {selectedApplicant && (
-        <PendingApplicantConfirmationModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          applicant={selectedApplicant}
-          onActionComplete={handleActionComplete}
-        />
-      )}
-    </div>
+      {
+        selectedApplicant && (
+          <PendingApplicantConfirmationModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            applicant={selectedApplicant}
+            onActionComplete={handleActionComplete}
+          />
+        )
+      }
+    </div >
   )
 }
 
 // Interviews Section
 const InterviewsSection = ({ onRefresh }) => {
-  const [interviewSchedule, setInterviewSchedule] = useState([])
+  const [applicants, setApplicants] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const fetchInterviewSchedule = async () => {
+  const fetchApplicants = async () => {
     setLoading(true)
     setError(null)
     try {
       const response = await api.get("/analytics/dashboard/interview-schedule")
-      setInterviewSchedule(response.data.data)
+      setApplicants(response.data.data)
     } catch (err) {
       console.error("Error fetching interview schedule:", err)
       setError("Failed to load interview schedule")
@@ -396,20 +341,20 @@ const InterviewsSection = ({ onRefresh }) => {
   }
 
   useEffect(() => {
-    fetchInterviewSchedule()
+    fetchApplicants()
   }, [])
 
   useEffect(() => {
     if (onRefresh) {
-      fetchInterviewSchedule()
+      fetchApplicants()
     }
   }, [onRefresh])
 
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Upcoming Interviews</h3>
-        <p className="body-regular text-gray-500">Scheduled interviews for the next 7 days</p>
+        <h3 className="headline text-gray-900">Upcoming Interviews</h3>
+        <p className="body-tiny text-gray-400">Scheduled interviews for the next 7 days</p>
       </div>
 
       {loading ? (
@@ -421,54 +366,17 @@ const InterviewsSection = ({ onRefresh }) => {
       ) : error ? (
         <div className="p-4 text-red-500 text-center">{error}</div>
       ) : (
-        <div className="overflow-x-auto h-[400px]">
-          <table className="min-w-full divide-y divide-gray-200 table-fixed w-full">
-            <thead className="bg-gray-50 sticky top-0 z-10">
-              <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
-                  Candidate
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
-                  Position
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
-                  Interview Date
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
-                  Interviewer
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {interviewSchedule.length > 0 ? (
-                interviewSchedule.map((interview) => (
-                  <tr key={interview.interview_id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900">
-                        {`${interview.first_name} ${interview.middle_name ? interview.middle_name + " " : ""}${interview.last_name}`}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap body-regular text-gray-500">
-                      {interview.position}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap body-regular text-gray-500">
-                      {formatDate(interview.date_of_interview)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap body-regular text-gray-500">
-                      {interview.interviewer_name}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="4" className="px-6 py-4 text-center body-regular text-gray-500">
-                    No upcoming interviews found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <InterviewTable
+          applicants={applicants}
+        />
+
+        //   <RecentTable
+        //   applicants={applicants}
+        //   onRowClick={(applicant) => {
+        //     console.log("Clicked applicant:", applicant)
+        //     alert(`Applicant: ${applicant.first_name} ${applicant.last_name}`)
+        //   }}
+        // />
       )}
     </div>
   )
@@ -495,7 +403,7 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div className="w-[80%] mx-auto mt-5">
+      <div className=" mx-auto mt-10">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
@@ -511,7 +419,7 @@ export default function Dashboard() {
         </div>
 
         {/* Summary Cards */}
-        <SummarySection onRefresh={refreshCounter} />
+        <SummarySection onRefresh={refreshCounter} setActiveTab={setActiveTab} />
 
         <div className=" gap-6">
           <div className="bg-white rounded-2xl border border-gray-200">
@@ -519,18 +427,15 @@ export default function Dashboard() {
               <Tabs tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
 
               <div className="p-4">
-                {/* Fixed content container with consistent height to prevent layout shift */}
-                {/* Applicants Tab Content */}
+
                 <div className={activeTab === "applicants" ? "block" : "hidden"}>
                   <RecentApplicantsSection onRefresh={refreshCounter} />
                 </div>
 
-                {/* Pending Applicants Tab Content */}
                 <div className={activeTab === "pending" ? "block" : "hidden"}>
                   <PendingApplicantsSection onRefresh={refreshCounter} />
                 </div>
 
-                {/* Interviews Tab Content */}
                 <div className={activeTab === "interviews" ? "block" : "hidden"}>
                   <InterviewsSection onRefresh={refreshCounter} />
                 </div>
