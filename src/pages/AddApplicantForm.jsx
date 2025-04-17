@@ -185,7 +185,6 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
       newEmails[index] = '';
       return { ...prev, additionalEmails: newEmails };
     });
-    checkForDuplicates();
   };
 
   const handleAddPhone = () => {
@@ -248,28 +247,26 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
       newPhones[index] = '';
       return { ...prev, additionalPhones: newPhones };
     });
-    checkForDuplicates();
   }
   const handleChange = async(e) => {
     const { name, value } = e.target
     if (name.startsWith("additionalEmail")) {
       const index = Number.parseInt(name.split("_")[1], 10)
-      await setFormData((prev) => {
+      setFormData((prev) => {
         const newEmails = [...prev.additionalEmails]
         newEmails[index] = value
         return { ...prev, additionalEmails: newEmails }
       })
     } else if (name.startsWith("additionalPhone")) {
       const index = Number.parseInt(name.split("_")[1], 10)
-      await setFormData((prev) => {
+      setFormData((prev) => {
         const newPhones = [...prev.additionalPhones]
         newPhones[index] = value
         return { ...prev, additionalPhones: newPhones }
       })
     } else {
-      await setFormData((prev) => ({ ...prev, [name]: value }))
+      setFormData((prev) => ({ ...prev, [name]: value }))
     }
-    checkForDuplicates();
   }
   const handleBlur = () => {
     checkForDuplicates()
