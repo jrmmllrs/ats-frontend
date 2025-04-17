@@ -346,26 +346,34 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Blacklisted Type
                         </label>
-                        <input
-                          type="text"
+                        <select
                           value={blacklistedType}
                           onChange={(e) => setBlacklistedType(e.target.value)}
                           className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                          placeholder="Enter type"
-                        />
+                        >
+                          <option value="">Select type</option>
+                          <option value="SOFT">Soft</option>
+                          <option value="HARD">Hard</option>
+                        </select>
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Reason for Blacklist
                         </label>
-                        <input
-                          type="text"
+                        <select
                           value={reason}
                           onChange={(e) => setReason(e.target.value)}
                           className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                          placeholder="Enter reason"
-                        />
+                        >
+                          <option value="">Select reason</option>
+                          <option value="DID_NOT_TAKE_TEST">Did not take test</option>
+                          <option value="NO_SHOW">No show</option>
+                          <option value="CULTURE_MISMATCH">Culture mismatch</option>
+                          <option value="EXPECTED_SALARY_MISMATCH">Expected salary mismatch</option>
+                          <option value="WORKING_SCHEDULE_MISMATCH">Working schedule mismatch</option>
+                          <option value="OTHER_REASONS">Other reasons</option>
+                        </select>
                       </div>
                     </div>
                   )}
