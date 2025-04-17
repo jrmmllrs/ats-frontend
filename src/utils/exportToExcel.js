@@ -1,6 +1,6 @@
 import getFilteredApplicants from "../services/getFilteredApplicants";
 import * as XLSX from 'xlsx';
-import saveAs  from 'file-saver';
+import saveAs from 'file-saver';
 
 const createExcel = (data, fileName) => {
     const ws = XLSX.utils.json_to_sheet(data);
@@ -12,12 +12,16 @@ const createExcel = (data, fileName) => {
 };
 
 const exportToExcel = async (dateFilter, dateFilterValue, position, status) => {
-    
+    console.log(position);
+    console.log(status);
+
+
+
     const applicants = await getFilteredApplicants(dateFilter, dateFilterValue, position, status);
     console.log("applicants: ", applicants);
-    console.log("type:", typeof(applicants));
-    
-    
+    console.log("type:", typeof (applicants));
+
+
     createExcel(applicants, "exported-applicants");
 }
 
