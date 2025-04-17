@@ -58,6 +58,7 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
     if (initialData) {
       console.log("Initial data:", initialData)
       const mappedData = {
+        applicantId: initialData.applicant_id,
         firstName: initialData.first_name || "",
         middleName: initialData.middle_name || "",
         lastName: initialData.last_name || "",
@@ -115,13 +116,17 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
   const checkForDuplicates = async () => {
     const payload = {
       applicant: JSON.stringify({
+        applicant_id: formData.applicantId,
         first_name: formData.firstName,
         middle_name: formData.middleName,
         last_name: formData.lastName,
         birth_date: formData.birthdate,
         gender: formData.gender,
         email_1: formData.email,
+        email_2: formData.additionalEmails[0] || null,
+        email_3: formData.additionalEmails[1] || null,
         mobile_number_1: formData.phone,
+        mobile_number_2: formData.additionalPhones[0] || null,
         cv_link: formData.cvLink,
         discovered_at: formData.source,
         referrer_id: formData.referrer,
@@ -262,6 +267,7 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }))
     }
+    checkForDuplicates()
   }
   const handleBlur = () => {
     checkForDuplicates()
