@@ -12,7 +12,7 @@ const IndustriesModal = ({ onClose }) => {
     const [isAddSetupModalOpen, setIsAddSetupModalOpen] = useState(false);
 
     return (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 p-4">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 p-4 z-50">
             <div className="rounded-3xl bg-white mx-10 p-6 pb-1 border border-gray-light w-200">
                 {/* Header Section */}
                 <div className="flex items-center justify-between gap-2 pb-1 border-b-2 border-gray-light">
