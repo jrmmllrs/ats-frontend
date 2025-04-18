@@ -3,6 +3,7 @@ import GdriveConfig from '../components/Gdrive';
 import SMTPConfiguration from '../components/SmtpConfig.';
 import api from '../api/axios';
 import useUserStore from '../context/userStore';
+import Loader from '../assets/Loader';
 
 const Configurations = () => {
     const [hasGdriveConfig, setHasGdriveConfig] = useState(false);
@@ -54,7 +55,18 @@ const Configurations = () => {
     return (
         <div className="container mx-auto px-4 py-10">
             {loading ? (
-                <div className="text-center">Loading configurations...</div>
+                <div className="flex items-center justify-center min-h-[60vh]">
+                    <Loader
+                        type="spinner"
+                        size="xl"
+                        color="#008080"
+                        text="Loading configurations..."
+                        fullScreen={false}
+                        className="mx-auto"
+                        theme="teal"
+                    />
+                </div>
+
             ) : (
                 <div className="flex w-full justify-center mx-auto max-w-5xl gap-8 flex-col md:flex-row">
                     <div className="w-full md:w-1/2">
