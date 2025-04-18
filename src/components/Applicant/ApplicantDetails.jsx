@@ -8,21 +8,6 @@ import AddApplicantForm from '../../pages/AddApplicantForm';
 import { statusMapping } from '../../hooks/statusMapping';
 import { useApplicantData } from '../../hooks/useApplicantData';
 
-// const statuses = [
-//   "Test Sent",
-//   "Interview Schedule Sent",
-//   "First Interview",
-//   "Second Interview",
-//   "Third Interview",
-//   "Fourth Interview",
-//   "Follow Up Interview",
-//   "For Job Offer",
-//   "Job Offer Rejected",
-//   "Job Offer Accepted",
-//   "Withdrew Application",
-//   "Blacklisted",
-//   "Not Fit",
-// ];
 
 function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate }) {
   const { statuses } = useApplicantData();
@@ -37,14 +22,21 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   const [pendingStatus, setPendingStatus] = useState('');
   const [showStatusHistoryModal, setShowStatusHistoryModal] = useState(false);
 
+  // Skip status warning modal
+  const [showSkipWarningModal, setShowSkipWarningModal] = useState(false);
+  const [skippedStatuses, setSkippedStatuses] = useState([]);
+
+  // For status history hover
+  const [hoverIndex, setHoverIndex] = useState(null);
+  const [skippedStatusesByHistory, setSkippedStatusesByHistory] = useState({});
+  const [skippedStatusPosition, setSkippedStatusPosition] = useState({ top: 0, left: 0 });
+  const [currentSkippedStatuses, setCurrentSkippedStatuses] = useState([]);
+
   //blacklisted info
   const [blacklistedType, setBlacklistedType] = useState(null);
   const [reason, setReason] = useState(null);
 
-
-
   useEffect(() => {
-
     if (applicant && applicant.status) {
       setStatus(statusMapping[applicant.status] || '');
 
@@ -60,18 +52,63 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   const fetchStatusHistory = async (progressId) => {
     try {
       const response = await api.get(`/applicant/status-history/${progressId}`);
-      setStatusHistory(response.data);
+      const history = response.data;
+      setStatusHistory(history);
+
+      // Calculate skipped statuses for each history entry
+      const skippedMap = {};
+
+      history.forEach((record, index) => {
+        if (record.previous_status && record.new_status) {
+          const prevIndex = statuses.indexOf(record.previous_status);
+          const newIndex = statuses.indexOf(record.new_status);
+
+          if (newIndex > prevIndex + 1) {
+            // Get the skipped statuses
+            const skipped = statuses.slice(prevIndex + 1, newIndex);
+            if (skipped.length > 0) {
+              skippedMap[index] = skipped;
+            }
+          }
+        }
+      });
+
+      setSkippedStatusesByHistory(skippedMap);
     } catch (error) {
       console.error("Error fetching status history:", error);
     }
   };
 
+  // Function to check if statuses are being skipped
+  const checkForSkippedStatuses = (currentStatus, newStatus) => {
+    const currentIndex = statuses.indexOf(currentStatus);
+    const newIndex = statuses.indexOf(newStatus);
+
+    // Only check forward progression (not backward)
+    if (newIndex > currentIndex + 1) {
+      // Get the skipped statuses
+      const skipped = statuses.slice(currentIndex + 1, newIndex);
+      return skipped;
+    }
+    return [];
+  };
+
   const handleStatusChange = (e) => {
     const newStatus = e.target.value;
     setPendingStatus(newStatus);
-    console.log('pending status: ', newStatus);
 
-    // Show date picker when status is changed
+    // Check if any statuses are being skipped
+    if (applicant && applicant.status) {
+      const skipped = checkForSkippedStatuses(applicant.status, newStatus);
+
+      if (skipped.length > 0) {
+        setSkippedStatuses(skipped);
+        setShowSkipWarningModal(true);
+        return;
+      }
+    }
+
+    // If no statuses are skipped, proceed normally
     setShowDatePicker(true);
 
     // Set default date to today
@@ -89,6 +126,26 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
     setIsDateApplicable(e.target.checked);
   };
 
+  const proceedWithStatusChange = () => {
+    // Close the warning modal
+    setShowSkipWarningModal(false);
+
+    // Proceed with the date picker
+    setShowDatePicker(true);
+
+    // Set default date to today
+    const today = new Date();
+    const formattedDate = today.toISOString().split('T')[0];
+    setSelectedDate(formattedDate);
+    setIsDateApplicable(true);
+  };
+
+  const cancelSkipStatusChange = () => {
+    // Reset pending status and close warning modal
+    setPendingStatus('');
+    setShowSkipWarningModal(false);
+  };
+
   const confirmStatusChange = async () => {
     const newStatus = pendingStatus;
     const previousStatus = status; // Store previous status
@@ -99,7 +156,6 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
 
     // Update the applicant status in the backend
     if (applicant && applicant.applicant_id) {
-      //const backendStatus = Object.keys(statusMapping).find(key => statusMapping[key] === newStatus);
       const backendStatus = newStatus;
       let data = {
         "progress_id": applicant.progress_id,
@@ -202,7 +258,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
 
   // Format status for display
   const formatStatusForDisplay = (statusKey) => {
-    return statusMapping[statusKey] || statusKey;
+    return statusKey.toLowerCase().split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   };
 
   // Format date for display
@@ -212,6 +268,35 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
 
   const toggleStatusHistoryModal = () => {
     setShowStatusHistoryModal(!showStatusHistoryModal);
+    // Reset skipped status hover when closing modal
+    if (showStatusHistoryModal) {
+      setHoverIndex(null);
+    }
+  };
+
+  // Handle hover on status history row
+  const handleRowMouseEnter = (index, event) => {
+    if (skippedStatusesByHistory[index]) {
+      // Calculate position for the hover modal - outside the status history modal
+      // Get the modal element position
+      const historyModal = document.querySelector('.status-history-modal');
+      if (historyModal) {
+        const rect = historyModal.getBoundingClientRect();
+
+        // Position the skipped status modal to the right of the history modal
+        setSkippedStatusPosition({
+          top: event.clientY, // Use the mouse Y position
+          left: rect.right + 10, // Place it 10px to the right of the history modal
+        });
+      }
+
+      setHoverIndex(index);
+      setCurrentSkippedStatuses(skippedStatusesByHistory[index]);
+    }
+  };
+
+  const handleRowMouseLeave = () => {
+    setHoverIndex(null);
   };
 
   return (
@@ -222,15 +307,19 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
         <h2 className="display">
           {`${applicant.first_name || ''} ${applicant.middle_name || ''} ${applicant.last_name || ''}`}
         </h2>
-        <div className="pl-5 flex flex-col flex-grow">
-          <div className="mt-2 flex items-center flex-shrink-0">
-            <FaUser className="mr-2 h-4 w-4" />
-            {applicant.gender || 'Not specified'}
-          </div>
-          <div className="mt-1 flex items-center">
-            <FaCakeCandles className="mr-2 h-4 w-4" />
-            {applicant.birth_date ? new Date(applicant.birth_date).toLocaleDateString() : 'No birth date'}
-          </div>
+        <div className="pl-5 pt-2 flex flex-col flex-grow">
+          {applicant.gender && (
+            <div className="mt-2 flex items-center flex-shrink-0">
+              <FaUser className="mr-2 h-4 w-4" />
+              {applicant.gender}
+            </div>
+          )}
+          {applicant.birth_date && (
+            <div className="mt-1 flex items-center">
+              <FaCakeCandles className="mr-2 h-4 w-4" />
+              {new Date(applicant.birth_date).toLocaleDateString()}
+            </div>
+          )}
           {applicant.email_1 ? <div className="mt-1 flex items-center">
             <FaEnvelope className="mr-2 h-4 w-4 flex-shrink-0" />
             {applicant.email_1}
@@ -313,6 +402,45 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
             </div>
           </div>
 
+          {/* Status Skip Warning Modal */}
+          {showSkipWarningModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded-lg shadow-lg w-96 max-w-md">
+                <div className="flex items-center justify-center mb-4 text-amber-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-center mb-2">Warning: Skipping Status Steps</h3>
+                <p className="mb-4 text-gray-600">
+                  You are about to skip the following status steps:
+                </p>
+                <ul className="list-disc pl-5 mb-4 text-gray-600">
+                  {skippedStatuses.map((status, index) => (
+                    <li key={index}>{formatStatusForDisplay(status)}</li>
+                  ))}
+                </ul>
+                <p className="mb-4 text-gray-600">
+                  Are you sure you want to proceed with this status change?
+                </p>
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={cancelSkipStatusChange}
+                    className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={proceedWithStatusChange}
+                    className="px-4 py-2 bg-amber-500 text-white rounded hover:bg-amber-600"
+                  >
+                    Proceed Anyway
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Date picker modal */}
           {showDatePicker && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -377,9 +505,6 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                       </div>
                     </div>
                   )}
-
-
-
                 </div>
 
                 <div className="flex justify-end gap-2">
@@ -403,7 +528,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
           {/* Status History Modal */}
           {showStatusHistoryModal && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="bg-white p-6 rounded-lg shadow-lg w-[600px] max-w-[90vw] max-h-[90vh] flex flex-col">
+              <div className="status-history-modal bg-white p-6 rounded-lg shadow-lg w-[600px] max-w-[90vw] max-h-[90vh] flex flex-col">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-medium text-teal">Status History</h3>
                   <button
@@ -427,7 +552,12 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                     </thead>
                     <tbody>
                       {statusHistory.map((record, index) => (
-                        <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                        <tr
+                          key={index}
+                          className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${skippedStatusesByHistory[index] ? 'cursor-pointer' : ''}`}
+                          onMouseEnter={(e) => handleRowMouseEnter(index, e)}
+                          onMouseLeave={handleRowMouseLeave}
+                        >
                           <td className="px-4 py-2">
                             {record.change_date === "N/A"
                               ? 'N/A'
@@ -436,7 +566,18 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                                 : 'N/A'}
                           </td>
                           <td className="px-4 py-2">{record.previous_status ? formatStatusForDisplay(record.previous_status) : 'Initial Status'}</td>
-                          <td className="px-4 py-2">{formatStatusForDisplay(record.new_status)}</td>
+                          <td className="px-4 py-2">
+                            <div className="flex items-center">
+                              {formatStatusForDisplay(record.new_status)}
+                              {skippedStatusesByHistory[index] && (
+                                <span className="ml-2 text-amber-500">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                  </svg>
+                                </span>
+                              )}
+                            </div>
+                          </td>
                           <td className="px-4 py-2">{record.user_name || record.changed_by}</td>
                         </tr>
                       ))}
@@ -444,12 +585,34 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                   </table>
                 </div>
               </div>
+
+              {/* Skipped Statuses Modal - Positioned outside the status history modal */}
+              {hoverIndex !== null && currentSkippedStatuses.length > 0 && (
+                <div
+                  className="fixed bg-white border border-gray-200 shadow-lg rounded-lg p-4 z-60"
+                  style={{
+                    // top: `${skippedStatusPosition.top}px`,
+                    left: `${skippedStatusPosition.left}px`,
+                    maxWidth: '300px'
+                  }}
+                >
+                  <div className="font-medium text-amber-600 mb-2 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    Skipped Statuses
+                  </div>
+                  <ul className="list-disc pl-5 text-gray-700">
+                    {currentSkippedStatuses.map((status, i) => (
+                      <li key={i} className="py-1">{formatStatusForDisplay(status)}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
 
           <div className="grid grid-cols-3 gap-3 pl-5 flex-grow">
-            {/* <div className="text-teal">Discovered FutSuite at</div>
-            <div className="col-span-2">{applicant.discovered_at || 'Not specified'}</div> */}
             <div className="text-teal">Applied for</div>
             <div className="col-span-2">{applicant.job_title || 'Not specified'}</div>
             <div className="text-teal">Applied on</div>
@@ -460,7 +623,6 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
             </div>
             <div className="text-teal">Applied from</div>
             <div className="col-span-2">{applicant.applied_source || 'Not specified'}</div>
-
           </div>
 
           {/* Tabs */}
@@ -525,4 +687,4 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   );
 }
 
-export default ApplicantDetails; 
+export default ApplicantDetails;

@@ -56,8 +56,8 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
 
   useEffect(() => {
     if (initialData) {
-      console.log("Initial data:", initialData)
       const mappedData = {
+        applicantId: initialData.applicant_id,
         firstName: initialData.first_name || "",
         middleName: initialData.middle_name || "",
         lastName: initialData.last_name || "",
@@ -80,11 +80,11 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
     }
   }, [initialData])
 
-  useEffect(() => {
+  useEffect(() => {   
     if (formData.firstName || formData.lastName || formData.email || formData.phone) {
       checkForDuplicates()
     }
-  }, [formData.firstName, formData.lastName, formData.email, formData.phone])
+  }, [formData.firstName, formData.lastName, formData.email, formData.phone, formData.additionalEmails, formData.additionalPhones])
 
   useEffect(() => {
     const fetchPositions = async () => {
@@ -115,13 +115,17 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
   const checkForDuplicates = async () => {
     const payload = {
       applicant: JSON.stringify({
+        applicant_id: formData.applicantId,
         first_name: formData.firstName,
         middle_name: formData.middleName,
         last_name: formData.lastName,
         birth_date: formData.birthdate,
         gender: formData.gender,
         email_1: formData.email,
+        email_2: formData.additionalEmails[0] || null,
+        email_3: formData.additionalEmails[1] || null,
         mobile_number_1: formData.phone,
+        mobile_number_2: formData.additionalPhones[0] || null,
         cv_link: formData.cvLink,
         discovered_at: formData.source,
         referrer_id: formData.referrer,
@@ -174,12 +178,14 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
     }
   }
 
-  const handleRemoveEmail = (index) => {
-    setFormData((prev) => {
-      const newEmails = prev.additionalEmails.filter((_, i) => i !== index)
-      return { ...prev, additionalEmails: newEmails }
-    })
-  }
+  const handleRemoveEmail = async (index) => {
+    
+    await setFormData((prev) => {
+      const newEmails = [...prev.additionalEmails];
+      newEmails[index] = '';
+      return { ...prev, additionalEmails: newEmails };
+    });
+  };
 
   const handleAddPhone = () => {
     // Check if we already have empty fields that aren't displayed
@@ -235,15 +241,14 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
       })
   }
 
-
-
-  const handleRemovePhone = (index) => {
-    setFormData((prev) => {
-      const newPhones = prev.additionalPhones.filter((_, i) => i !== index)
-      return { ...prev, additionalPhones: newPhones }
-    })
+  const handleRemovePhone = async (index) => {
+    await setFormData((prev) => {
+      const newPhones = [...prev.additionalPhones];
+      newPhones[index] = '';
+      return { ...prev, additionalPhones: newPhones };
+    });
   }
-  const handleChange = (e) => {
+  const handleChange = async(e) => {
     const { name, value } = e.target
     if (name.startsWith("additionalEmail")) {
       const index = Number.parseInt(name.split("_")[1], 10)

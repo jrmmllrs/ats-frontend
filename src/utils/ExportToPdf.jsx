@@ -1,90 +1,237 @@
-import getFilteredApplicants from "../services/getFilteredApplicants";
 import React, { useEffect, useState } from "react";
-import { Page, Text, View, Document, StyleSheet, PDFDownloadLink, Link } from "@react-pdf/renderer";
-import { format, parseISO } from 'date-fns';
+import getFilteredApplicants from "../services/getFilteredApplicants";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import moment from "moment";
+import { FiDownload } from "react-icons/fi";
+import exportToExcel from "../utils/exportToExcel";
 
-const styles = StyleSheet.create({
-  page: { padding: 20, flexDirection: "column" },
-  title: { fontSize: 24, marginBottom: 10, textAlign: "center", fontWeight: "bold" },
-  description: { fontSize: 14, marginBottom: 15, textAlign: "center" },
-  table: { display: "table", width: "auto", borderStyle: "solid", borderWidth: 1 },
-  tableRow: { flexDirection: "row" },
-  tableColHeader: {
-    width: "11.11%", 
-    borderStyle: "solid", 
-    borderWidth: 1, 
-    backgroundColor: "#eee", 
-    padding: 4, 
-    textAlign: "center",
-    fontSize: 10,
-  },
-  tableCol: {
-    width: "11.11%", 
-    borderStyle: "solid", 
-    borderWidth: 1, 
-    padding: 4, 
-    textAlign: "center",
-    fontSize: 9,
-  },
-});
-
-const ExportToPdf = ({ dateFilter, dateFilterValue, position, status }) => {
-  const [applicants, setApplicants] = useState([]);
+const ExportToPdf = ({
+  dateFilter,
+  dateFilterValue,
+  position,
+  status,
+  onClose,
+}) => {
+  const [isExporting, setIsExporting] = useState(false);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState(null);
+  const [pdfFileName, setPdfFileName] = useState("");
+  const [pdfDoc, setPdfDoc] = useState(null);
+  const [isExcelExporting, setIsExcelExporting] = useState(false);
 
   useEffect(() => {
-    const fetchApplicants = async () => {
-      const results = await getFilteredApplicants(dateFilter, dateFilterValue, position, status);
-      setApplicants(results || []);
+    const generatePdf = async () => {
+      setIsExporting(true);
+      try {
+        const applicants = await getFilteredApplicants(
+          dateFilter,
+          dateFilterValue,
+          position,
+          status
+        );
+        const doc = new jsPDF({
+          orientation: "landscape",
+          unit: "mm",
+          format: "a2",
+        });
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(22);
+        doc.text("Applicant Information Report", 20, 20);
+
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "normal");
+        doc.text(
+          "This report provides a summary of applicants filtered by the selected criteria.",
+          20,
+          30
+        );
+
+        // Table headers
+        const headers = [
+          "First Name",
+          "Middle Name",
+          "Last Name",
+          "Gender",
+          "Discovered At",
+          "CV Link",
+          "Date Applied",
+          "Mobile 1",
+          "Mobile 2",
+          "Email 1",
+          "Email 2",
+          "Email 3",
+          "Stage",
+          "Status",
+          "Title",
+        ];
+
+        // Table rows
+        const data = applicants.map((row) => [
+          row.first_name || "",
+          row.middle_name || "N/A",
+          row.last_name || "",
+          row.gender || "N/A",
+          row.discovered_at || "N/A",
+          row.cv_link || "N/A",
+          row.date_created ? moment(row.date_created).format("YYYY-MM-DD") : "N/A",
+          row.mobile_number_1 || "",
+          row.mobile_number_2 || "N/A",
+          row.email_1 || "",
+          row.email_2 || "N/A",
+          row.email_3 || "N/A",
+          row.stage || "N/A",
+          row.status || "N/A",
+          row.title || "N/A",
+        ]);
+
+        autoTable(doc, {
+          startY: 40,
+          head: [headers],
+          body: data,
+          styles: {
+            font: "helvetica",
+            fontSize: 9,
+            cellPadding: 1,
+            overflow: "linebreak",
+            valign: "middle",
+          },
+          headStyles: {
+            fillColor: [13, 148, 136], // teal
+            textColor: 255,
+            fontStyle: "bold",
+          },
+          alternateRowStyles: {
+            fillColor: [240, 240, 240],
+          },
+          margin: { left: 10, right: 10 },
+          tableWidth: "auto",
+        });
+
+        const fileName = `applicant_list_${moment().format("YYYYMMDD")}.pdf`;
+        setPdfFileName(fileName);
+        setPdfDoc(doc);
+
+        // Preview
+        const blob = doc.output("blob");
+        const url = URL.createObjectURL(blob);
+        setPdfPreviewUrl(url);
+      } catch (error) {
+        alert("Failed to generate PDF: " + error.message);
+      } finally {
+        setIsExporting(false);
+      }
     };
 
-    fetchApplicants();
+    generatePdf();
+
+    // Cleanup
+    return () => {
+      if (pdfPreviewUrl) URL.revokeObjectURL(pdfPreviewUrl);
+    };
+    // eslint-disable-next-line
   }, [dateFilter, dateFilterValue, position, status]);
 
+  const handleDownload = () => {
+    if (pdfDoc) {
+      pdfDoc.save(pdfFileName);
+    }
+  };
+
+  const handleExcelExport = async () => {
+    setIsExcelExporting(true);
+    try {
+      let value = "";
+      if (dateFilter === "year" && dateFilterValue) {
+        value = dateFilterValue;
+      } else if (dateFilter === "month" && dateFilterValue) {
+        value = dateFilterValue;
+      }
+      const excelBlob = await exportToExcel(
+        dateFilter,
+        value,
+        position,
+        status,
+        true // return blob
+      );
+      if (!excelBlob) throw new Error("Failed to generate Excel file");
+      const url = URL.createObjectURL(excelBlob);
+      const fileName = `applicant_list_${moment().format("YYYYMMDD")}.xlsx`;
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 1000);
+    } catch (error) {
+      alert("Failed to generate Excel file: " + error.message);
+    } finally {
+      setIsExcelExporting(false);
+    }
+  };
+
   return (
-    <Document>
-      <Page style={styles.page} size="A3" orientation="landscape">
-        <Text style={styles.title}>Applicant Information Report</Text>
-        <Text style={styles.description}>This report provides a summary of applicants filtered by the selected criteria.</Text>
-        <View style={styles.table}>
-          <View style={styles.tableRow}>
-            <Text style={styles.tableColHeader}>First Name</Text>
-            <Text style={styles.tableColHeader}>Middle Name</Text>
-            <Text style={styles.tableColHeader}>Last Name</Text>
-            <Text style={styles.tableColHeader}>Gender</Text>
-            <Text style={styles.tableColHeader}>Discovered At</Text>
-            <Text style={styles.tableColHeader}>CV Link</Text>
-            <Text style={styles.tableColHeader}>Date Applied</Text>
-            <Text style={styles.tableColHeader}>Mobile 1</Text>
-            <Text style={styles.tableColHeader}>Mobile 2</Text>
-            <Text style={styles.tableColHeader}>Email 1</Text>
-            <Text style={styles.tableColHeader}>Email 2</Text>
-            <Text style={styles.tableColHeader}>Email 3</Text>
-            <Text style={styles.tableColHeader}>Stage</Text>
-            <Text style={styles.tableColHeader}>Status</Text>
-            <Text style={styles.tableColHeader}>Title</Text>
-          </View>
-          {applicants.map((row, index) => (
-            <View style={styles.tableRow} key={index}>
-              <Text style={styles.tableCol}>{row.first_name}</Text>
-              <Text style={styles.tableCol}>{row.middle_name || "N/A"}</Text>
-              <Text style={styles.tableCol}>{row.last_name}</Text>
-              <Text style={styles.tableCol}>{row.gender}</Text>
-              <Text style={styles.tableCol}>{row.discovered_at}</Text>
-              <Text style={styles.tableCol}>{row.cv_link ? <Link src={row.cv_link}>Link</Link> : "N/A"}</Text>
-              <Text style={styles.tableCol}>{row.date_created ? format(parseISO(row.date_created), 'yyyy-MM-dd') : "N/A"}</Text>
-              <Text style={styles.tableCol}>{row.mobile_number_1}</Text>
-              <Text style={styles.tableCol}>{row.mobile_number_2 || "N/A"}</Text>
-              <Text style={styles.tableCol}>{row.email_1}</Text>
-              <Text style={styles.tableCol}>{row.email_2 || "N/A"}</Text>
-              <Text style={styles.tableCol}>{row.email_3 || "N/A"}</Text>
-              <Text style={styles.tableCol}>{row.stage}</Text>
-              <Text style={styles.tableCol}>{row.status}</Text>
-              <Text style={styles.tableCol}>{row.title}</Text>
-            </View>
-          ))}
-        </View>
-      </Page>
-    </Document>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      style={{ overflow: "hidden" }}
+    >
+      <div className="bg-white rounded-lg shadow-xl w-4/5 h-5/6 flex flex-col max-h-[90vh] overflow-hidden">
+        {/* Modal Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-light">
+          <h2 className="text-xl font-semibold text-gray-800">PDF Preview</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            ×
+          </button>
+        </div>
+        {/* Preview */}
+        <div className="flex-1 overflow-hidden p-4">
+          {pdfPreviewUrl ? (
+            <iframe
+              src={pdfPreviewUrl}
+              className="w-full h-full border border-gray-light rounded"
+              title="PDF Preview"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <p className="text-gray-500">
+                {isExporting ? "Generating PDF..." : "Loading preview..."}
+              </p>
+            </div>
+          )}
+        </div>
+        {/* Modal Footer */}
+        <div className="px-6 py-4 border-t border-gray-light flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 mr-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleExcelExport}
+            className="px-4 py-2 mr-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center"
+            disabled={isExcelExporting}
+          >
+            <FiDownload className="mr-2" />
+            {isExcelExporting ? "Exporting..." : "Download Excel"}
+          </button>
+          <button
+            onClick={handleDownload}
+            className="px-4 py-2 bg-teal text-white rounded hover:bg-teal-dark flex items-center"
+            disabled={isExporting}
+          >
+            <FiDownload className="mr-2" />
+            Download PDF
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 

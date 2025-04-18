@@ -4,20 +4,13 @@ import "react-datepicker/dist/react-datepicker.css";
 import { FaFileExport } from "react-icons/fa";
 import AddApplicantDropdown from "../components/AddApplicantDropdown";
 import ApplicantTable from "../components/ApplicantTable";
-
-import { PDFDownloadLink } from "@react-pdf/renderer";
-
-import exportToExcel from "../utils/exportToExcel";
-import moment from "moment";
-
 import ExportToPdf from "../utils/ExportToPdf";
-
+import moment from "moment";
 import applicantDataStore from "../context/applicantDataStore";
 import { searchApplicant } from "../utils/applicantDataUtils";
 import positionStore from "../context/positionStore";
 import applicantFilterStore from "../context/applicantFilterStore";
 import { clearFilter } from "../utils/applicantListUtils";
-
 
 export default function ApplicantList({
   onSelectApplicant,
@@ -25,20 +18,27 @@ export default function ApplicantList({
 }) {
   const { search, setSearch, status, dateFilter, setDateFilter, dateFilterType, setDateFilterType } = applicantFilterStore();
   const [selectedDate, setSelectedDate] = useState(null);
-  //const [dateFilterType, setDateFilterType] = useState("month");
-  //const [sortOrder, setSortOrder] = useState("desc");
-  const [isOpen, setIsOpen] = useState(false);
   const [exportValue, setExportValue] = useState("");
   const { setApplicantData } = applicantDataStore();
   const { positionFilter } = positionStore();
 
-  const dropdownRef = useRef(null);
+  // PDF Export modal state
+  const [showPdfModal, setShowPdfModal] = useState(false);
 
-  const applicants = [
-    // Your applicant data here
-  ];
+  // Handle body scroll when modal is open
+  useEffect(() => {
+    if (showPdfModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [showPdfModal]);
 
-  const handleExportClick = () => {
+  // Open PDF export modal directly
+  const handlePdfExport = () => {
     let value = "";
     if (dateFilterType === "year" && selectedDate) {
       value = selectedDate.getFullYear().toString();
@@ -46,66 +46,22 @@ export default function ApplicantList({
       value = moment(selectedDate).format("MMMM").toLowerCase();
     }
     setExportValue(value);
+    setShowPdfModal(true);
   };
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   return (
     <div className="relative mx-auto max-w-[1200px] rounded-3xl bg-white p-6 border border-gray-light">
       <div className="mb-4 flex items-center justify-between rounded-lg ">
         <h1 className="headline text-gray-dark font-semibold md:mb-0">Applicant List</h1>
         <div className="center flex gap-2">
-          <div className="relative inline-block text-left" ref={dropdownRef}>
-            <button className="flex items-center rounded-md bg-white border border-teal px-2 py-1 text-sm text-teal hover:bg-gray-light cursor-pointer"
-              onClick={() => setIsOpen(!isOpen)}>
+          <div className="relative inline-block text-left">
+            <button
+              className="flex items-center rounded-md bg-white border border-teal px-2 py-1 text-sm text-teal hover:bg-gray-light cursor-pointer"
+              onClick={handlePdfExport}
+            >
               <FaFileExport className="mr-2 h-4 w-4 " /> Export
             </button>
-
-            {isOpen && (
-              <div className="absolute w-20 sm:w-full mt-1 bg-white border border-gray-200 rounded-lg z-10">
-                <button
-                  className="block text-center w-full body-regular px-2 py-2 text-gray-dark hover:bg-gray-100"
-                  onClick={() => {
-                    handleExportClick();
-                    exportToExcel(dateFilterType, exportValue, 'Business Operations Associate', ["NONE", "TEST_SENT"]);
-                  }}
-                >
-                  Excel
-                </button>
-
-                <button
-                  className="block text-center w-full body-regular px-2 py-2 text-gray-dark hover:bg-gray-100"
-                  onClick={handleExportClick} // Ensure exportValue is updated
-                >
-                  <PDFDownloadLink
-                    document={
-                      <ExportToPdf
-                        dateFilter={dateFilterType}
-                        dateFilterValue={exportValue}
-                        position="Business Operations Associate"
-                        status={["NONE", "TEST_SENT"]}
-                      />
-                    }
-                    fileName="table.pdf"
-                  >
-                    {({ loading }) => (loading ? "Loading..." : "PDF")}
-                  </PDFDownloadLink>
-                </button>
-
-              </div>
-            )}
           </div>
-
-          {/* dropdown button for adding a new applicant (add manually or upload a file)*/}
           <AddApplicantDropdown className="" onAddManually={onAddApplicantClick} />
         </div>
       </div>
@@ -147,7 +103,6 @@ export default function ApplicantList({
             Clear
           </button>
         </div>
-
       </div>
 
       <div
@@ -156,6 +111,17 @@ export default function ApplicantList({
       >
         <ApplicantTable onSelectApplicant={onSelectApplicant} />
       </div>
+
+      {/* PDF Export Modal */}
+      {showPdfModal && (
+        <ExportToPdf
+          dateFilter={dateFilterType}
+          dateFilterValue={exportValue}
+          position={positionFilter}
+          status={status}
+          onClose={() => setShowPdfModal(false)}
+        />
+      )}
     </div>
   );
 }
