@@ -35,15 +35,8 @@ const Jobs = () => {
     return (
         <div className="flex-col items-center justify-center">
             <section className="mb-5 grid grid-cols-3 grid-rows-[7rem] gap-5">
-                {/* <div
-                    onClick={() => alert("applicants")}
-                    className="rounded-md grid place-content-center cursor-pointer bg-white border border-gray-light"
-                >
-                    <span className="text-3xl text-center ">147</span>
-                    <div className="text-sm text-gray-500 text-center">Applications</div>
-                </div> */}
                 <div
-                    onClick={() => setIsGearModalOpen(true)}      //nyenyenyenyenyenye
+                    onClick={() => setIsGearModalOpen(true)}
                     className="rounded-2xl grid place-content-center cursor-pointer bg-white border border-gray-light hover:bg-teal-soft transition duration-300 ease-in-out"
                 >
                     <span className="text-3xl text-center">{industriesCount}</span>
