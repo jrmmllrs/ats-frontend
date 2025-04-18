@@ -15,6 +15,9 @@ const DiscussionBox = ({ applicant, discussion, fetchDiscussionInterview }) => {
     // Removed isExporting state
 
     const handleSubmit = () => {
+        console.log(discussion);
+
+
         const data = {
             applicant_id: applicant.applicant_id,
             interview_id: discussion.interview_id,
