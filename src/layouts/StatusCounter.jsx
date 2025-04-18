@@ -40,6 +40,7 @@ export default function StatusCounter() {
             <div
               className="text-end body-tiny text-gray-dark border border-gray-light hover:bg-gray-light rounded-md cursor-pointer p-0.5"
               data-tooltip-target="clear"
+              title="Clear"
               onClick={() => clearSelections(stages, setStages, setSelectedStatuses, clearStatus, setStatus, setPositionFilter, search, dateFilterType, dateFilter, setApplicantData)}
             >
               <MdDeselect
@@ -88,11 +89,10 @@ export default function StatusCounter() {
           <div key={stage.name}>
             {/* Stage Button */}
             <div
-              className={`flex cursor-pointer items-center justify-between ${
-                stage.selected
-                  ? "bg-teal text-white"
-                  : "bg-gray-light text-gray-dark"
-              } hover:bg-teal-soft mb-2 rounded-md px-2`}
+              className={`flex cursor-pointer items-center justify-between ${stage.selected
+                ? "bg-teal text-white"
+                : "bg-gray-light text-gray-dark"
+                } hover:bg-teal-soft mb-2 rounded-md px-2`}
               onClick={() => handleStageClick(stage, setSelectedStatuses, search, toggleStage, dateFilterType, dateFilter, positionFilter, setApplicantData, setStatusStage)}
             >
               <div className="flex flex-1 items-center justify-between">
@@ -114,7 +114,7 @@ export default function StatusCounter() {
 
             {/* Status Buttons - Collapsible */}
             {!collapsedStages[stage.name] && (
-              <div className="space-y-2 overflow-hidden">
+              <div className="space-y-1.5 overflow-hidden">
                 {stage.statuses.map((Status) => (
                   <div
                     onClick={() => {
@@ -146,7 +146,7 @@ export default function StatusCounter() {
                       setStatus(Status.value);
                     }}
                     key={Status.name}
-                    className={`mx-1 flex items-center justify-between rounded-lg border px-3 py-1 ${Status.selected
+                    className={`mx-1 flex items-center justify-between rounded-lg border px-3 py-0.5 ${Status.selected
                       ? "border-teal-soft bg-teal-soft"
                       : "border-gray-light"
                       } hover:bg-gray-light`}
