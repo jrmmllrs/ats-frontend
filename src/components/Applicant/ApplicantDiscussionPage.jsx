@@ -3,7 +3,7 @@ import { FiPlus } from "react-icons/fi";
 import DiscussionBox from "../DiscussionBox.jsx";
 import InterviewNotes from "../InterviewNotes.jsx";
 import api from "../../api/axios.js";
-import useUserStore from "../context/userStore";
+import useUserStore from "../../context/userStore.jsx";
 
 function ApplicantDiscussionPage({ applicant }) {
   const [activeTab, setActiveTab] = useState("Discussion Box");
@@ -44,6 +44,7 @@ function ApplicantDiscussionPage({ applicant }) {
 
   const handleAddInterview = () => {
     if (selectedInterviewer && interviewDate && noteType) {
+      console.log(applicant);
 
       const data = {
         applicant_id: applicant.applicant_id,
