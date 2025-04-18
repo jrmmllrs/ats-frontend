@@ -3,6 +3,7 @@ import { FiPlus } from "react-icons/fi";
 import DiscussionBox from "../DiscussionBox.jsx";
 import InterviewNotes from "../InterviewNotes.jsx";
 import api from "../../api/axios.js";
+import useUserStore from "../context/userStore";
 
 function ApplicantDiscussionPage({ applicant }) {
   const [activeTab, setActiveTab] = useState("Discussion Box");
@@ -13,6 +14,7 @@ function ApplicantDiscussionPage({ applicant }) {
   const [noteType, setNoteType] = useState("FIRST INTERVIEW");
   const [discussion, setDiscussion] = useState(null);
   const [interviewsArray, setInterviewsArray] = useState([]);
+  const { user } = useUserStore();
 
   const fetchUsers = () => {
     api.get("/user/user-accounts")
@@ -46,7 +48,7 @@ function ApplicantDiscussionPage({ applicant }) {
       const data = {
         applicant_id: applicant.applicant_id,
         tracking_id: applicant.tracking_id,
-        interviewer_id: selectedInterviewer.user_id,
+        interviewer_id: user.user_id,
         date_of_interview: interviewDate,
         note_type: noteType
       }

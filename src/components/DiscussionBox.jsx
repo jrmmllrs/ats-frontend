@@ -19,8 +19,10 @@ const DiscussionBox = ({ applicant, discussion, fetchDiscussionInterview }) => {
 
 
         const data = {
+            s
             applicant_id: applicant.applicant_id,
             interview_id: discussion.interview_id,
+            interviewer_id: user.user_id,
             note_type: "DISCUSSION",
             note_body: noteBody,
             noted_by: user.user_id,
