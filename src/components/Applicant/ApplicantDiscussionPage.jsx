@@ -44,6 +44,7 @@ function ApplicantDiscussionPage({ applicant }) {
     if (selectedInterviewer && interviewDate && noteType) {
 
       const data = {
+        applicant_id: applicant.applicant_id,
         tracking_id: applicant.tracking_id,
         interviewer_id: selectedInterviewer.user_id,
         date_of_interview: interviewDate,

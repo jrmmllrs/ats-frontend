@@ -16,6 +16,7 @@ const DiscussionBox = ({ applicant, discussion, fetchDiscussionInterview }) => {
 
     const handleSubmit = () => {
         const data = {
+            applicant_id: applicant.applicant_id,
             interview_id: discussion.interview_id,
             note_type: "DISCUSSION",
             note_body: noteBody,
