@@ -12,21 +12,18 @@ const Jobs = () => {
     const { setIsGearModalOpen, setJobsData, activeTab, setActiveTab } = jobStore();
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-
-        const handleTabClick = (tab) => {
-            if (tab === "open" && activeTab !== "open") {
-                setActiveTab("open");
-                getOpenJobs(setJobsData);
-            } else if (tab === "close" && activeTab !== "close") {
-                setActiveTab("close");
-                getCloseJobs(setJobsData);
-            } else {
-                setActiveTab(null);
-                fetchJobs(setJobsData);
-            }
+    const handleTabClick = (tab) => {
+        if (tab === "open" && activeTab !== "open") {
+            setActiveTab("open");
+            getOpenJobs(setJobsData);
+        } else if (tab === "close" && activeTab !== "close") {
+            setActiveTab("close");
+            getCloseJobs(setJobsData);
+        } else {
+            setActiveTab(null);
+            fetchJobs(setJobsData);
         }
-    });
+    }
 
     useEffect(() => {
         const getCounts = async () => {
