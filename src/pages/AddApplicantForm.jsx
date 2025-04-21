@@ -48,7 +48,7 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
   const [pendingSubmit, setPendingSubmit] = useState(false)
   const user = useUserStore((state) => state.user)
   const [modalType, setModalType] = useState(null) // 'submit' or 'cancel'
-  const [cvAttatchement, setcvAttatchement] = useState(); 
+  const [cvAttatchement, setcvAttatchement] = useState();
 
 
   // Determine if we're editing or adding based on initialData
@@ -80,7 +80,7 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
     }
   }, [initialData])
 
-  useEffect(() => {   
+  useEffect(() => {
     if (formData.firstName || formData.lastName || formData.email || formData.phone) {
       checkForDuplicates()
     }
@@ -179,7 +179,7 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
   }
 
   const handleRemoveEmail = async (index) => {
-    
+
     await setFormData((prev) => {
       const newEmails = [...prev.additionalEmails];
       newEmails[index] = '';
@@ -214,31 +214,31 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
     }
   }
 
-  const handleCVAttachementChange  = (e) => {
+  const handleCVAttachementChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       console.log(e.target.files[0]);
-      const file = e.target.files[0]; 
-      handleUploadCV(file); 
-    }else {
+      const file = e.target.files[0];
+      handleUploadCV(file);
+    } else {
       console.log('file unsuccessfully read');
     }
   }
 
   const handleUploadCV = async (file) => {
-      const formdata = new FormData(); 
-      formdata.append('file', file); 
-      formdata.append('company_id', user.company_id); 
+    const formdata = new FormData();
+    formdata.append('file', file);
+    formdata.append('company_id', user.company_id);
 
-      await api.post("/upload/gdrive/cv", formdata).then((response) => {
-        console.log('response', response);
-        
-        setFormData((prev) => ({
-          ...prev, 
-          cvLink: response.data.fileUrl
-        }))
-      }).catch((error) => {
-        console.log(error);
-      })
+    await api.post("/upload/gdrive/cv", formdata).then((response) => {
+      console.log('response', response);
+
+      setFormData((prev) => ({
+        ...prev,
+        cvLink: response.data.fileUrl
+      }))
+    }).catch((error) => {
+      console.log(error);
+    })
   }
 
   const handleRemovePhone = async (index) => {
@@ -248,7 +248,7 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
       return { ...prev, additionalPhones: newPhones };
     });
   }
-  const handleChange = async(e) => {
+  const handleChange = async (e) => {
     const { name, value } = e.target
     if (name.startsWith("additionalEmail")) {
       const index = Number.parseInt(name.split("_")[1], 10)
@@ -296,7 +296,7 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
         referrer_id: formData.referrer,
         created_by: user.user_id,
         updated_by: user.user_id,
-        user_id: user.user_id, 
+        user_id: user.user_id,
         company_id: user.company_id,
         position_id: formData.position,
         test_result: formData.testResult,
@@ -783,19 +783,19 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
 
         </div>
         {showConfirmationModal && (
-  <ConfirmationModal
-  title={modalType === 'submit' ? "Confirm Submission" : "Cancel Form"}
-  message={
-    modalType === 'submit' 
-      ? "Are you sure you want to submit this form?" 
-      : "Are you sure you want to cancel? All unsaved changes will be lost."
-  }
-  confirmText={modalType === 'submit' ? "Submit" : "Confirm"}
-  cancelText={modalType === 'submit' ? "Back" : "Back"}
-  onConfirm={modalType === 'submit' ? confirmSubmit : confirmCancel}
-  onCancel={closeModal}
-/>
-)}
+          <ConfirmationModal
+            title={modalType === 'submit' ? "Confirm Submission" : "Cancel Form"}
+            message={
+              modalType === 'submit'
+                ? "Are you sure you want to submit this form?"
+                : "Are you sure you want to cancel? All unsaved changes will be lost."
+            }
+            confirmText={modalType === 'submit' ? "Submit" : "Confirm"}
+            cancelText={modalType === 'submit' ? "Back" : "Back"}
+            onConfirm={modalType === 'submit' ? confirmSubmit : confirmCancel}
+            onCancel={closeModal}
+          />
+        )}
       </div>
     </>
   )
