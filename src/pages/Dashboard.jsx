@@ -74,7 +74,7 @@ const SummarySection = ({ onRefresh, setActiveTab }) => {
       return;
     }
 
-    navigate("/ats", {
+    navigate("/dashboard", {
       state: {
         view: tab,
       }

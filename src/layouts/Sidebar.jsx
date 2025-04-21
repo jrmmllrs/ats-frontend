@@ -6,6 +6,8 @@ import {
   FaChartBar,
   FaBriefcase
 } from "react-icons/fa";
+import { NavLink } from "react-router-dom";
+
 
 import { FaGear } from "react-icons/fa6";
 import useUserStore from "../context/userStore";
@@ -31,6 +33,7 @@ export default function Sidebar({ isOpen, onToggleSidebar, onSelectView, selecte
     setCurrentView(view);
     onSelectView(view);
     onToggleSidebar();
+    navigate(`/${view}`);
   };
 
   const handleLogout = () => {
@@ -85,21 +88,11 @@ export default function Sidebar({ isOpen, onToggleSidebar, onSelectView, selecte
           {/* User Info */}
           <div className="mb-6 flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-white">
-              {user && user.profile_image ? (
-                <img
-                  src={user.profile_image}
-                  alt="User Profile"
-                  className="h-full w-full rounded-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center rounded-full bg-white">
-                  <img
-                    src={profileUser}
-                    alt="User Profile"
-                    className="h-full w-full rounded-full object-cover"
-                  />
-                </div>
-              )}
+              <img
+                src={user?.profile_image || profileUser}
+                alt="User Profile"
+                className="h-10 w-10 rounded-full object-cover"
+              />
             </div>
             <div>
               {user ? (
@@ -118,36 +111,12 @@ export default function Sidebar({ isOpen, onToggleSidebar, onSelectView, selecte
           {/* Navigation */}
           <nav className="space-y-2">
             <hr className="border-gray-light" />
-            <SidebarLink
-              text="Dashboard"
-              icon={<FaTable />}
-              onClick={() => handleSelectView("dashboard")}
-              active={currentView === "dashboard"}
-            />
-            <SidebarLink
-              text="Applicants"
-              icon={<FaUsers />}
-              onClick={() => handleSelectView("listings")}
-              active={currentView === "listings"}
-            />
-            <SidebarLink
-              text="Analytics"
-              icon={<FaChartBar />}
-              onClick={() => handleSelectView("analytics")}
-              active={currentView === "analytics"}
-            />
-            <SidebarLink
-              text="Jobs"
-              icon={<FaBriefcase />}
-              onClick={() => handleSelectView("jobs")}
-              active={currentView === "jobs"}
-            />
-            <SidebarLink
-              text="Configurations"
-              icon={<FaGear />}
-              onClick={() => handleSelectView("config")}
-              active={currentView === "config"}
-            />
+            <SidebarLink to="/dashboard" text="Dashboard" icon={<FaTable />} />
+            <SidebarLink to="/applicants" text="Applicants" icon={<FaUsers />} />
+            <SidebarLink to="/analytics" text="Analytics" icon={<FaChartBar />} />
+            <SidebarLink to="/jobs" text="Jobs" icon={<FaBriefcase />} />
+            <SidebarLink to="/config" text="Configurations" icon={<FaGear />} />
+
           </nav>
         </div>
 
@@ -168,15 +137,17 @@ export default function Sidebar({ isOpen, onToggleSidebar, onSelectView, selecte
 }
 
 // Reusable SidebarLink Component
-function SidebarLink({ text, icon, onClick, active }) {
+function SidebarLink({ to, text, icon }) {
   return (
-    <a
-      href="#"
-      className={`flex items-center gap-3 rounded-md px-4 py-2 font-medium text-gray-dark transition ${active ? "bg-teal-600 text-white" : "hover:bg-gray-100"}`}
-      onClick={onClick}
+    <NavLink
+      to={to}
+      className={({ isActive }) =>
+        `flex items-center gap-3 rounded-md px-4 py-2 font-medium transition ${isActive ? "bg-teal-600 text-white" : "text-gray-dark hover:bg-gray-100"
+        }`
+      }
     >
       {icon}
       {text}
-    </a>
+    </NavLink>
   );
 }

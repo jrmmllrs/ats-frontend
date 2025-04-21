@@ -4,7 +4,7 @@ import { FaBell } from "react-icons/fa6";
 import api from "../api/axios"
 
 export default function Header({ onSelectView, onToggleSidebar, onToggleATSHealthcheck, selectedView }) {
-  // const [currentView, setCurrentView] = useState("listings")
+  const [currentView, setCurrentView] = useState("applicants")
   const [notificationCount, setNotificationCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [isNotificationRead, setIsNotificationRead] = useState(
@@ -13,7 +13,7 @@ export default function Header({ onSelectView, onToggleSidebar, onToggleATSHealt
   const [titlePage, setTitlePage] = useState("")
 
   useEffect(() => {
-    if (selectedView === "listings") {
+    if (selectedView === "applicants") {
       setTitlePage("Applicants")
     } else if (selectedView === "analytics") {
       setTitlePage("Analytics")

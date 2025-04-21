@@ -5,7 +5,7 @@ import Cookies from "js-cookie";
 const PublicRoute = ({ element }) => {
   const token = Cookies.get("token");
 
-  return token ? <Navigate to="/ats" /> : element;
+  return token ? <Navigate to="/" /> : element;
 };
 
 export default PublicRoute;
