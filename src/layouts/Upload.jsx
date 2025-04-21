@@ -333,6 +333,7 @@ function Upload({ onClose }) {
           position_id: positionId,
           position: acceptedApplicant.position,
           test_result: acceptedApplicant.test_result,
+          applied_source: acceptedApplicant.applied_source,
         }),
       };
 

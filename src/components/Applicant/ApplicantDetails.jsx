@@ -53,12 +53,15 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
     try {
       const response = await api.get(`/applicant/status-history/${progressId}`);
       const history = response.data;
-      setStatusHistory(history);
+
+      // Sort history from older to newer
+      const sortedHistory = history.sort((a, b) => new Date(a.changed_at) - new Date(b.changed_at));
+      setStatusHistory(sortedHistory);
 
       // Calculate skipped statuses for each history entry
       const skippedMap = {};
 
-      history.forEach((record, index) => {
+      sortedHistory.forEach((record, index) => {
         if (record.previous_status && record.new_status) {
           const prevIndex = statuses.indexOf(record.previous_status);
           const newIndex = statuses.indexOf(record.new_status);
@@ -111,10 +114,11 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
     // If no statuses are skipped, proceed normally
     setShowDatePicker(true);
 
-    // Set default date to today
-    const today = new Date();
-    const formattedDate = today.toISOString().split('T')[0];
-    setSelectedDate(formattedDate);
+    // Set default date and time to now
+    const now = new Date();
+    const formattedDate = now.toISOString().split('T')[0];
+    const formattedTime = now.toTimeString().split(' ')[0]; // Get time in HH:MM:SS format
+    setSelectedDate(`${formattedDate}T${formattedTime}`);
     setIsDateApplicable(true);
   };
 
@@ -133,10 +137,11 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
     // Proceed with the date picker
     setShowDatePicker(true);
 
-    // Set default date to today
-    const today = new Date();
-    const formattedDate = today.toISOString().split('T')[0];
-    setSelectedDate(formattedDate);
+    // Set default date and time to now
+    const now = new Date();
+    const formattedDate = now.toISOString().split('T')[0];
+    const formattedTime = now.toTimeString().split(' ')[0]; // Get time in HH:MM:SS format
+    setSelectedDate(`${formattedDate}T${formattedTime}`);
     setIsDateApplicable(true);
   };
 
