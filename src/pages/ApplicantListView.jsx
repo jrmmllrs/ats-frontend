@@ -53,6 +53,16 @@ export default function ApplicantListView() {
         navigate(`/applicants/${tabId}`);
     };
 
+    // In ApplicantListView.jsx
+    const handleCloseTab = (tabId) => {
+        if (activeTab === tabId) {
+            // If closing the active tab, navigate back to the list first
+            navigate("/applicants");
+        }
+        // Then close the tab in state
+        closeTab(tabId);
+    };
+
     if (showAddForm) return <AddApplicantForm onClose={() => setShowAddForm(false)} />;
 
     return (
@@ -84,7 +94,10 @@ export default function ApplicantListView() {
                             </button>
                             <button
                                 className="ml-1 text-gray-600 hover:text-white"
-                                onClick={() => closeTab(tab.id)}
+                                onClick={(e) => {
+                                    e.stopPropagation(); // Prevent tab activation
+                                    handleCloseTab(tab.id);
+                                }}
                             >
                                 <FaTimes className="h-3 w-3" />
                             </button>
