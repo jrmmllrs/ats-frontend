@@ -1,4 +1,3 @@
-// App.js - Main Routing File
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import PrivateRoute from "./context/PrivateRoute";
@@ -7,11 +6,10 @@ import FullOfSuite from "./pages/FullOfSuite";
 import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
 
-// Import all the main views that were previously inside Listings
-import MainLayout from "./layouts/MainLayout"; // We'll create this wrapper component
+
+import MainLayout from "./layouts/MainLayout"; 
 import Dashboard from "./pages/Dashboard";
-import ApplicantListView from "./pages/ApplicantListView"; // This will be a new component
-import ApplicantDetailsPage from "./pages/ApplicantDetailsPage";
+import ApplicantListView from "./pages/ApplicantListView";
 import AnalysisPage from "./pages/AnalysisPage";
 import Jobs from "./pages/Jobs";
 import Configurations from "./pages/Configurations";
@@ -41,7 +39,7 @@ function App() {
 
         {/* Not Found Route */}
         <Route path="*" element={<NotFound />} />
-      </Routes>
+      </Routes> 
     </BrowserRouter>
   );
 }
