@@ -9,10 +9,11 @@ import DataTable from 'react-data-table-component';
 
 function UserManagementPage() {
   const [users, setUsers] = useState([]);
+  const [serviceFeatures, setServiceFeatures] = useState([]);
+  const [jobTitles, setJobTitles] = useState([]);
   const [form, setForm] = useState({
     user_email: "",
     user_password: "",
-    user_key: "",
     first_name: "",
     middle_name: "",
     last_name: "",
@@ -22,13 +23,16 @@ function UserManagementPage() {
     personal_email: "",
     contact_number: "",
     birthdate: "",
-    company_id: "",
+    company_id: "717a6512-b8f6-4586-8431-feb3fcad585c",
     job_title_id: "",
-    department_id: "",
-    division_id: "",
-    upline_id: "",
+    service_feature_ids: []
   });
+
+  
+
   const [loading, setLoading] = useState(false);
+  const [featuresLoading, setFeaturesLoading] = useState(false);
+  const [titlesLoading, setTitlesLoading] = useState(false);
   const [error, setError] = useState("");
   const [editId, setEditId] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -36,108 +40,95 @@ function UserManagementPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage] = useState(10);
 
-  // Fetch all users
-  const fetchUsers = async () => {
-    setLoading(true);
+  // Fetch all data
+  const fetchData = async () => {
     try {
-      const res = await api.get("/user-management/");
-      setUsers(res.data);
+      setLoading(true);
+      
+      // Fetch users
+      const usersRes = await api.get("/user/user-accounts");
+      console.log('user',usersRes.data.userAccounts);
+      setUsers(usersRes.data.userAccounts);
+      
+      // Fetch service features
+      setFeaturesLoading(true);
+      const featuresRes = await api.get("/user/service-features");
+      setServiceFeatures(featuresRes.data.service_features);
+      setFeaturesLoading(false);
+      
+      // Fetch job titles
+      setTitlesLoading(true);
+      const jobTitlesRes = await api.get("/user/job-titles");
+      console.log('jobroute',jobTitlesRes.data);
+      setJobTitles(jobTitlesRes.data.job_titles);
+      setTitlesLoading(false);
+      
       setError("");
     } catch (err) {
-      setError("Failed to fetch users");
+      setError(err.response?.data?.message || "Failed to fetch data");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
-    fetchUsers();
+    fetchData();
   }, []);
 
   // Handle form input change
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm(prev => ({ ...prev, [name]: value }));
   };
 
-  // Handle form submit (Create or Update)
+  // Handle service feature selection
+  const handleFeatureToggle = (featureId) => {
+    setForm(prev => {
+      const newFeatures = prev.service_feature_ids.includes(featureId)
+        ? prev.service_feature_ids.filter(id => id !== featureId)
+        : [...prev.service_feature_ids, featureId];
+      return { ...prev, service_feature_ids: newFeatures };
+    });
+  };
+
+  // Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    
     try {
+      const payload = {
+        ...form,
+        service_feature_ids: JSON.stringify(form.service_feature_ids)
+      };
+
       if (editId) {
-        // Only update user basic info (as per backend)
-        await api.put(`/user-management/${editId}`, {
-          user_email: form.user_email,
-          user_password: form.user_password,
-          user_key: form.user_key,
-          is_deactivated: form.is_deactivated || 0,
-        });
+        console.log('editId',editId);
+        await api.put(`user/user-management/${editId}`, payload);
       } else {
-        await api.post("/user-management/create", form);
+        // Create new user
+        await api.post("/user/create-user", payload);
       }
-      setForm({
-        user_email: "",
-        user_password: "",
-        user_key: "",
-        first_name: "",
-        middle_name: "",
-        last_name: "",
-        extension_name: "",
-        sex: "",
-        user_pic: "",
-        personal_email: "",
-        contact_number: "",
-        birthdate: "",
-        company_id: "",
-        job_title_id: "",
-        department_id: "",
-        division_id: "",
-        upline_id: "",
-      });
-      setEditId(null);
-      setIsFormOpen(false);
-      fetchUsers();
+      
+      // Reset form and refresh data
+      handleCancel();
+      fetchData();
     } catch (err) {
-      setError(editId ? "Failed to update user" : "Failed to add user");
+      setError(err.response?.data?.message || 
+        (editId ? "Failed to update user" : "Failed to create user"));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  // Handle edit
-  const handleEdit = (user) => {
-    setEditId(user.user_id);
-    setIsFormOpen(true);
-    setForm({
-      user_email: user.user_email || "",
-      user_password: "", // Don't prefill password
-      user_key: user.user_key || "",
-      first_name: user.first_name || "",
-      middle_name: user.middle_name || "",
-      last_name: user.last_name || "",
-      extension_name: user.extension_name || "",
-      sex: user.sex || "",
-      user_pic: user.user_pic || "",
-      personal_email: user.personal_email || "",
-      contact_number: user.contact_number || "",
-      birthdate: user.birthdate ? user.birthdate.slice(0, 10) : "",
-      company_id: user.company_id || "",
-      job_title_id: user.job_title_id || "",
-      department_id: user.department_id || "",
-      division_id: user.division_id || "",
-      upline_id: user.upline_id || "",
-      is_deactivated: user.is_deactivated || 0,
-    });
-  };
-
-  // Handle cancel edit
+  // Handle cancel
   const handleCancel = () => {
     setEditId(null);
     setIsFormOpen(false);
     setForm({
       user_email: "",
       user_password: "",
-      user_key: "",
       first_name: "",
       middle_name: "",
       last_name: "",
@@ -147,21 +138,20 @@ function UserManagementPage() {
       personal_email: "",
       contact_number: "",
       birthdate: "",
-      company_id: "",
+      company_id: "717a6512-b8f6-4586-8431-feb3fcad585c",
       job_title_id: "",
-      department_id: "",
-      division_id: "",
-      upline_id: "",
+      service_feature_ids: []
     });
   };
 
   // Filter users based on search term
   const filteredUsers = users.filter(user => 
-    user.user_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.user_key?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    (user.user_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (user.first_name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (user.last_name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (user.personal_email?.toLowerCase().includes(searchTerm.toLowerCase()))
+  ));
+
 
   // Columns for DataTable
   const columns = [
@@ -170,80 +160,85 @@ function UserManagementPage() {
       selector: row => row.user_email,
       sortable: true,
       cell: row => (
-        <div>
+        <div className="py-2">
           <div className="text-sm font-medium text-gray-900">{row.user_email}</div>
-          <div className="text-xs text-gray-500">{row.user_key}</div>
+          {row.personal_email && (
+            <div className="text-xs text-gray-500">{row.personal_email}</div>
+          )}
         </div>
       ),
-      minWidth: '250px'
+      minWidth: '200px'
     },
     {
       name: 'Name',
       selector: row => `${row.first_name} ${row.last_name}`,
       sortable: true,
       cell: row => (
-        <div className="flex items-center">
-          <div className="flex-shrink-0 h-8 w-8 bg-teal-100 rounded-full flex items-center justify-center">
+        <div className="flex items-center py-2">
+          <div className="flex-shrink-0 h-10 w-10 bg-teal-100 rounded-full flex items-center justify-center">
             <span className="text-sm font-medium text-teal-600">
               {row.first_name?.charAt(0) || row.last_name?.charAt(0) || "U"}
             </span>
           </div>
           <div className="ml-3">
             <div className="text-sm font-medium text-gray-900">
-              {row.first_name} {row.last_name}
+              {row.first_name} {row.middle_name} {row.last_name} {row.extension_name}
             </div>
-            <div className="text-xs text-gray-500">{row.personal_email || "No personal email"}</div>
+            <div className="text-xs text-gray-500">
+              {row.contact_number || "No contact number"}
+            </div>
           </div>
         </div>
       ),
       minWidth: '250px'
     },
     {
-      name: 'Contact',
-      selector: row => row.contact_number,
+      name: 'Job Title',
+      selector: row => row.job_title_id,
       sortable: true,
       cell: row => (
-        <div>
-          <div className="text-sm text-gray-900">{row.contact_number || "N/A"}</div>
-          <div className="text-xs text-gray-500">
-            {row.birthdate ? row.birthdate.slice(0, 10) : "No birthdate"}
-          </div>
+        <div className="text-sm text-gray-900 py-2">
+          {jobTitles.find(j => j.job_title_id === row.job_title_id)?.job_title_name || "N/A"}
         </div>
       ),
       minWidth: '150px'
     },
     {
-      name: 'Status',
-      selector: row => row.is_deactivated ? "Inactive" : "Active",
-      sortable: true,
-      cell: row => (
-        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-medium rounded-full ${
-          row.is_deactivated 
-            ? 'bg-red-50 text-red-600' 
-            : 'bg-teal-50 text-teal-600'
-        }`}>
-          {row.is_deactivated ? "Inactive" : "Active"}
-        </span>
-      ),
-      minWidth: '100px'
-    },
-    {
       name: 'Actions',
       cell: row => (
-        <div className="flex space-x-3">
-          <button
-            onClick={() => handleEdit(row)}
-            className="text-teal-600 hover:text-teal-800 transition-colors flex items-center gap-1"
-          >
-            <FiEdit2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Edit</span>
-          </button>
-        </div>
+        <button
+          onClick={() => {
+            setEditId(row.user_id);
+            setIsFormOpen(true);
+            setForm({
+              user_email: row.user_email,
+              user_password: "",
+              first_name: row.first_name,
+              middle_name: row.middle_name,
+              last_name: row.last_name,
+              extension_name: row.extension_name,
+              sex: row.sex,
+              user_pic: row.user_pic,
+              personal_email: row.personal_email,
+              contact_number: row.contact_number,
+              birthdate: row.birthdate ? row.birthdate.slice(0, 10) : "",
+              company_id: row.company_id || "717a6512-b8f6-4586-8431-feb3fcad585c",
+              job_title_id: row.job_title_id || "",
+              service_feature_ids: row.service_features ? 
+                row.service_features.map(f => f.service_feature_id) : 
+                []
+            });
+          }}
+          className="text-teal-600 hover:text-teal-800 transition-colors p-2"
+          title="Edit user"
+        >
+          <FiEdit2 className="h-5 w-5" />
+        </button>
       ),
       ignoreRowClick: true,
       allowOverflow: true,
       button: true,
-      minWidth: '80px'
+      width: '80px'
     },
   ];
 
@@ -253,15 +248,15 @@ function UserManagementPage() {
     const range = (start, end) => Array.from({ length: end - start + 1 }, (_, i) => start + i);
     
     return (
-      <div className="flex items-center justify-between mt-4">
+      <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-4">
         <div className="text-sm text-gray-500">
           Showing {((currentPage - 1) * rowsPerPage) + 1} to {Math.min(currentPage * rowsPerPage, rowCount)} of {rowCount} users
         </div>
-        <div className="flex items-center space-x-1">
+        <div className="flex items-center gap-1">
           <button
             onClick={() => onChangePage(currentPage > 1 ? currentPage - 1 : 1)}
             disabled={currentPage === 1}
-            className="px-3 py-1 border border-gray-200 rounded text-sm disabled:opacity-50 flex items-center"
+            className="px-3 py-1 border border-gray-200 rounded text-sm disabled:opacity-50 flex items-center hover:bg-gray-50"
           >
             <FiChevronLeft className="h-4 w-4 mr-1" />
             Previous
@@ -271,7 +266,7 @@ function UserManagementPage() {
             <button
               key={page}
               onClick={() => onChangePage(page)}
-              className={`px-3 py-1 border rounded text-sm ${
+              className={`px-3 py-1 border rounded text-sm min-w-[40px] ${
                 currentPage === page 
                   ? 'bg-teal-600 text-white border-teal-600' 
                   : 'border-gray-200 text-gray-700 hover:bg-gray-50'
@@ -284,7 +279,7 @@ function UserManagementPage() {
           <button
             onClick={() => onChangePage(currentPage < pages ? currentPage + 1 : pages)}
             disabled={currentPage === pages}
-            className="px-3 py-1 border border-gray-200 rounded text-sm disabled:opacity-50 flex items-center"
+            className="px-3 py-1 border border-gray-200 rounded text-sm disabled:opacity-50 flex items-center hover:bg-gray-50"
           >
             Next
             <FiChevronRight className="h-4 w-4 ml-1" />
@@ -373,12 +368,15 @@ function UserManagementPage() {
                     fontWeight: '500',
                     textTransform: 'uppercase',
                     color: '#6b7280',
+                    backgroundColor: '#f9fafb',
                   },
                 },
                 cells: {
                   style: {
                     paddingLeft: '1.5rem',
                     paddingRight: '1.5rem',
+                    paddingTop: '0.5rem',
+                    paddingBottom: '0.5rem',
                   },
                 },
               }}
@@ -401,7 +399,7 @@ function UserManagementPage() {
                 ) : (
                   <>
                     <FiPlus className="h-5 w-5 text-teal-600" />
-                    New User
+                    Add New User
                   </>
                 )}
               </h3>
@@ -421,13 +419,13 @@ function UserManagementPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        User Email*
+                        Email Address*
                       </label>
                       <input
                         name="user_email"
                         value={form.user_email}
                         onChange={handleChange}
-                        placeholder="user@example.com"
+                        type="email"
                         required
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
                       />
@@ -435,7 +433,7 @@ function UserManagementPage() {
                     
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {editId ? "New Password (leave blank to keep)" : "Password*"}
+                        Password{!editId && '*'}
                       </label>
                       <input
                         name="user_password"
@@ -443,22 +441,12 @@ function UserManagementPage() {
                         onChange={handleChange}
                         type="password"
                         required={!editId}
+                        minLength={8}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
                       />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        User Key*
-                      </label>
-                      <input
-                        name="user_key"
-                        value={form.user_key}
-                        onChange={handleChange}
-                        placeholder="Unique identifier"
-                        required
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
-                      />
+                      {!editId && (
+                        <p className="mt-1 text-xs text-gray-500">Minimum 8 characters</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -469,13 +457,13 @@ function UserManagementPage() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        First Name
+                        First Name*
                       </label>
                       <input
                         name="first_name"
                         value={form.first_name}
                         onChange={handleChange}
-                        placeholder="John"
+                        required
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
                       />
                     </div>
@@ -488,20 +476,19 @@ function UserManagementPage() {
                         name="middle_name"
                         value={form.middle_name}
                         onChange={handleChange}
-                        placeholder="Michael"
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
                       />
                     </div>
                     
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Last Name
+                        Last Name*
                       </label>
                       <input
                         name="last_name"
                         value={form.last_name}
                         onChange={handleChange}
-                        placeholder="Doe"
+                        required
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
                       />
                     </div>
@@ -521,7 +508,7 @@ function UserManagementPage() {
                     
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Sex
+                        Gender
                       </label>
                       <select
                         name="sex"
@@ -563,7 +550,7 @@ function UserManagementPage() {
                         name="personal_email"
                         value={form.personal_email}
                         onChange={handleChange}
-                        placeholder="personal@example.com"
+                        type="email"
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
                       />
                     </div>
@@ -576,11 +563,82 @@ function UserManagementPage() {
                         name="contact_number"
                         value={form.contact_number}
                         onChange={handleChange}
-                        placeholder="+1234567890"
+                        type="tel"
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
                       />
                     </div>
                   </div>
+                </div>
+                
+                {/* Job Information */}
+                <div className="md:col-span-2">
+                  <h4 className="text-sm font-medium text-gray-500 mb-3">Job Information</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Job Title*
+                      </label>
+                      <select
+                        name="job_title_id"
+                        value={form.job_title_id}
+                        onChange={handleChange}
+                        required
+                        disabled={titlesLoading}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
+                      >
+                        <option value="">Select Job Title</option>
+                        {jobTitles.map(job => (
+                          <option key={job.job_title_id} value={job.job_title_id}>
+                            {job.job_title}
+                          </option>
+                        ))}
+                      </select>
+                      {titlesLoading && (
+                        <p className="mt-1 text-xs text-gray-500">Loading job titles...</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Company ID
+                      </label>
+                      <input
+                        name="company_id"
+                        value={form.company_id}
+                        onChange={handleChange}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-gray-50"
+                        readOnly
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Permissions */}
+                <div className="md:col-span-2">
+                  <h4 className="text-sm font-medium text-gray-500 mb-3">Access Permissions</h4>
+                  {featuresLoading ? (
+                    <div className="flex items-center justify-center p-4">
+                      <FiLoader className="h-5 w-5 text-teal-500 animate-spin mr-2" />
+                      <span className="text-sm text-gray-500">Loading permissions...</span>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {serviceFeatures.map(feature => (
+                        <div key={feature.service_feature_id} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id={`feature-${feature.service_feature_id}`}
+                            checked={form.service_feature_ids.includes(feature.service_feature_id)}
+                            onChange={() => handleFeatureToggle(feature.service_feature_id)}
+                            className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
+                          />
+                          <label htmlFor={`feature-${feature.service_feature_id}`} className="ml-2 text-sm text-gray-700">
+                            {feature.feature_name}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 
                 {/* Form actions */}

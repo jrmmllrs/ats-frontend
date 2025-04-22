@@ -4,8 +4,9 @@ import {
   FaTable,
   FaUsers,
   FaChartBar,
-  FaBriefcase
+  FaBriefcase,
 } from "react-icons/fa";
+import { FaUserGear } from "react-icons/fa6";
 import { NavLink } from "react-router-dom";
 
 
@@ -116,6 +117,7 @@ export default function Sidebar({ isOpen, onToggleSidebar, onSelectView, selecte
             <SidebarLink to="/analytics" text="Analytics" icon={<FaChartBar />} />
             <SidebarLink to="/jobs" text="Jobs" icon={<FaBriefcase />} />
             <SidebarLink to="/config" text="Configurations" icon={<FaGear />} />
+            <SidebarLink to="/usermanagement" text="User Management" icon={<FaUserGear />} />
 
           </nav>
         </div>
