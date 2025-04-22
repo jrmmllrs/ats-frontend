@@ -56,7 +56,7 @@ export const filterApplicants = async (position, setApplicantData, status, date,
 //     }
 // }
 
-export const searchApplicant = async (searchValue, setApplicantData) => {
+export const searchApplicant = async (searchValue, setApplicantData, stages, setStages) => {
     let sql = "/applicants/search?";
     if (searchValue === "") {  
         fetchApplicants(setApplicantData)
@@ -66,6 +66,18 @@ export const searchApplicant = async (searchValue, setApplicantData) => {
         const { data } = await api.get(sql);
         setApplicantData(data); 
     }
+    setStages(
+        stages.map((stage) => ({
+            ...stage,
+            selected: false,
+            statuses: stage.statuses.map((status) => ({
+            ...status,
+            selected: false,
+            })),
+        })),
+    );
+    console.log("okayyyyyy!!!!!");
+    
 }
 
   export const updateStatus = async (id, progress_id, Status, status, applicantData, setApplicantData, positionFilter, setStages, initialStages, setPositionFilter, user) => {

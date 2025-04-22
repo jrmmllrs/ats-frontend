@@ -11,6 +11,7 @@ import { searchApplicant } from "../utils/applicantDataUtils";
 import positionStore from "../context/positionStore";
 import applicantFilterStore from "../context/applicantFilterStore";
 import { clearFilter } from "../utils/applicantListUtils";
+import { useStages } from "../hooks/useStages";
 
 export default function ApplicantList({
   onSelectApplicant,
@@ -21,6 +22,21 @@ export default function ApplicantList({
   const [exportValue, setExportValue] = useState("");
   const { setApplicantData } = applicantDataStore();
   const { positionFilter } = positionStore();
+  const { stages, setStages } = useStages();
+
+
+  // const clearStage = () => {
+  //   setStages(
+  //     stages.map((stage) => ({
+  //       ...stage,
+  //       selected: false,
+  //       statuses: stage.statuses.map((status) => ({
+  //         ...status,
+  //         selected: false,
+  //       })),
+  //     })),
+  //   );
+  // } 
 
   // PDF Export modal state
   const [showPdfModal, setShowPdfModal] = useState(false);
@@ -72,7 +88,7 @@ export default function ApplicantList({
             type="text"
             placeholder="Search"
             value={search}
-            onChange={(e) => { setSearch(e.target.value); searchApplicant(e.target.value, setApplicantData) }}
+            onChange={(e) => { setSearch(e.target.value); searchApplicant(e.target.value, setApplicantData, stages, setStages)}}
             className="w-full body-regular rounded-md border border-gray-300 p-2"
           />
         </div>
