@@ -1,6 +1,5 @@
 import api from "../api/axios";
 import moment from "moment";
-import { initialStages } from "./StagesData";
 import { filterApplicants } from "./applicantDataUtils";
 import { searchApplicant } from "./applicantDataUtils";
 
