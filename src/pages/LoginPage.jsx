@@ -27,7 +27,7 @@ export default function LoginPage() {
 
       if (response.status === 200) {
         Cookies.set("token", response.data.token, { expires: rememberMe ? 7 : 1 });
-        navigate("/ats");
+        navigate("/");
       } else {
         setError("Invalid email or password");
       }
@@ -186,10 +186,10 @@ export default function LoginPage() {
             </form>
 
             <div className="text-center">
-                <Link to="/reset-password" className="text-sm text-teal-600 hover:text-teal-700 hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
+              <Link to="/reset-password" className="text-sm text-teal-600 hover:text-teal-700 hover:underline">
+                Forgot password?
+              </Link>
+            </div>
           </div>
         </div>
 

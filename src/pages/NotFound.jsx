@@ -6,6 +6,8 @@ import NotFoundImage2 from "../assets/404bro.svg";
 import NotFoundImage3 from "../assets/404amico.svg";
 import NotFoundImage4 from "../assets/404pana.svg";
 import NotFoundImage5 from "../assets/404rafiki.svg";
+import { useNavigate } from "react-router-dom";
+
 
 
 export default function NotFound() {
@@ -20,6 +22,8 @@ export default function NotFound() {
     const randomIndex = random.int(0, images.length - 1);
     const NotFoundImage = images[randomIndex];
 
+    const navigate = useNavigate();
+
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 px-4 text-center">
             <img
@@ -30,13 +34,13 @@ export default function NotFound() {
             <p className="text-lg text-gray-600 mb-6">
                 Sorry, the page you're looking for doesn't exist or has been moved.
             </p>
-            <Link
-                to="/"
+            <button
+                onClick={() => navigate(-1)}
                 className="flex items-center gap-2 px-6 py-3 bg-teal-600 text-white rounded-full hover:bg-teal-700 transition"
             >
                 <FaArrowLeft />
-                Back to Dashboard
-            </Link>
+                Go Back
+            </button>
         </div>
     );
 }
