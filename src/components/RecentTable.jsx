@@ -22,7 +22,7 @@ const RecentTable = ({ applicants, onSelectApplicant }) => {
 
         const applicantId = row.applicant_id || row.id;
         // Use state to pass data instead of query parameters
-        navigate(`/applicant/${applicantId}`);
+        navigate(`/applicants/${applicantId}`);
     };
     const columns = [
         { name: 'Name', selector: row => <NameCell row={row} /> },
