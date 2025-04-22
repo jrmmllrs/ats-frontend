@@ -62,7 +62,7 @@ export default function MainLayout() {
     // Function to handle applicant selection (for ATS Healthcheck)
     const selectApplicant = (applicant) => {
         setShowATSHealthcheck(false);
-        navigate(`/applicant/${applicant.applicant_id}`);
+        navigate(`/applicants/${applicant.applicant_id}`);
     };
 
     return (
