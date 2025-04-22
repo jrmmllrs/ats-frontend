@@ -13,6 +13,7 @@ import ApplicantListView from "./pages/ApplicantListView";
 import AnalysisPage from "./pages/AnalysisPage";
 import Jobs from "./pages/Jobs";
 import Configurations from "./pages/Configurations";
+import UserManagementPage from "./pages/UserManagementPage";
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
           <Route index element={<Navigate to="/dashboard" />} />
 
           {/* Main views as separate routes */}
+          <Route path="usermanagement" element={<UserManagementPage />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="applicants" element={<ApplicantListView />} />
           <Route path="applicants/:id" element={<ApplicantListView />} />
