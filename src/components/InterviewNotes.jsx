@@ -60,11 +60,17 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
 
     const handleSubmit = () => {
         const data = {
+            applicant_id: applicant.applicant_id,
             interview_id: interview.interview_id,
+            interviewer_id: user.user_id,
             note_type: "FIRST INTERVIEW",
             note_body: noteBody,
-            noted_by: user.user_id
+            noted_by: user.user_id,
+
         };
+
+        console.log('data', data);
+
 
         api.post('/interview/note', data).then((response) => {
             //trigger the change of the source data
