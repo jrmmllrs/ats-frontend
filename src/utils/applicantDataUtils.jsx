@@ -25,32 +25,44 @@ export const filterApplicants = async (position, setApplicantData, status, date,
     }
 }
 
-export const searchApplicant = async (searchValue, setApplicantData, positionFilter, status, dateFilterType, dateFilter) => {
+// export const searchApplicant = async (searchValue, setApplicantData, positionFilter, status, dateFilterType, dateFilter) => {
+//     let sql = "/applicants/search?";
+//     if (searchValue === "") {  
+//         if (positionFilter === "All" && status == [] && dateFilter === "") {
+//             fetchApplicants(setApplicantData);
+//         }     
+//         else {
+//             dateFilterType === 'month' ?
+//             filterApplicants(positionFilter, setApplicantData, status, moment(dateFilter).format("MMMM"), dateFilterType) :
+//             filterApplicants(positionFilter, setApplicantData, status, moment(dateFilter).format("YYYY"), dateFilterType);
+//         }
+//     }
+//     else if (searchValue !== "") {
+//         sql += `searchQuery=${searchValue}`;
+//         positionFilter !== "All" ? sql += `&position=${positionFilter}` : sql += "";
+//         status.forEach((statusItem) => {
+//             sql += `&status=${statusItem}`;
+//         });
+//         if (moment(dateFilter).format("MMMM") !== "Invalid date") {
+//             if (dateFilterType === "month") {
+//                 sql += `&month=${moment(dateFilter).format("MMMM")}`;
+//             }
+//             else if (dateFilterType === "year") {
+//                 sql += `&year=${moment(dateFilter).format("YYYY")}`;
+//             }
+//         }
+//         const { data } = await api.get(sql);
+//         setApplicantData(data); 
+//     }
+// }
+
+export const searchApplicant = async (searchValue, setApplicantData) => {
     let sql = "/applicants/search?";
     if (searchValue === "") {  
-        if (positionFilter === "All" && status == [] && dateFilter === "") {
-            fetchApplicants(setApplicantData);
-        }     
-        else {
-            dateFilterType === 'month' ?
-            filterApplicants(positionFilter, setApplicantData, status, moment(dateFilter).format("MMMM"), dateFilterType) :
-            filterApplicants(positionFilter, setApplicantData, status, moment(dateFilter).format("YYYY"), dateFilterType);
-        }
+        fetchApplicants(setApplicantData)
     }
-    else if (searchValue !== "") {
+    else {
         sql += `searchQuery=${searchValue}`;
-        positionFilter !== "All" ? sql += `&position=${positionFilter}` : sql += "";
-        status.forEach((statusItem) => {
-            sql += `&status=${statusItem}`;
-        });
-        if (moment(dateFilter).format("MMMM") !== "Invalid date") {
-            if (dateFilterType === "month") {
-                sql += `&month=${moment(dateFilter).format("MMMM")}`;
-            }
-            else if (dateFilterType === "year") {
-                sql += `&year=${moment(dateFilter).format("YYYY")}`;
-            }
-        }
         const { data } = await api.get(sql);
         setApplicantData(data); 
     }

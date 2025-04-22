@@ -72,7 +72,7 @@ export default function ApplicantList({
             type="text"
             placeholder="Search"
             value={search}
-            onChange={(e) => { setSearch(e.target.value); searchApplicant(e.target.value, setApplicantData, positionFilter, status, dateFilterType, dateFilter) }}
+            onChange={(e) => { setSearch(e.target.value); searchApplicant(e.target.value, setApplicantData) }}
             className="w-full body-regular rounded-md border border-gray-300 p-2"
           />
         </div>
