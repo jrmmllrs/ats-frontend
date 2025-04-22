@@ -196,11 +196,22 @@ function UserManagementPage() {
       name: 'Job Title',
       selector: row => row.job_title_id,
       sortable: true,
-      cell: row => (
-        <div className="text-sm text-gray-900 py-2">
-          {jobTitles.find(j => j.job_title_id === row.job_title_id)?.job_title_name || "N/A"}
-        </div>
-      ),
+      cell: row => {
+        // Debugging log
+        console.log('User job title ID:', row.job_title_id);
+        console.log('Available job titles:', jobTitles);
+        
+        const jobTitle = jobTitles.find(j => 
+          j.job_title_id === row.job_title_id ||
+          j.id === row.job_title_id // Some APIs might use just 'id'
+        );
+        
+        return (
+          <div className="text-sm text-gray-900 py-2">
+            {jobTitle?.job_title || jobTitle?.name || "N/A"}
+          </div>
+        );
+      },
       minWidth: '150px'
     },
     {
