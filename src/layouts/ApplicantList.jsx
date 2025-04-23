@@ -7,20 +7,37 @@ import ApplicantTable from "../components/ApplicantTable";
 import ExportToPdf from "../utils/ExportToPdf";
 import moment from "moment";
 import applicantDataStore from "../context/applicantDataStore";
-import { searchApplicant } from "../utils/applicantDataUtils";
+import { filterApplicants, filterDate, searchApplicant } from "../utils/applicantDataUtils";
 import positionStore from "../context/positionStore";
 import applicantFilterStore from "../context/applicantFilterStore";
 import { clearFilter } from "../utils/applicantListUtils";
+import { useStages } from "../hooks/useStages";
+import { fetchCounts } from "../utils/statusCounterFunctions";
+import { initialStages } from "../utils/StagesData";
 
 export default function ApplicantList({
   onSelectApplicant,
   onAddApplicantClick,
 }) {
-  const { search, setSearch, status, dateFilter, setDateFilter, dateFilterType, setDateFilterType } = applicantFilterStore();
-  const [selectedDate, setSelectedDate] = useState(null);
+  const { search, setSearch, status, setStatus, clearStatus, dateFilter, setDateFilter, dateFilterType, setDateFilterType, selectedDate, setSelectedDate } = applicantFilterStore();
   const [exportValue, setExportValue] = useState("");
   const { setApplicantData } = applicantDataStore();
-  const { positionFilter } = positionStore();
+  const { positionFilter, setPositionFilter } = positionStore();
+  const { stages, setStages } = useStages();
+
+
+  // const clearStage = () => {
+  //   setStages(
+  //     stages.map((stage) => ({
+  //       ...stage,
+  //       selected: false,
+  //       statuses: stage.statuses.map((status) => ({
+  //         ...status,
+  //         selected: false,
+  //       })),
+  //     })),
+  //   );
+  // } 
 
   // PDF Export modal state
   const [showPdfModal, setShowPdfModal] = useState(false);
@@ -72,7 +89,7 @@ export default function ApplicantList({
             type="text"
             placeholder="Search"
             value={search}
-            onChange={(e) => { setSearch(e.target.value); searchApplicant(e.target.value, setApplicantData, positionFilter, status, dateFilterType, dateFilter) }}
+            onChange={(e) => { console.log(status); clearStatus([]); setSearch(e.target.value); searchApplicant(e.target.value, setApplicantData, stages, setStages, setPositionFilter, setSelectedDate); fetchCounts(setStages, initialStages) }}
             className="w-full body-regular rounded-md border border-gray-300 p-2"
           />
         </div>
@@ -89,7 +106,13 @@ export default function ApplicantList({
           </select>
           <DatePicker
             selected={selectedDate}
-            onChange={(date) => { setSelectedDate(date); setDateFilter(date); searchApplicant(search, setApplicantData, positionFilter, status, dateFilterType, date) }}
+            onChange={(date) => { 
+              setSelectedDate(date); 
+              setDateFilter(date); 
+              setSearch("");
+              dateFilterType === "month" ? date = moment(date).format("MMMM") : date = moment(date).format("YYYY");
+              filterApplicants(positionFilter, setApplicantData, status, date, dateFilterType) 
+            }}
             showMonthYearPicker={dateFilterType === "month"}
             showYearPicker={dateFilterType === "year"}
             dateFormat={dateFilterType === "month" ? "MM/yyyy" : "yyyy"}
@@ -98,7 +121,7 @@ export default function ApplicantList({
           />
           <button
             className="flex w-auto body-regular rounded-md bg-teal-600 px-4 py-2 text-white hover:bg-teal-700"
-            onClick={() => clearFilter(setSelectedDate, setApplicantData, setDateFilterType, setDateFilter, setSearch, status, dateFilterType, positionFilter)}
+            onClick={() => clearFilter(setSelectedDate, setApplicantData, setDateFilterType, setDateFilter, setSearch, status, positionFilter)}
           >
             Clear
           </button>
