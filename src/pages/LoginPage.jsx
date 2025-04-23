@@ -4,6 +4,7 @@ import { FiMail, FiLock, FiEye, FiEyeOff, FiUser, FiCopy } from "react-icons/fi"
 import api from "../api/axios";
 import Cookies from "js-cookie";
 import { Link } from "react-router-dom";
+import useUserStore from "../context/userStore";
 export default function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -13,6 +14,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [showTestCredentials, setShowTestCredentials] = useState(false);
+  const { setUser } = useUserStore();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -20,13 +22,22 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const response = await api.post("/auth/login", {
+      const loginResponse = await api.post("/auth/login", {
         user_email: email,
         user_password: password,
       });
 
-      if (response.status === 200) {
-        Cookies.set("token", response.data.token, { expires: rememberMe ? 7 : 1 });
+      if (loginResponse.status === 200) {
+        const token = loginResponse.data.token;
+        Cookies.set("token", token, { expires: rememberMe ? 7 : 1 });
+
+        const userInfoResponse = await api.get("/user/getuserinfo", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setUser(userInfoResponse.data);
         navigate("/");
       } else {
         setError("Invalid email or password");
