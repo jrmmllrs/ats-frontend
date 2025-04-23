@@ -149,7 +149,7 @@ function UserManagementPage() {
 
       if (editId) {
         console.log('editId', editId);
-        await api.put(`user/user-management/${editId}`, payload);
+        await api.put(`user/user-management/${encodeURIComponent(editId)}`, payload);
       } else {
         // Create new user
         await api.post("/user/create-user", payload);
