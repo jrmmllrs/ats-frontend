@@ -39,6 +39,7 @@ function UserManagementPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage] = useState(10);
+  const [prevJobTitleId, setPrevJobTitleId] = useState(null);
 
   // Fetch all data
   const fetchData = async () => {
@@ -76,65 +77,48 @@ function UserManagementPage() {
   }, []);
 
   useEffect(() => {
-    if (form.job_title_id && jobTitles.length > 0 && serviceFeatures.length > 0) {
-      const selectedJob = jobTitles.find(job =>
-        job.job_title_id === form.job_title_id ||
+    // Only run when job_title_id actually changes (not initial load)
+    if (form.job_title_id && form.job_title_id !== prevJobTitleId && 
+        jobTitles.length > 0 && serviceFeatures.length > 0) {
+      
+      const selectedJob = jobTitles.find(job => 
+        job.job_title_id === form.job_title_id || 
         job.id === form.job_title_id
       );
-
+      
       if (selectedJob) {
         const jobTitleName = (selectedJob.job_title || selectedJob.name).toLowerCase();
-
-        // First clear all permissions
-        setForm(prev => ({
-          ...prev,
-          service_feature_ids: []
-        }));
-
-        // Then apply job-specific permissions after a slight delay
-        // to ensure the clear operation completes
-        const timeoutId = setTimeout(() => {
-          // Get all feature IDs
-          const allFeatureIds = serviceFeatures.map(f => f.service_feature_id);
-
-          // Get feature IDs for specific features
-          const getFeatureIdsByName = (names) => {
-            return serviceFeatures
-              .filter(f => names.some(name =>
-                f.feature_name.toLowerCase().includes(name.toLowerCase())
-              ))
-              .map(f => f.service_feature_id);
-          };
-
+        
+        // Only modify permissions for specific job titles
+        if (jobTitleName.includes('hr') || jobTitleName.includes('interviewer')) {
           let newFeatureIds = [];
-
+          
           if (jobTitleName.includes('hr')) {
             // HR gets all permissions
-            newFeatureIds = allFeatureIds;
+            newFeatureIds = serviceFeatures.map(f => f.service_feature_id);
           } else if (jobTitleName.includes('interviewer')) {
             // Interviewer gets only specific permissions
-            newFeatureIds = getFeatureIdsByName([
-              'interview notes',
-              'applicant listing'
-            ]);
+            newFeatureIds = serviceFeatures
+              .filter(f => 
+                f.feature_name.toLowerCase().includes('interview notes') ||
+                f.feature_name.toLowerCase().includes('applicant listing')
+              )
+              .map(f => f.service_feature_id);
           }
-          // Add more conditions for other job titles as needed
-
-          // Only update if there are permissions to set
-          if (newFeatureIds.length > 0) {
-            setForm(prev => ({
-              ...prev,
-              service_feature_ids: newFeatureIds
-            }));
-          }
-        }, 10); // Small delay to ensure state updates properly
-
-        return () => clearTimeout(timeoutId); // Cleanup timeout
+          
+          setForm(prev => ({
+            ...prev,
+            service_feature_ids: newFeatureIds
+          }));
+        }
       }
+      
+      // Update previous job title ID
+      setPrevJobTitleId(form.job_title_id);
     }
-  }, [form.job_title_id, jobTitles, serviceFeatures]);
+  }, [form.job_title_id, jobTitles, serviceFeatures, prevJobTitleId]);
 
-  
+
   // Handle form input change
   const handleChange = (e) => {
     const { name, value } = e.target;
