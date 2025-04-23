@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { usePositions } from "../hooks/usePositions";
 import { useStages, handleStageClick } from "../hooks/useStages";
 import { useCollapse } from "../hooks/useCollapse";
@@ -18,7 +18,7 @@ export default function StatusCounter() {
   const { stages, setStages, toggleStage, toggleStatus } = useStages();
   const { collapsedStages, toggleCollapse } = useCollapse();
   const { positionFilter, setPositionFilter } = positionStore();
-  const { status, setStatus, setStatusStage, clearStatus, search, dateFilter, dateFilterType } = applicantFilterStore();
+  const { status, setStatus, setStatusStage, clearStatus, search, setSearch, dateFilter, dateFilterType, setSelectedDate } = applicantFilterStore();
   const { setApplicantData } = applicantDataStore();
   const [selectedStatuses, setSelectedStatuses] = useState([]);
 
@@ -26,6 +26,10 @@ export default function StatusCounter() {
   const hasSelectedStatus = stages.some((stage) =>
     stage.statuses.some((status) => status.selected),
   );
+
+  useEffect(() => {
+    setSelectedStatuses([]);
+  }, [search])
 
 
   return (
@@ -41,7 +45,7 @@ export default function StatusCounter() {
               className="text-end body-tiny text-gray-dark border border-gray-light hover:bg-gray-light rounded-md cursor-pointer p-0.5"
               data-tooltip-target="clear"
               title="Clear"
-              onClick={() => clearSelections(stages, setStages, setSelectedStatuses, clearStatus, setStatus, setPositionFilter, search, dateFilterType, dateFilter, setApplicantData)}
+              onClick={() => clearSelections(stages, setStages, setSelectedStatuses, clearStatus, setStatus, setPositionFilter, setApplicantData, dateFilter, dateFilterType)}
             >
               <MdDeselect
                 // onClick={() => clearSelections(stages, setStages, setSelectedStatuses, clearStatus, setStatus, setPositionFilter, search, dateFilterType, dateFilter, setApplicantData)}
@@ -62,14 +66,7 @@ export default function StatusCounter() {
                 setPositionFilter,
                 selectedStatuses,
               );
-              if (search === "") {
-                dateFilterType === 'month' ?
-                  filterApplicants(e.target.value, setApplicantData, status, moment(dateFilter).format("MMMM"), dateFilterType) :
-                  filterApplicants(e.target.value, setApplicantData, status, moment(dateFilter).format("YYYY"), dateFilterType)
-              }
-              else {
-                searchApplicant(search, setApplicantData, e.target.value, status, dateFilterType, dateFilter);
-              }
+              filterApplicants(e.target.value, setApplicantData, status, setSearch);
             }}
             value={positionFilter}
           >
@@ -93,7 +90,7 @@ export default function StatusCounter() {
                 ? "bg-teal text-white"
                 : "bg-gray-light text-gray-dark"
                 } hover:bg-teal-soft mb-2 rounded-md px-2`}
-              onClick={() => handleStageClick(stage, setSelectedStatuses, search, toggleStage, dateFilterType, dateFilter, positionFilter, setApplicantData, setStatusStage)}
+              onClick={() => {handleStageClick(stage, setSelectedStatuses, search, toggleStage, dateFilterType, dateFilter, positionFilter, setApplicantData, setStatusStage); setSearch("")}}
             >
               <div className="flex flex-1 items-center justify-between">
                 <span className="body-bold">{stage.name}</span>
@@ -118,6 +115,7 @@ export default function StatusCounter() {
                 {stage.statuses.map((Status) => (
                   <div
                     onClick={() => {
+                      setSearch(""),
                       toggleStatus(
                         stage.name,
                         Status.name,
@@ -133,14 +131,17 @@ export default function StatusCounter() {
                             (status) => status !== Status.value,
                           )
                           : [...prevStatuses, Status.value];
-                        if (search === "") {
-                          dateFilterType === 'month' ?
-                            filterApplicants(positionFilter, setApplicantData, updatedStatuses, moment(dateFilter).format("MMMM"), dateFilterType) :
-                            filterApplicants(positionFilter, setApplicantData, updatedStatuses, moment(dateFilter).format("YYYY"), dateFilterType)
-                        }
-                        else {
-                          searchApplicant(search, setApplicantData, positionFilter, updatedStatuses, dateFilterType, dateFilter);
-                        }
+                        // if (search === "") {
+                        //   dateFilterType === 'month' ?
+                        //     filterApplicants(positionFilter, setApplicantData, updatedStatuses, moment(dateFilter).format("MMMM"), dateFilterType) :
+                        //     filterApplicants(positionFilter, setApplicantData, updatedStatuses, moment(dateFilter).format("YYYY"), dateFilterType)
+                        // }
+                        // else {
+                        //   searchApplicant(search, setApplicantData, positionFilter, updatedStatuses, dateFilterType, dateFilter);
+                        // }
+                        dateFilterType === 'month' ?
+                          filterApplicants(positionFilter, setApplicantData, updatedStatuses, moment(dateFilter).format("MMMM"), dateFilterType) :
+                          filterApplicants(positionFilter, setApplicantData, updatedStatuses, moment(dateFilter).format("YYYY"), dateFilterType)
                         return updatedStatuses;
                       });
                       setStatus(Status.value);

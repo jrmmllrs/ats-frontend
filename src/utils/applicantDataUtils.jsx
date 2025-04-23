@@ -7,6 +7,25 @@ export const fetchApplicants = async (setApplicantData) => {
     setApplicantData(data);
 }
 
+// export const filterApplicants = async (position, setApplicantData, status, setSearch) => {
+//     console.log(position, status);
+    
+//     let sql = "/applicants/filter?";
+//     position != "All" ? sql += `position=${position}` : sql += "";
+    
+//     if (status.length === 0 && position === "All") {
+//         fetchApplicants(setApplicantData);
+//     }
+//     else {   
+//         status.forEach((statusItem) => {
+//             sql += `&status=${statusItem}`;
+//           });
+//         const { data } = await api.get(sql);
+//         setApplicantData(data);
+//     }
+//     setSearch("");
+// }
+
 export const filterApplicants = async (position, setApplicantData, status, date, dateType) => {
     
     let sql = "/applicants/filter?";
