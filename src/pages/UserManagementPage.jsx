@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import api from "../api/axios";
-import { 
-  FiUsers, FiPlus, FiEdit2, FiX, FiCheck, 
-  FiSearch, FiAlertCircle, FiLoader, FiChevronLeft, 
-  FiChevronRight 
+import {
+  FiUsers, FiPlus, FiEdit2, FiX, FiCheck,
+  FiSearch, FiAlertCircle, FiLoader, FiChevronLeft,
+  FiChevronRight
 } from "react-icons/fi";
 import DataTable from 'react-data-table-component';
 
@@ -28,7 +28,7 @@ function UserManagementPage() {
     service_feature_ids: []
   });
 
-  
+
 
   const [loading, setLoading] = useState(false);
   const [featuresLoading, setFeaturesLoading] = useState(false);
@@ -44,25 +44,25 @@ function UserManagementPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch users
       const usersRes = await api.get("/user/user-accounts");
-      console.log('user',usersRes.data.userAccounts);
+      console.log('user', usersRes.data.userAccounts);
       setUsers(usersRes.data.userAccounts);
-      
+
       // Fetch service features
       setFeaturesLoading(true);
       const featuresRes = await api.get("/user/service-features");
       setServiceFeatures(featuresRes.data.service_features);
       setFeaturesLoading(false);
-      
+
       // Fetch job titles
       setTitlesLoading(true);
       const jobTitlesRes = await api.get("/user/job-titles");
-      console.log('jobroute',jobTitlesRes.data);
+      console.log('jobroute', jobTitlesRes.data);
       setJobTitles(jobTitlesRes.data.job_titles);
       setTitlesLoading(false);
-      
+
       setError("");
     } catch (err) {
       setError(err.response?.data?.message || "Failed to fetch data");
@@ -75,6 +75,66 @@ function UserManagementPage() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (form.job_title_id && jobTitles.length > 0 && serviceFeatures.length > 0) {
+      const selectedJob = jobTitles.find(job =>
+        job.job_title_id === form.job_title_id ||
+        job.id === form.job_title_id
+      );
+
+      if (selectedJob) {
+        const jobTitleName = (selectedJob.job_title || selectedJob.name).toLowerCase();
+
+        // First clear all permissions
+        setForm(prev => ({
+          ...prev,
+          service_feature_ids: []
+        }));
+
+        // Then apply job-specific permissions after a slight delay
+        // to ensure the clear operation completes
+        const timeoutId = setTimeout(() => {
+          // Get all feature IDs
+          const allFeatureIds = serviceFeatures.map(f => f.service_feature_id);
+
+          // Get feature IDs for specific features
+          const getFeatureIdsByName = (names) => {
+            return serviceFeatures
+              .filter(f => names.some(name =>
+                f.feature_name.toLowerCase().includes(name.toLowerCase())
+              ))
+              .map(f => f.service_feature_id);
+          };
+
+          let newFeatureIds = [];
+
+          if (jobTitleName.includes('hr')) {
+            // HR gets all permissions
+            newFeatureIds = allFeatureIds;
+          } else if (jobTitleName.includes('interviewer')) {
+            // Interviewer gets only specific permissions
+            newFeatureIds = getFeatureIdsByName([
+              'interview notes',
+              'applicant listing'
+            ]);
+          }
+          // Add more conditions for other job titles as needed
+
+          // Only update if there are permissions to set
+          if (newFeatureIds.length > 0) {
+            setForm(prev => ({
+              ...prev,
+              service_feature_ids: newFeatureIds
+            }));
+          }
+        }, 10); // Small delay to ensure state updates properly
+
+        return () => clearTimeout(timeoutId); // Cleanup timeout
+      }
+    }
+  }, [form.job_title_id, jobTitles, serviceFeatures]);
+
+  
   // Handle form input change
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -96,7 +156,7 @@ function UserManagementPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    
+
     try {
       const payload = {
         ...form,
@@ -104,18 +164,18 @@ function UserManagementPage() {
       };
 
       if (editId) {
-        console.log('editId',editId);
+        console.log('editId', editId);
         await api.put(`user/user-management/${editId}`, payload);
       } else {
         // Create new user
         await api.post("/user/create-user", payload);
       }
-      
+
       // Reset form and refresh data
       handleCancel();
       fetchData();
     } catch (err) {
-      setError(err.response?.data?.message || 
+      setError(err.response?.data?.message ||
         (editId ? "Failed to update user" : "Failed to create user"));
     } finally {
       setLoading(false);
@@ -145,8 +205,8 @@ function UserManagementPage() {
   };
 
   // Filter users based on search term
-  const filteredUsers = users.filter(user => 
-    (user.user_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredUsers = users.filter(user =>
+  (user.user_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (user.first_name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (user.last_name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (user.personal_email?.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -200,12 +260,12 @@ function UserManagementPage() {
         // Debugging log
         console.log('User job title ID:', row.job_title_id);
         console.log('Available job titles:', jobTitles);
-        
-        const jobTitle = jobTitles.find(j => 
+
+        const jobTitle = jobTitles.find(j =>
           j.job_title_id === row.job_title_id ||
           j.id === row.job_title_id // Some APIs might use just 'id'
         );
-        
+
         return (
           <div className="text-sm text-gray-900 py-2">
             {jobTitle?.job_title || jobTitle?.name || "N/A"}
@@ -235,8 +295,8 @@ function UserManagementPage() {
               birthdate: row.birthdate ? row.birthdate.slice(0, 10) : "",
               company_id: row.company_id || "717a6512-b8f6-4586-8431-feb3fcad585c",
               job_title_id: row.job_title_id || "",
-              service_feature_ids: row.service_features ? 
-                row.service_features.map(f => f.service_feature_id) : 
+              service_feature_ids: row.service_features ?
+                row.service_features.map(f => f.service_feature_id) :
                 []
             });
           }}
@@ -257,7 +317,7 @@ function UserManagementPage() {
   const CustomPagination = ({ rowsPerPage, rowCount, onChangePage, currentPage }) => {
     const pages = Math.ceil(rowCount / rowsPerPage);
     const range = (start, end) => Array.from({ length: end - start + 1 }, (_, i) => start + i);
-    
+
     return (
       <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-4">
         <div className="text-sm text-gray-500">
@@ -272,21 +332,20 @@ function UserManagementPage() {
             <FiChevronLeft className="h-4 w-4 mr-1" />
             Previous
           </button>
-          
+
           {range(1, pages).map(page => (
             <button
               key={page}
               onClick={() => onChangePage(page)}
-              className={`px-3 py-1 border rounded text-sm min-w-[40px] ${
-                currentPage === page 
-                  ? 'bg-teal-600 text-white border-teal-600' 
+              className={`px-3 py-1 border rounded text-sm min-w-[40px] ${currentPage === page
+                  ? 'bg-teal-600 text-white border-teal-600'
                   : 'border-gray-200 text-gray-700 hover:bg-gray-50'
-              }`}
+                }`}
             >
               {page}
             </button>
           ))}
-          
+
           <button
             onClick={() => onChangePage(currentPage < pages ? currentPage + 1 : pages)}
             disabled={currentPage === pages}
@@ -312,7 +371,7 @@ function UserManagementPage() {
               </div>
               <h1 className="text-xl font-semibold text-gray-800">User Management</h1>
             </div>
-            
+
             <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
               <div className="relative flex-1 sm:flex-none">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -326,7 +385,7 @@ function UserManagementPage() {
                   className="block w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
               </div>
-              
+
               <button
                 onClick={() => setIsFormOpen(true)}
                 className="flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-150 ease-in-out"
@@ -441,7 +500,7 @@ function UserManagementPage() {
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
                       />
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Password{!editId && '*'}
@@ -461,7 +520,7 @@ function UserManagementPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Personal Information */}
                 <div className="md:col-span-2">
                   <h4 className="text-sm font-medium text-gray-500 mb-3">Personal Information</h4>
@@ -478,7 +537,7 @@ function UserManagementPage() {
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
                       />
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Middle Name
@@ -490,7 +549,7 @@ function UserManagementPage() {
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
                       />
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Last Name*
@@ -503,7 +562,7 @@ function UserManagementPage() {
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
                       />
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Extension Name
@@ -516,7 +575,7 @@ function UserManagementPage() {
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
                       />
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Gender
@@ -533,7 +592,7 @@ function UserManagementPage() {
                         <option value="Other">Other</option>
                       </select>
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Birthdate
@@ -548,7 +607,7 @@ function UserManagementPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Contact Information */}
                 <div className="md:col-span-2">
                   <h4 className="text-sm font-medium text-gray-500 mb-3">Contact Information</h4>
@@ -565,7 +624,7 @@ function UserManagementPage() {
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
                       />
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Contact Number
@@ -580,7 +639,7 @@ function UserManagementPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Job Information */}
                 <div className="md:col-span-2">
                   <h4 className="text-sm font-medium text-gray-500 mb-3">Job Information</h4>
@@ -608,7 +667,7 @@ function UserManagementPage() {
                         <p className="mt-1 text-xs text-gray-500">Loading job titles...</p>
                       )}
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Company ID
@@ -623,7 +682,7 @@ function UserManagementPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Permissions */}
                 <div className="md:col-span-2">
                   <h4 className="text-sm font-medium text-gray-500 mb-3">Access Permissions</h4>
@@ -651,7 +710,7 @@ function UserManagementPage() {
                     </div>
                   )}
                 </div>
-                
+
                 {/* Form actions */}
                 <div className="md:col-span-2 flex justify-end gap-3 pt-4 border-t">
                   <button

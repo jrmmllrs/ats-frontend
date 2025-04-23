@@ -33,7 +33,7 @@ function App() {
 
         {/* Private Routes with Layout */}
         <Route path="/" element={<PrivateRoute element={<MainLayout />} />}>
-          <Route path="/access-denied" element={<AccessDenied />} />
+        <Route path="/access-denied" element={<AccessDenied />} />
           <Route index element={<Navigate to="/dashboard" />} />
 
           {/* Feature-protected Routes */}
