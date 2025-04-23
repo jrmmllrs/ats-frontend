@@ -18,11 +18,8 @@ import PrivateRoute from "./context/PrivateRoute";
 import PublicRoute from "./context/PublicRoute";
 import FeatureProtectedRoute from "./context/FeatureProtectedRoute";
 
-import useUserStore from "./context/userStore";
 
-useUserStore.subscribe((state) => {
-  console.log("Zustand:", state);
-});
+
 
 function App() {
   return (

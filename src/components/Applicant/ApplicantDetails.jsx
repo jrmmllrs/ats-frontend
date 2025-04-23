@@ -36,6 +36,12 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   const [blacklistedType, setBlacklistedType] = useState(null);
   const [reason, setReason] = useState(null);
 
+
+  const { hasFeature } = useUserStore(); // Access the hasFeature function
+  const canEditApplicant = hasFeature("Edit Applicant");
+ const canEmailApplicant = hasFeature("Send Mail");
+ const canSeeInterview = hasFeature("Interview Notes");
+
   useEffect(() => {
     if (applicant && applicant.status) {
       setStatus(statusMapping[applicant.status] || '');
@@ -398,12 +404,14 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                   <FaHistory className="w-4 h-4 text-teal" />
                 </button>
               )}
-              <button
-                onClick={handleEditClick}
-                className="ml-2 p-2.5 rounded-full bg-teal hover:bg-teal/70 cursor-pointer"
-              >
-                <FaPen className="w-4 h-4 text-white" />
-              </button>
+              {canEditApplicant && ( // Conditionally render the edit button
+                <button
+                  onClick={handleEditClick}
+                  className="ml-2 p-2.5 rounded-full bg-teal hover:bg-teal/70 cursor-pointer"
+                >
+                  <FaPen className="w-4 h-4 text-white" />
+                </button>
+              )}
             </div>
           </div>
 
@@ -634,7 +642,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
           <div className="mt-auto pt-5 flex justify-end">
             <div className="flex gap-2 bg-teal-soft p-1 rounded-md">
               {/* Service ID */}
-              {user.feature_names && user.feature_names["999b8e93-ca9a-4aa0-9242-5cf1e289a205"] === "Interview Notes" && (
+              {canSeeInterview &&(
                 <button
                   className={`px-4 py-1 rounded-md ${activeTab === 'discussion'
                     ? 'bg-[#008080] text-white'
@@ -645,7 +653,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                   Discussion
                 </button>
               )}
-              {user.feature_names && user.feature_names["d878490d-e446-454c-83fa-7828d7782bf8"] === "Send Mail" && (
+              {canEmailApplicant &&(
                 <button
                   className={`px-4 py-1 rounded-md ${activeTab === 'sendMail'
                     ? 'bg-[#008080] text-white'
