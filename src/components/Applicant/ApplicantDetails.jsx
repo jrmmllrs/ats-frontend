@@ -35,12 +35,12 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   //blacklisted info
   const [blacklistedType, setBlacklistedType] = useState(null);
   const [reason, setReason] = useState(null);
-
+  const [reasonForRejection, setReasonForRejection] = useState(null);
 
   const { hasFeature } = useUserStore(); // Access the hasFeature function
   const canEditApplicant = hasFeature("Edit Applicant");
- const canEmailApplicant = hasFeature("Send Mail");
- const canSeeInterview = hasFeature("Interview Notes");
+  const canEmailApplicant = hasFeature("Send Mail");
+  const canSeeInterview = hasFeature("Interview Notes");
 
   useEffect(() => {
     if (applicant && applicant.status) {
@@ -176,7 +176,8 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
         "change_date": isDateApplicable ? selectedDate : "N/A",
         "previous_status": previousBackendStatus,
         "blacklisted_type": blacklistedType,
-        "reason": reason
+        "reason": reason,
+        "reason_for_rejection": reasonForRejection,
       };
 
       try {
@@ -518,6 +519,28 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                       </div>
                     </div>
                   )}
+
+
+                  {pendingStatus === "NOT_FIT" && (
+                    <div className="space-y-4 pt-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Reason for Rejection
+                        </label>
+                        <select
+                          value={reasonForRejection}
+                          onChange={(e) => setReasonForRejection(e.target.value)}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                        >
+                          <option value="CULTURE_MISMATCH">Culture Mismatch</option>
+                          <option value="ASKING_SALARY_MISMATCH">Asking salary mismatch</option>
+                          <option value="WORKING_SCHEDULE_MISMATCH">Working schedule mismatch</option>
+                          <option value="SKILLSET_MISMATCH">Skillset mismatch</option>
+                          <option value="OTHER_REASONS">Other reasons</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex justify-end gap-2">
@@ -642,7 +665,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
           <div className="mt-auto pt-5 flex justify-end">
             <div className="flex gap-2 bg-teal-soft p-1 rounded-md">
               {/* Service ID */}
-              {canSeeInterview &&(
+              {canSeeInterview && (
                 <button
                   className={`px-4 py-1 rounded-md ${activeTab === 'discussion'
                     ? 'bg-[#008080] text-white'
@@ -653,7 +676,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                   Discussion
                 </button>
               )}
-              {canEmailApplicant &&(
+              {canEmailApplicant && (
                 <button
                   className={`px-4 py-1 rounded-md ${activeTab === 'sendMail'
                     ? 'bg-[#008080] text-white'
