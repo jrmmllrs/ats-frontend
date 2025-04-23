@@ -1,14 +1,22 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useParams } from "react-router-dom"; // Add this import
+import { useParams } from "react-router-dom";
 import ApplicantDetails from "../components/Applicant/ApplicantDetails";
 import ApplicantDiscussionPage from "../components/Applicant/ApplicantDiscussionPage";
 import ApplicantSendMailPage from "../components/Applicant/ApplicantSendMailPage";
 import api from "../api/axios";
 import Loader from "../assets/Loader";
+import useUserStore from "../context/userStore"; // Import the Zustand store
+import AccessDenied from "../assets/AccessDenied.svg"; // Import the Access Denied SVG
 
 function ApplicantDetailsPage({ applicant = null, onBack = null }) {
   const { id } = useParams(); // Get ID from URL params if available
-  const [activeTab, setActiveTab] = useState("discussion");
+  const { hasFeature } = useUserStore(); // Access the hasFeature function
+  const canViewDiscussion = hasFeature("Interview Notes"); // Check if the user has the "Discussion" feature
+  const canSendMail = hasFeature("Send Mail"); // Check if the user has the "Send Mail" feature
+
+  // Dynamically set the default tab based on available features
+  const defaultTab = canViewDiscussion ? "discussion" : canSendMail ? "sendMail" : null;
+  const [activeTab, setActiveTab] = useState(defaultTab);
   const [loading, setLoading] = useState(true);
   const [applicantInfo, setApplicantInfo] = useState({});
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -27,7 +35,7 @@ function ApplicantDetailsPage({ applicant = null, onBack = null }) {
     try {
       console.log("Fetching applicant data for ID:", applicantId);
       const response = await api.get(`/applicants/${applicantId}`);
-      
+
       if (response.data && Array.isArray(response.data) && response.data.length > 0) {
         console.log("Fetched applicant data:", response.data);
         const processedData = response.data[0] || {};
@@ -52,24 +60,39 @@ function ApplicantDetailsPage({ applicant = null, onBack = null }) {
 
   // Function to trigger a refresh
   const handleApplicantUpdate = (updatedInfo) => {
-    // You can either directly update the state if you have the full object
     if (updatedInfo && Object.keys(updatedInfo).length > 0) {
       setApplicantInfo(updatedInfo);
-    } 
-    // And also trigger a refresh to ensure latest data from backend
-    setRefreshTrigger(prev => prev + 1);
+    }
+    setRefreshTrigger((prev) => prev + 1);
   };
 
   const renderActiveTab = () => {
     switch (activeTab) {
       case "discussion":
-        return <ApplicantDiscussionPage
-          applicant={applicantInfo}
-        />;
+        return canViewDiscussion ? (
+          <ApplicantDiscussionPage applicant={applicantInfo} />
+        ) : (
+          <div className="flex flex-col items-center justify-center mt-10">
+            <img src={AccessDenied} alt="Access Denied" className="w-32 h-32 mb-4" />
+            <p className="text-gray-500 text-center">You do not have access to the Discussion tab.</p>
+          </div>
+        );
       case "sendMail":
-        return <ApplicantSendMailPage applicant={applicantInfo} />;
+        return canSendMail ? (
+          <ApplicantSendMailPage applicant={applicantInfo} />
+        ) : (
+          <div className="flex flex-col items-center justify-center mt-10">
+            <img src={AccessDenied} alt="Access Denied" className="w-32 h-32 mb-4" />
+            <p className="text-gray-500 text-center">You do not have access to the Send Mail tab.</p>
+          </div>
+        );
       default:
-        return null;
+        return (
+          <div className="flex flex-col items-center justify-center mt-10">
+            <img src={AccessDenied} alt="Access Denied" className="w-64 h-64 mb-4" />
+            <p className="text-gray-500 text-center">You do not have access to view any tabs.</p>
+          </div>
+        );
     }
   };
 
@@ -89,16 +112,25 @@ function ApplicantDetailsPage({ applicant = null, onBack = null }) {
       </div>
     );
   }
-  
+
   return (
     <div className="">
+      {/* ApplicantDetails is always visible */}
       <ApplicantDetails
         applicant={applicantInfo}
         onTabChange={setActiveTab}
         activeTab={activeTab}
         onApplicantUpdate={handleApplicantUpdate}
       />
-      <div className="mt-4 mb-10">{renderActiveTab()}</div>
+      {/* Render tabs only if the user has access */}
+      {(canViewDiscussion || canSendMail) ? (
+        <div className="mt-4 mb-10">{renderActiveTab()}</div>
+      ) : (
+        <div className="flex flex-col items-center justify-center mt-10">
+          <img src={AccessDenied} alt="Access Denied" className="w-64 h-64 mb-4" />
+          <p className="text-gray-500 text-center">You do not have access to view the tabs.</p>
+        </div>
+      )}
     </div>
   );
 }
