@@ -28,8 +28,6 @@ function ApplicantDiscussionPage({ applicant }) {
 
   const fetchDiscussionInterview = () => {
     return api.get(`/interview?tracking_id=${applicant.tracking_id}`).then((response) => {
-      console.log('fetched discussion and interview: ', response.data);
-
       setDiscussion(response.data[0]);
       setInterviewsArray(response.data.slice(1));
 
@@ -44,18 +42,15 @@ function ApplicantDiscussionPage({ applicant }) {
 
   const handleAddInterview = () => {
     if (selectedInterviewer && interviewDate && noteType) {
-      console.log(applicant);
-
       const data = {
         applicant_id: applicant.applicant_id,
         tracking_id: applicant.tracking_id,
-        interviewer_id: user.user_id,
+        interviewer_id: selectedInterviewer.user_id,
         date_of_interview: interviewDate,
         note_type: noteType
       }
 
       api.post('/interview', data).then((response) => {
-        console.log(response.data);
         fetchDiscussionInterview();
         setIsModalOpen(false);
       }).catch((error) => {
