@@ -240,9 +240,6 @@ const ApplicantTable = ({ onSelectApplicant }) => {
                       <option value="">Select reason</option>
                       <option value="DID_NOT_TAKE_TEST">Did not take test</option>
                       <option value="NO_SHOW">No show</option>
-                      <option value="CULTURE_MISMATCH">Culture mismatch</option>
-                      <option value="EXPECTED_SALARY_MISMATCH">Expected salary mismatch</option>
-                      <option value="WORKING_SCHEDULE_MISMATCH">Working schedule mismatch</option>
                       <option value="OTHER_REASONS">Other reasons</option>
                     </select>
                   </div>
