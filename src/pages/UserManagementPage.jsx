@@ -2,11 +2,9 @@ import React, { useEffect, useState } from "react";
 import api from "../api/axios";
 import {
   FiUsers, FiPlus, FiEdit2, FiX, FiAlertCircle, FiChevronLeft,
-  FiChevronRight,
-
+  FiChevronRight, FiInfo, FiCheck, FiAlertTriangle
 } from "react-icons/fi";
 import DataTable from 'react-data-table-component';
-
 
 function UserManagementPage() {
   const [users, setUsers] = useState([]);
@@ -29,8 +27,6 @@ function UserManagementPage() {
     service_feature_ids: []
   });
 
-
-
   const [loading, setLoading] = useState(false);
   const [featuresLoading, setFeaturesLoading] = useState(false);
   const [titlesLoading, setTitlesLoading] = useState(false);
@@ -41,6 +37,9 @@ function UserManagementPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage] = useState(10);
   const [prevJobTitleId, setPrevJobTitleId] = useState(null);
+  const [autoAssignedFeatures, setAutoAssignedFeatures] = useState([]);
+  const [showJobChangeConfirm, setShowJobChangeConfirm] = useState(false);
+  const [pendingJobTitleId, setPendingJobTitleId] = useState(null);
 
   // Fetch all data
   const fetchData = async () => {
@@ -49,7 +48,6 @@ function UserManagementPage() {
 
       // Fetch users
       const usersRes = await api.get("/user/user-accounts");
-      console.log('user', usersRes.data.userAccounts);
       setUsers(usersRes.data.userAccounts);
 
       // Fetch service features
@@ -61,7 +59,6 @@ function UserManagementPage() {
       // Fetch job titles
       setTitlesLoading(true);
       const jobTitlesRes = await api.get("/user/job-titles");
-      console.log('jobroute', jobTitlesRes.data);
       setJobTitles(jobTitlesRes.data.job_titles);
       setTitlesLoading(false);
 
@@ -77,53 +74,110 @@ function UserManagementPage() {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    // Only run when job_title_id actually changes (not initial load)
-    if (form.job_title_id && form.job_title_id !== prevJobTitleId && 
-        jobTitles.length > 0 && serviceFeatures.length > 0) {
-      
-      const selectedJob = jobTitles.find(job => 
-        job.job_title_id === form.job_title_id || 
-        job.id === form.job_title_id
-      );
-      
-      if (selectedJob) {
-        const jobTitleName = (selectedJob.job_title || selectedJob.name).toLowerCase();
-        
-        // Only modify permissions for specific job titles
-        if (jobTitleName.includes('hr') || jobTitleName.includes('interviewer')) {
-          let newFeatureIds = [];
-          
-          if (jobTitleName.includes('hr')) {
-            // HR gets all permissions
-            newFeatureIds = serviceFeatures.map(f => f.service_feature_id);
-          } else if (jobTitleName.includes('interviewer')) {
-            // Interviewer gets only specific permissions
-            newFeatureIds = serviceFeatures
-              .filter(f => 
-                f.feature_name.toLowerCase().includes('interview notes') ||
-                f.feature_name.toLowerCase().includes('applicant listing')
-              )
-              .map(f => f.service_feature_id);
-          }
-          
-          setForm(prev => ({
-            ...prev,
-            service_feature_ids: newFeatureIds
-          }));
-        }
-      }
-      
-      // Update previous job title ID
-      setPrevJobTitleId(form.job_title_id);
+  // Get recommended features for a job title
+  const getRecommendedFeatures = (jobTitleId) => {
+    if (!jobTitleId || jobTitles.length === 0 || serviceFeatures.length === 0) {
+      return [];
     }
-  }, [form.job_title_id, jobTitles, serviceFeatures, prevJobTitleId]);
 
+    const selectedJob = jobTitles.find(job => 
+      job.job_title_id === jobTitleId || job.id === jobTitleId
+    );
+    
+    if (!selectedJob) return [];
+
+    const jobTitleName = (selectedJob.job_title || selectedJob.name).toLowerCase();
+    let recommendedFeatures = [];
+
+    if (jobTitleName.includes('hr')) {
+      // HR gets all permissions
+      recommendedFeatures = serviceFeatures.map(f => f.service_feature_id);
+    } else if (jobTitleName.includes('interviewer')) {
+      // Interviewer gets specific permissions
+      recommendedFeatures = serviceFeatures
+        .filter(f => 
+          f.feature_name.toLowerCase().includes('interview notes') ||
+          f.feature_name.toLowerCase().includes('applicant listing')
+        )
+        .map(f => f.service_feature_id);
+    }
+
+    return recommendedFeatures;
+  };
+
+  // Handle initial form load for editing
+  const handleEditFormLoad = (userData) => {
+    const initialFeatures = userData.service_features 
+      ? userData.service_features.map(f => f.service_feature_id) 
+      : [];
+
+    setForm({
+      user_email: userData.user_email,
+      user_password: "",
+      first_name: userData.first_name,
+      middle_name: userData.middle_name,
+      last_name: userData.last_name,
+      extension_name: userData.extension_name,
+      sex: userData.sex,
+      user_pic: userData.user_pic,
+      personal_email: userData.personal_email,
+      contact_number: userData.contact_number,
+      birthdate: userData.birthdate ? userData.birthdate.slice(0, 10) : "",
+      company_id: userData.company_id || "717a6512-b8f6-4586-8431-feb3fcad585c",
+      job_title_id: userData.job_title_id || "",
+      service_feature_ids: initialFeatures
+    });
+
+    // Set previous job title and auto-assigned features
+    setPrevJobTitleId(userData.job_title_id);
+    const recommended = getRecommendedFeatures(userData.job_title_id);
+    setAutoAssignedFeatures(recommended);
+  };
+
+  // Handle job title change with confirmation
+  const handleJobTitleChange = (e) => {
+    const newJobTitleId = e.target.value;
+    
+    if (editId && form.job_title_id !== newJobTitleId) {
+      const currentRecommended = getRecommendedFeatures(form.job_title_id);
+      const newRecommended = getRecommendedFeatures(newJobTitleId);
+      
+      // Only show confirmation if permissions would change
+      if (JSON.stringify(currentRecommended) !== JSON.stringify(newRecommended)) {
+        setPendingJobTitleId(newJobTitleId);
+        setShowJobChangeConfirm(true);
+        return;
+      }
+    }
+    
+    // No confirmation needed, proceed with change
+    proceedWithJobTitleChange(newJobTitleId);
+  };
+
+  const proceedWithJobTitleChange = (newJobTitleId) => {
+    const recommendedFeatures = getRecommendedFeatures(newJobTitleId);
+    
+    setForm(prev => ({
+      ...prev,
+      job_title_id: newJobTitleId,
+      // Only auto-set features when creating new user
+      service_feature_ids: editId ? prev.service_feature_ids : recommendedFeatures
+    }));
+    
+    setAutoAssignedFeatures(recommendedFeatures);
+    setPrevJobTitleId(newJobTitleId);
+    setShowJobChangeConfirm(false);
+  };
 
   // Handle form input change
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    
+    if (name === 'job_title_id') {
+      handleJobTitleChange(e);
+    } else {
+      setForm(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   // Handle service feature selection
@@ -149,14 +203,11 @@ function UserManagementPage() {
       };
 
       if (editId) {
-        console.log('editId', editId);
         await api.put(`user/user-management/${encodeURIComponent(editId)}`, payload);
       } else {
-        // Create new user
         await api.post("/user/create-user", payload);
       }
 
-      // Reset form and refresh data
       handleCancel();
       fetchData();
     } catch (err) {
@@ -171,6 +222,7 @@ function UserManagementPage() {
   const handleCancel = () => {
     setEditId(null);
     setIsFormOpen(false);
+    setShowJobChangeConfirm(false);
     setForm({
       user_email: "",
       user_password: "",
@@ -187,16 +239,16 @@ function UserManagementPage() {
       job_title_id: "",
       service_feature_ids: []
     });
+    setAutoAssignedFeatures([]);
   };
 
   // Filter users based on search term
   const filteredUsers = users.filter(user =>
-  (user.user_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (user.first_name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (user.last_name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (user.personal_email?.toLowerCase().includes(searchTerm.toLowerCase()))
+    (user.user_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.first_name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (user.last_name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (user.personal_email?.toLowerCase().includes(searchTerm.toLowerCase()))
   ));
-
 
   const columns = [
     {
@@ -267,24 +319,7 @@ function UserManagementPage() {
           onClick={() => {
             setEditId(row.user_id);
             setIsFormOpen(true);
-            setForm({
-              user_email: row.user_email,
-              user_password: "",
-              first_name: row.first_name,
-              middle_name: row.middle_name,
-              last_name: row.last_name,
-              extension_name: row.extension_name,
-              sex: row.sex,
-              user_pic: row.user_pic,
-              personal_email: row.personal_email,
-              contact_number: row.contact_number,
-              birthdate: row.birthdate ? row.birthdate.slice(0, 10) : "",
-              company_id: row.company_id || "717a6512-b8f6-4586-8431-feb3fcad585c",
-              job_title_id: row.job_title_id || "",
-              service_feature_ids: row.service_features ?
-                row.service_features.map(f => f.service_feature_id) :
-                []
-            });
+            handleEditFormLoad(row);
           }}
           className="text-gray-500 hover:text-[#008080] transition-colors p-2 hover:bg-gray-50 rounded-lg"
           title="Edit user"
@@ -299,7 +334,7 @@ function UserManagementPage() {
     },
   ];
 
-  // Custom pagination component with modern styling
+  // Custom pagination component
   const CustomPagination = ({ rowsPerPage, rowCount, onChangePage, currentPage }) => {
     const pages = Math.ceil(rowCount / rowsPerPage);
     const range = (start, end) => Array.from({ length: end - start + 1 }, (_, i) => start + i);
@@ -678,40 +713,67 @@ function UserManagementPage() {
                   </div>
                 </div>
 
-             
-                        <div className="space-y-4">
-                          <h4 className="text-base font-medium text-gray-800">Access Permissions</h4>
-                          {featuresLoading ? (
-                          <div className="flex items-center justify-center p-4">
-                            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-[#008080] mr-2"></div>
-                            <span className="text-sm text-gray-500">Loading permissions...</span>
-                          </div>
-                          ) : (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                            {serviceFeatures.map(feature => (
-                            <div key={feature.service_feature_id} className="flex items-start">
-                              <div className="flex items-center h-5 mt-0.5">
+                {/* Access Permissions */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-base font-medium text-gray-800">Access Permissions</h4>
+                    {autoAssignedFeatures.length > 0 && (
+                      <div className="flex items-center text-sm text-[#008080] bg-[#008080]/10 px-3 py-1 rounded-full">
+                        <FiInfo className="mr-1.5" />
+                        <span>{editId ? "Recommended" : "Auto-assigned"} permissions based on job title</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {featuresLoading ? (
+                    <div className="flex items-center justify-center p-4">
+                      <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-[#008080] mr-2"></div>
+                      <span className="text-sm text-gray-500">Loading permissions...</span>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {serviceFeatures.map(feature => {
+                        const isAutoAssigned = autoAssignedFeatures.includes(feature.service_feature_id);
+                        const isChecked = form.service_feature_ids.includes(feature.service_feature_id);
+                        
+                        return (
+                          <div 
+                            key={feature.service_feature_id} 
+                            className={`flex items-start p-2 rounded-lg ${isAutoAssigned ? 'bg-[#008080]/5' : ''}`}
+                          >
+                            <div className="flex items-center h-5 mt-0.5">
                               <input
                                 type="checkbox"
                                 id={`feature-${feature.service_feature_id}`}
-                                checked={form.service_feature_ids.includes(feature.service_feature_id)}
+                                checked={isChecked}
                                 onChange={() => handleFeatureToggle(feature.service_feature_id)}
-                                className="h-4 w-4 text-[#008080] focus:ring-[#008080] border-gray-300 rounded"
+                                className={`h-4 w-4 ${isAutoAssigned ? 'text-[#008080]' : 'text-gray-700'} focus:ring-[#008080] border-gray-300 rounded`}
                               />
+                            </div>
+                            <label 
+                              htmlFor={`feature-${feature.service_feature_id}`} 
+                              className="ml-2 text-sm text-gray-700"
+                            >
+                              <div className="font-medium flex items-center">
+                                {feature.feature_name}
+                                {isAutoAssigned && (
+                                  <span className="ml-1.5 text-xs text-[#008080] flex items-center">
+                                    <FiCheck className="mr-0.5" /> recommended
+                                  </span>
+                                )}
                               </div>
-                              <label htmlFor={`feature-${feature.service_feature_id}`} className="ml-2 text-sm text-gray-700">
-                              <div className="font-medium">{feature.feature_name}</div>
                               {feature.description && (
                                 <div className="text-xs text-gray-500 mt-1">{feature.description}</div>
                               )}
-                              </label>
-                            </div>
-                            ))}
+                            </label>
                           </div>
-                          )}
-                        </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
 
-                        {/* Form actions */}
+                {/* Form actions */}
                 <div className="flex justify-end gap-3 pt-6 border-t">
                   <button
                     type="button"
@@ -739,6 +801,46 @@ function UserManagementPage() {
                 </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Job Title Change Confirmation */}
+      {showJobChangeConfirm && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
+            <div className="p-6">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 mt-0.5">
+                  <FiAlertTriangle className="h-5 w-5 text-yellow-500" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium text-gray-800 mb-2">Change Job Title</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Changing this job title will modify the recommended permissions for this user.
+                    Do you want to update the permissions to match the new job title's recommendations?
+                  </p>
+                  <div className="flex justify-end gap-3">
+                    <button
+                      onClick={() => {
+                        setShowJobChangeConfirm(false);
+                        // Revert to previous job title
+                        setForm(prev => ({ ...prev, job_title_id: prevJobTitleId }));
+                      }}
+                      className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
+                    >
+                      Keep Current Permissions
+                    </button>
+                    <button
+                      onClick={() => proceedWithJobTitleChange(pendingJobTitleId)}
+                      className="px-4 py-2 bg-[#008080] text-white rounded-lg hover:bg-[#006666] transition-colors text-sm font-medium"
+                    >
+                      Update Permissions
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
