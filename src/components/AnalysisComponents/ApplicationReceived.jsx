@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo, useCallback } from "react";
 import api from "../../api/axios";
 import { FaInfoCircle } from "react-icons/fa";
 
-const ApplicationReceived = ({ year, month }) => { // Receive year and month props
+const ApplicationReceived = ({ year, month, isExpanded }) => { // Receive year and month props
   const [totalApplications, setTotalApplications] = useState(0);
   const [monthsData, setMonthsData] = useState([]);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -21,6 +21,10 @@ const ApplicationReceived = ({ year, month }) => { // Receive year and month pro
         const currentTime = new Date().getTime();
         const cacheAge = currentTime - cachedTime;
         
+
+
+        // Change this Laterrrrrrrrrrr!!!!!!!!!!!!!!-------------------------------
+
         // Cache valid for 5 minutes (300000 ms)
         if (cacheAge < 300000) {
           const parsedData = JSON.parse(cachedDataString);
@@ -61,6 +65,7 @@ const ApplicationReceived = ({ year, month }) => { // Receive year and month pro
   useEffect(() => {
     fetchApplicationData();
   }, [fetchApplicationData]);
+
 
   // Memoize the application data based on last fetch time
   const applicationData = useMemo(() => {
@@ -118,12 +123,23 @@ const ApplicationReceived = ({ year, month }) => { // Receive year and month pro
       </p>
 
       <div className="space-y-2">
-        {months.map((month, index) => (
-          <div key={index} className="flex justify-between">
-            <span className="font-medium">{month.name}</span>
-            <span className="font-medium">{month.count}</span>
-          </div>
-        ))}
+        {isExpanded ? (
+          // Show all counters per month when expanded
+          months.map((month, index) => (
+            <div key={index} className="flex justify-between">
+              <span className="font-medium">{month.name}</span>
+              <span className="font-medium">{month.count}</span>
+            </div>
+          ))
+        ) : (
+          // Show breakdown when not expanded
+          months.slice(0, 3).map((month, index) => ( // Example: Show only the first 3 months
+            <div key={index} className="flex justify-between">
+              <span className="font-medium">{month.name}</span>
+              <span className="font-medium">{month.count}</span>
+            </div>
+          ))
+        )}
       </div>
     </>
   );
