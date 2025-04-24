@@ -35,7 +35,7 @@ export default function ATSHealthcheck({ onSelectApplicant }) {
               position: applicant.title,
               timeAgo: getTimeAgo(applicant.date_created),
               applicantData: applicant,
-              status: applicant.status,
+              status: getFormattedStatus(applicant.status, applicant.stage),
             };
 
             needsAttentionNotifications.push({
@@ -52,7 +52,7 @@ export default function ATSHealthcheck({ onSelectApplicant }) {
               position: applicant.title,
               timeAgo: getTimeAgo(applicant.date_created),
               applicantData: applicant,
-              status: applicant.status,
+              status: getFormattedStatus(applicant.status, applicant.stage),
             };
 
             generalNotifications.push({
