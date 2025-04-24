@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Children } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaAddressCard, FaEnvelope, FaPen, FaPhone, FaUser, FaHistory } from 'react-icons/fa';
 import useUserStore from '../../context/userStore';
 import api from '../../api/axios';
@@ -7,8 +7,8 @@ import { FaCakeCandles, FaFileLines } from 'react-icons/fa6';
 import AddApplicantForm from '../../pages/AddApplicantForm';
 import { statusMapping } from '../../hooks/statusMapping';
 import { useApplicantData } from '../../hooks/useApplicantData';
-import Modal from '../Modals/Modal';
-import { IoWarningOutline } from "react-icons/io5";
+import StatusHistoryModal from '../Modals/StatusHistoryModal';
+import SkipStatusWarningModal from '../Modals/skipStatusModal';
 
 
 function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate }) {
@@ -23,7 +23,6 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   const [isDateApplicable, setIsDateApplicable] = useState(true);
   const [pendingStatus, setPendingStatus] = useState('');
   const [showStatusHistoryModal, setShowStatusHistoryModal] = useState(false);
-  const [showModal, setShowModal] = useState(false);
 
   // Skip status warning modal
   const [showSkipWarningModal, setShowSkipWarningModal] = useState(false);
@@ -38,12 +37,6 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   //blacklisted info
   const [blacklistedType, setBlacklistedType] = useState(null);
   const [reason, setReason] = useState(null);
-  const [reasonForRejection, setReasonForRejection] = useState(null);
-
-  const { hasFeature } = useUserStore(); // Access the hasFeature function
-  const canEditApplicant = hasFeature("Edit Applicant");
-  const canEmailApplicant = hasFeature("Send Mail");
-  const canSeeInterview = hasFeature("Interview Notes");
 
   useEffect(() => {
     if (applicant && applicant.status) {
@@ -179,8 +172,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
         "change_date": isDateApplicable ? selectedDate : "N/A",
         "previous_status": previousBackendStatus,
         "blacklisted_type": blacklistedType,
-        "reason": reason,
-        "reason_for_rejection": reasonForRejection,
+        "reason": reason
       };
 
       try {
@@ -271,16 +263,6 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
     setIsEditFormOpen(false);
   }
 
-  // Format status for display
-  const formatStatusForDisplay = (statusKey) => {
-    return statusKey.toLowerCase().split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-  };
-
-  // Format date for display
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString();
-  };
-
   const toggleStatusHistoryModal = () => {
     setShowStatusHistoryModal(!showStatusHistoryModal);
     // Reset skipped status hover when closing modal
@@ -369,11 +351,10 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
           <div className="mt-1 flex items-censter">
             <FaAddressCard className="mr-2 h-4 w-4" />
             <a
-              href={applicant.cv_link ? applicant.cv_link : null}
+              href={applicant.cv_link}
               target="_blank"
               rel="noopener noreferrer"
               className="underline block mt-1 cursor-pointer"
-              onClick={()=> applicant.cv_link ? "" : setShowModal(true)}
             >
               Applicant's Resume
             </a>
@@ -409,54 +390,22 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                   <FaHistory className="w-4 h-4 text-teal" />
                 </button>
               )}
-              {canEditApplicant && ( // Conditionally render the edit button
-                <button
-                  onClick={handleEditClick}
-                  className="ml-2 p-2.5 rounded-full bg-teal hover:bg-teal/70 cursor-pointer"
-                >
-                  <FaPen className="w-4 h-4 text-white" />
-                </button>
-              )}
+              <button
+                onClick={handleEditClick}
+                className="ml-2 p-2.5 rounded-full bg-teal hover:bg-teal/70 cursor-pointer"
+              >
+                <FaPen className="w-4 h-4 text-white" />
+              </button>
             </div>
           </div>
 
           {/* Status Skip Warning Modal */}
           {showSkipWarningModal && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="bg-white p-6 rounded-lg shadow-lg w-96 max-w-md">
-                <div className="flex items-center justify-center mb-4 text-amber-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-medium text-center mb-2">Warning: Skipping Status Steps</h3>
-                <p className="mb-4 text-gray-600">
-                  You are about to skip the following status steps:
-                </p>
-                <ul className="list-disc pl-5 mb-4 text-gray-600">
-                  {skippedStatuses.map((status, index) => (
-                    <li key={index}>{formatStatusForDisplay(status)}</li>
-                  ))}
-                </ul>
-                <p className="mb-4 text-gray-600">
-                  Are you sure you want to proceed with this status change?
-                </p>
-                <div className="flex justify-end gap-2">
-                  <button
-                    onClick={cancelSkipStatusChange}
-                    className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={proceedWithStatusChange}
-                    className="px-4 py-2 bg-amber-500 text-white rounded hover:bg-amber-600"
-                  >
-                    Proceed Anyway
-                  </button>
-                </div>
-              </div>
-            </div>
+            <SkipStatusWarningModal
+              skippedStatuses={skippedStatuses}
+              onCancel={cancelSkipStatusChange}
+              onProceed={proceedWithStatusChange}
+            />
           )}
 
           {/* Date picker modal */}
@@ -515,28 +464,9 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                           <option value="">Select reason</option>
                           <option value="DID_NOT_TAKE_TEST">Did not take test</option>
                           <option value="NO_SHOW">No show</option>
-                          <option value="OTHER_REASONS">Other reasons</option>
-                        </select>
-                      </div>
-                    </div>
-                  )}
-
-
-                  {pendingStatus === "NOT_FIT" && (
-                    <div className="space-y-4 pt-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Reason for Rejection
-                        </label>
-                        <select
-                          value={reasonForRejection}
-                          onChange={(e) => setReasonForRejection(e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                        >
-                          <option value="CULTURE_MISMATCH">Culture Mismatch</option>
-                          <option value="ASKING_SALARY_MISMATCH">Asking salary mismatch</option>
+                          <option value="CULTURE_MISMATCH">Culture mismatch</option>
+                          <option value="EXPECTED_SALARY_MISMATCH">Expected salary mismatch</option>
                           <option value="WORKING_SCHEDULE_MISMATCH">Working schedule mismatch</option>
-                          <option value="SKILLSET_MISMATCH">Skillset mismatch</option>
                           <option value="OTHER_REASONS">Other reasons</option>
                         </select>
                       </div>
@@ -564,89 +494,17 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
 
           {/* Status History Modal */}
           {showStatusHistoryModal && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="status-history-modal bg-white p-6 rounded-lg shadow-lg w-[600px] max-w-[90vw] max-h-[90vh] flex flex-col">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-medium text-teal">Status History</h3>
-                  <button
-                    onClick={toggleStatusHistoryModal}
-                    className="p-1 rounded-full hover:bg-gray-200"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                <div className="overflow-y-auto flex-1">
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-2 text-left">Date</th>
-                        <th className="px-4 py-2 text-left">Changed From</th>
-                        <th className="px-4 py-2 text-left">Changed To</th>
-                        <th className="px-4 py-2 text-left">Changed By</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {statusHistory.map((record, index) => (
-                        <tr
-                          key={index}
-                          className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${skippedStatusesByHistory[index] ? 'cursor-pointer' : ''}`}
-                          onMouseEnter={(e) => handleRowMouseEnter(index, e)}
-                          onMouseLeave={handleRowMouseLeave}
-                        >
-                          <td className="px-4 py-2">
-                            {record.change_date === "N/A"
-                              ? 'N/A'
-                              : record.changed_at
-                                ? formatDate(record.changed_at)
-                                : 'N/A'}
-                          </td>
-                          <td className="px-4 py-2">{record.previous_status ? formatStatusForDisplay(record.previous_status) : 'Initial Status'}</td>
-                          <td className="px-4 py-2">
-                            <div className="flex items-center">
-                              {formatStatusForDisplay(record.new_status)}
-                              {skippedStatusesByHistory[index] && (
-                                <span className="ml-2 text-amber-500">
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                  </svg>
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-4 py-2">{record.user_name || record.changed_by}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Skipped Statuses Modal - Positioned outside the status history modal */}
-              {hoverIndex !== null && currentSkippedStatuses.length > 0 && (
-                <div
-                  className="fixed bg-white border border-gray-200 shadow-lg rounded-lg p-4 z-60"
-                  style={{
-                    // top: `${skippedStatusPosition.top}px`,
-                    left: `${skippedStatusPosition.left}px`,
-                    maxWidth: '300px'
-                  }}
-                >
-                  <div className="font-medium text-amber-600 mb-2 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    Skipped Statuses
-                  </div>
-                  <ul className="list-disc pl-5 text-gray-700">
-                    {currentSkippedStatuses.map((status, i) => (
-                      <li key={i} className="py-1">{formatStatusForDisplay(status)}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
+            <StatusHistoryModal
+              show={showStatusHistoryModal}
+              toggle={toggleStatusHistoryModal}
+              statusHistory={statusHistory}
+              skippedStatusesByHistory={skippedStatusesByHistory}
+              hoverIndex={hoverIndex}
+              handleRowMouseEnter={handleRowMouseEnter}
+              handleRowMouseLeave={handleRowMouseLeave}
+              currentSkippedStatuses={currentSkippedStatuses}
+              skippedStatusPosition={skippedStatusPosition}
+            />
           )}
 
           <div className="grid grid-cols-3 gap-3 pl-5 flex-grow">
@@ -666,7 +524,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
           <div className="mt-auto pt-5 flex justify-end">
             <div className="flex gap-2 bg-teal-soft p-1 rounded-md">
               {/* Service ID */}
-              {canSeeInterview && (
+              {user.feature_names && user.feature_names["999b8e93-ca9a-4aa0-9242-5cf1e289a205"] === "Interview Notes" && (
                 <button
                   className={`px-4 py-1 rounded-md ${activeTab === 'discussion'
                     ? 'bg-[#008080] text-white'
@@ -677,7 +535,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                   Discussion
                 </button>
               )}
-              {canEmailApplicant && (
+              {user.feature_names && user.feature_names["d878490d-e446-454c-83fa-7828d7782bf8"] === "Send Mail" && (
                 <button
                   className={`px-4 py-1 rounded-md ${activeTab === 'sendMail'
                     ? 'bg-[#008080] text-white'
@@ -697,29 +555,6 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
         )}
 
       </div>
-
-      {showModal && (
-        <Modal onClose={() => setShowModal(false)}>
-            <div className="p-6 rounded-lg text-center max-w-md w-full">
-              <div className="mb-4">
-                <IoWarningOutline className="text-amber-500 h-12 w-12 mx-auto" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-800 mb-2">
-                No CV Link Available
-              </h3>
-              <p className="text-gray-600 mb-4">
-                The applicant has not provided a CV link. Please contact the applicant
-                to request their resume.
-              </p>
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 bg-teal text-white rounded hover:bg-teal/80"
-              >
-                Close
-              </button>
-            </div>
-        </Modal>
-      )}
 
       {/* Toast Messages */}
       <div className="fixed top-4 right-4 space-y-2">
