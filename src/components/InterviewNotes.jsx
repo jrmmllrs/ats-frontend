@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { FiSend } from "react-icons/fi";
+import { IoMdSend } from "react-icons/io";
 import { SlOptionsVertical } from "react-icons/sl";
 import { IoMdClose } from "react-icons/io";
 import { FiDownload } from "react-icons/fi";
@@ -28,12 +28,19 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
     const [noteBody, setNoteBody] = useState("");
     const { user } = useUserStore();
     const dropdownRef = useRef(null);
+    const notesContainerRef = useRef(null);
     const [isOpen, setIsOpen] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
     const [showPreviewModal, setShowPreviewModal] = useState(false);
     const [pdfPreviewUrl, setPdfPreviewUrl] = useState(null);
     const [pdfFileName, setPdfFileName] = useState("");
     const [pdfDocument, setPdfDocument] = useState(null);
+
+    useEffect(() => {
+        if (notesContainerRef.current) {
+            notesContainerRef.current.scrollTop = notesContainerRef.current.scrollHeight;
+        }
+    }, [interview.interview_notes]);
 
     const editor = useEditor({
         extensions: [
@@ -409,9 +416,11 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
                 </div>
             </div>
 
-            <div className="px-6 pb-5">
+            <div>
                 {/* Messages */}
-                <div className="max-h-150 min-h-60 overflow-y-auto rounded-lg py-2 px-4">
+                <div
+                    ref={notesContainerRef}
+                    className="max-h-100 min-h-60 overflow-y-auto rounded-lg py-2 px-4">
                     {interview.interview_notes.map((note) =>
                     (<MessageBox
                         key={note.note_id}
@@ -422,9 +431,9 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
                 </div>
 
                 {/* Message input */}
-                <div className=" items-center m-5 mt-0 gap-2">
-                    <div className="mb-5 rounded-xl border border-gray-200 bg-white p-3">
-                        <div className="mb-4 flex gap-3 rounded-lg bg-white">
+                <div className="items-center">
+                    <div className="border-t border-gray-200 rounded-b-lg p-2">
+                        <div className="mb-2 flex gap-3 rounded-lg" >
                             <BoldIcon
                                 className={`h-6 w-6 cursor-pointer ${editor.isActive("bold") ? "text-teal-600" : "text-gray-600"}`}
                                 onClick={() => editor.chain().focus().toggleBold().run()}
@@ -455,28 +464,28 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
                                 onClick={() => editor.chain().focus().setTextAlign("right").run()}
                             />
                         </div>
-                        <EditorContent
-                            editor={editor}
-                            className="
-                                       [&_ul]:list-disc [&_ul]:pl-6
-                                       [&_ol]:list-decimal [&_ol]:pl-6
-                                       [&_em]:font-inherit
-                                       [&_strong]:font-avenir-black
-                                       [&_strong_em]:font-inherit
-                                       [&_em_strong]:font-inherit
-                                   "
-                        />
+                        <div className="relative">
+                            <EditorContent
+                                editor={editor}
+                                className="
+                                        [&_ul]:list-disc [&_ul]:pl-6
+                                        [&_ol]:list-decimal [&_ol]:pl-6
+                                        [&_em]:font-inherit
+                                        [&_strong]:font-avenir-black
+                                        [&_strong_em]:font-inherit
+                                        [&_em_strong]:font-inherit
+                                    "
+                            />
+                            <div className="absolute bottom-0 right-0 ">
+                                <button
+                                    onClick={handleSubmit}
+                                    className="rounded-xl text-teal p-2 m-1 hover:text-teal-soft cursor-pointer flex items-center"
+                                >
+                                    <IoMdSend className="size-5" />
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <div className="flex items-center justify-between body-regular">
-                        <button
-                            onClick={handleSubmit}
-                            className="rounded-lg bg-teal px-6 py-2 text-white hover:bg-teal-light cursor-pointer"
-                        >
-                            <FiSend className="mr-2" />
-                            Submit Note
-                        </button>
-                    </div>
-
                 </div>
             </div>
 
