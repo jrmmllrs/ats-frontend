@@ -4,6 +4,7 @@ const turndownService = new TurndownService({
   headingStyle: "atx",
   bulletListMarker: "-",
   strongDelimiter: "*",
+  emDelimiter: "_",
 });
 
 turndownService.addRule("underline", {
