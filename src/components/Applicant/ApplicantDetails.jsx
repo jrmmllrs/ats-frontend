@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Children } from 'react';
 import { FaAddressCard, FaEnvelope, FaPen, FaPhone, FaUser, FaHistory } from 'react-icons/fa';
 import useUserStore from '../../context/userStore';
 import api from '../../api/axios';
@@ -7,6 +7,8 @@ import { FaCakeCandles, FaFileLines } from 'react-icons/fa6';
 import AddApplicantForm from '../../pages/AddApplicantForm';
 import { statusMapping } from '../../hooks/statusMapping';
 import { useApplicantData } from '../../hooks/useApplicantData';
+import Modal from '../Modals/Modal';
+import { IoWarningOutline } from "react-icons/io5";
 
 
 function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate }) {
@@ -21,6 +23,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   const [isDateApplicable, setIsDateApplicable] = useState(true);
   const [pendingStatus, setPendingStatus] = useState('');
   const [showStatusHistoryModal, setShowStatusHistoryModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   // Skip status warning modal
   const [showSkipWarningModal, setShowSkipWarningModal] = useState(false);
@@ -366,10 +369,11 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
           <div className="mt-1 flex items-censter">
             <FaAddressCard className="mr-2 h-4 w-4" />
             <a
-              href={applicant.cv_link}
+              href={applicant.cv_link ? applicant.cv_link : null}
               target="_blank"
               rel="noopener noreferrer"
               className="underline block mt-1 cursor-pointer"
+              onClick={()=> applicant.cv_link ? "" : setShowModal(true)}
             >
               Applicant's Resume
             </a>
@@ -693,6 +697,29 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
         )}
 
       </div>
+
+      {showModal && (
+        <Modal onClose={() => setShowModal(false)}>
+            <div className="p-6 rounded-lg text-center max-w-md w-full">
+              <div className="mb-4">
+                <IoWarningOutline className="text-amber-500 h-12 w-12 mx-auto" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-800 mb-2">
+                No CV Link Available
+              </h3>
+              <p className="text-gray-600 mb-4">
+                The applicant has not provided a CV link. Please contact the applicant
+                to request their resume.
+              </p>
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 bg-teal text-white rounded hover:bg-teal/80"
+              >
+                Close
+              </button>
+            </div>
+        </Modal>
+      )}
 
       {/* Toast Messages */}
       <div className="fixed top-4 right-4 space-y-2">
