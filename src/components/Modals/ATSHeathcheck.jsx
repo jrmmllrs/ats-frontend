@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../../api/axios.js"; // Import the axios instance
-
+import { startCase } from "lodash";
 export default function ATSHealthcheck({ onSelectApplicant }) {
   const [activeTab, setActiveTab] = useState("general");
   const [notifications, setNotifications] = useState({
@@ -50,9 +50,11 @@ export default function ATSHealthcheck({ onSelectApplicant }) {
               id: applicant.applicant_id,
               name: `${applicant.first_name} ${applicant.last_name}`,
               position: applicant.title,
-              timeAgo: getTimeAgo(applicant.date_created),
+              timeAgo: getTimeAgo(applicant.date_applied),
               applicantData: applicant,
               status: getFormattedStatus(applicant.status, applicant.stage),
+              notification_type: startCase(applicant.notification_type.toLowerCase()),
+
             };
 
             generalNotifications.push({
@@ -179,6 +181,9 @@ export default function ATSHealthcheck({ onSelectApplicant }) {
                     <div className="text-right">
                       <div className={`body-bold`}>{notification.status}</div>
                       <div className={`text-teal body-tiny`}>Applied {notification.timeAgo}</div>
+                      <div className="px-2 py-1 text-xs font-bold text-teal-600 capitalize">
+                        {notification.notification_type}
+                      </div>
                     </div>
                   </div>
                 ))}
