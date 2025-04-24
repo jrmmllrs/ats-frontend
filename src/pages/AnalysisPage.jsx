@@ -582,7 +582,7 @@ const AnalysisPage = () => {
         <ChartCard
           id="sourceDistribution"
           title="Applicant Sources"
-          subtitle="Where applicants are coming from"
+          subtitle="Where applicants discovered this"
           icon={<FiPieChart className="h-4 w-4 sm:h-5 sm:w-5" />}
         >
           {loading ? (
@@ -627,11 +627,16 @@ const AnalysisPage = () => {
           )}
         </ChartCard>
 
-        <Card id="source" title="Source of Applications" icon={<FiPieChart className="h-4 w-4 sm:h-5 sm:w-5" />}>
+        <ChartCard 
+        id="source" 
+        title="Source of Applications" 
+        icon={<FiPieChart className="h-4 w-4 sm:h-5 sm:w-5" />}
+        subtitle="Where applicants applied"
+        >
             <div className="w-full h-[300px]">
               <SourceOfApplication year={year} month={month} />
             </div>    
-          </Card>
+          </ChartCard>
       </div>
     </div>
   )
