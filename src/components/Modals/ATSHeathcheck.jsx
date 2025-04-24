@@ -17,7 +17,7 @@ export default function ATSHealthcheck({ onSelectApplicant }) {
         setLoading(true);
         const response = await api.get("/notification");
         const data = response.data;
-
+        console.log(data);
         if (!data) {
           throw new Error("No data received from server");
         }
@@ -25,11 +25,6 @@ export default function ATSHealthcheck({ onSelectApplicant }) {
         // Format ATS notifications
         const generalNotifications = [];
         const needsAttentionNotifications = [];
-
-        // Get current date for comparison
-        const now = new Date();
-        const threeDaysAgo = new Date(now);
-        threeDaysAgo.setDate(now.getDate() - 3);
 
         // Process ATS applicants
         if (data.ats && Array.isArray(data.ats)) {
@@ -39,40 +34,30 @@ export default function ATSHealthcheck({ onSelectApplicant }) {
               name: `${applicant.first_name} ${applicant.last_name}`,
               position: applicant.title,
               timeAgo: getTimeAgo(applicant.date_created),
-              applicantData: applicant // Store the full applicant data
+              applicantData: applicant,
+              status: applicant.status,
             };
 
-            // Parse dates for comparison
-            const createdDate = new Date(applicant.date_created);
-            const updatedDate = new Date(applicant.updated_at);
+            needsAttentionNotifications.push({
+              ...notificationItem,
+            });
+          });
+        }
 
-            // Check if this is a new applicant (created in the last 24 hours)
-            const isNewApplicant = (now - createdDate) < (24 * 60 * 60 * 1000);
+        if (data.general && Array.isArray(data.general)) {
+          data.general.forEach(applicant => {
+            const notificationItem = {
+              id: applicant.applicant_id,
+              name: `${applicant.first_name} ${applicant.last_name}`,
+              position: applicant.title,
+              timeAgo: getTimeAgo(applicant.date_created),
+              applicantData: applicant,
+              status: applicant.status,
+            };
 
-            // Check if this applicant hasn't been updated in 3 days
-            const needsAttention = updatedDate < threeDaysAgo;
-
-            if (isNewApplicant) {
-              // Newly added applicants go to general notifications
-              generalNotifications.push({
-                ...notificationItem,
-                status: applicant.status === "TEST_SENT" ? "Test Sent" : "New Applicant"
-              });
-            } else if (applicant.status === "BLACKLISTED" || applicant.status === "NOT_FIT") {
-              // Blacklisted applicants go to general
-              generalNotifications.push({
-                ...notificationItem,
-                status: "Blacklisted Applicant"
-              });
-            } else if (needsAttention) {
-              // Applicants not updated in 3+ days go to needs attention
-              const status = getFormattedStatus(applicant.status, applicant.stage);
-              needsAttentionNotifications.push({
-                ...notificationItem,
-                status,
-                timeAgo: `Last updated ${getTimeAgo(applicant.updated_at)}`
-              });
-            }
+            generalNotifications.push({
+              ...notificationItem,
+            });
           });
         }
 
