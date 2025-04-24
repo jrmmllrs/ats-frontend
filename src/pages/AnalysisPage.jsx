@@ -96,6 +96,7 @@ const AnalysisPage = () => {
   const [summaryData, setSummaryData] = useState(null)
   const [statusDistribution, setStatusDistribution] = useState([])
   const [sourceDistribution, setSourceDistribution] = useState([])
+  const [applicationSource, setApplicationSource] = useState([])
   const [monthlyTrends, setMonthlyTrends] = useState([])
   const [jobPositions, setJobPositions] = useState([])
   const [hiringFunnel, setHiringFunnel] = useState(null)
@@ -136,6 +137,7 @@ const AnalysisPage = () => {
         summaryResponse,
         statusResponse,
         sourceResponse,
+        applicationSourceResponse,
         monthlyResponse,
         jobsResponse,
         applicantsResponse,
@@ -146,6 +148,7 @@ const AnalysisPage = () => {
         api.get(`/analytics/dashboard/summary?${queryString}`),
         api.get(`/analytics/dashboard/status-distribution?${queryString}`),
         api.get(`/analytics/dashboard/source-distribution?${queryString}`),
+        api.get(`/analytics/dashboard/application-source?${queryString}`),
         api.get(`/analytics/dashboard/monthly-trends?year=${year}`), // Keep this one year-only
         api.get(`/analytics/dashboard/job-positions?${queryString}`),
         api.get(`/analytics/dashboard/recent-applicants?${queryString}`),
@@ -158,6 +161,7 @@ const AnalysisPage = () => {
       setSummaryData(summaryResponse.data.data)
       setStatusDistribution(statusResponse.data.data)
       setSourceDistribution(sourceResponse.data.data)
+      setApplicationSource(applicationSourceResponse.data.data)
       setMonthlyTrends(monthlyResponse.data.data)
       setJobPositions(jobsResponse.data.data)
       setRecentApplicants(applicantsResponse.data.data)
@@ -504,7 +508,7 @@ const AnalysisPage = () => {
           <ChartCard 
             id="requisition" 
             title="Requisition Analysis" 
-            subtitle="Nyhahahaha"
+            subtitle="Requisition Data"
             icon={<FiBarChart2 className="h-4 w-4 sm:h-5 sm:w-5" />}
           >
             <div className="w-full h-[400px]">
@@ -580,8 +584,56 @@ const AnalysisPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Source Distribution */}
         <ChartCard
-          id="sourceDistribution"
+          id="applicationSource"
           title="Applicant Sources"
+          subtitle="Where applicants applied from"
+          icon={<FiPieChart className="h-4 w-4 sm:h-5 sm:w-5" />}
+        >
+          {loading ? (
+            <div className="w-full h-[300px] flex items-center justify-center">
+              <Skeleton className="h-[250px] w-full" />
+            </div>
+          ) : (
+            <div className="h-[300px] flex justify-center">
+              <Pie
+                data={{
+                  labels: applicationSource.map((item) => item.applied_source),
+                  datasets: [
+                    {
+                      label: "Applicants",
+                      data: applicationSource.map((item) => item.count),
+                      backgroundColor: COLORS.map((color) => `${color}`),
+                      borderWidth: 1,
+                    },
+                  ],
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      display: true, // Hides the legend labels
+                    },
+                    tooltip: {
+                      callbacks: {
+                        label: (context) => {
+                          const value = context.raw || 0
+                          const total = context.dataset.data.reduce((a, b) => a + b, 0)
+                          const percentage = Math.round((value / total) * 100)
+                          return `${percentage}%`
+                        },
+                      },
+                    },
+                  },
+                }}
+              />
+            </div>
+          )}
+        </ChartCard>
+
+        <ChartCard
+          id="source"
+          title="Source of Application"
           subtitle="Where applicants discovered this"
           icon={<FiPieChart className="h-4 w-4 sm:h-5 sm:w-5" />}
         >
@@ -627,7 +679,7 @@ const AnalysisPage = () => {
           )}
         </ChartCard>
 
-        <ChartCard 
+        {/* <ChartCard 
         id="source" 
         title="Source of Applications" 
         icon={<FiPieChart className="h-4 w-4 sm:h-5 sm:w-5" />}
@@ -636,7 +688,7 @@ const AnalysisPage = () => {
             <div className="w-full h-[300px]">
               <SourceOfApplication year={year} month={month} />
             </div>    
-          </ChartCard>
+        </ChartCard> */}
       </div>
     </div>
   )
