@@ -1,4 +1,4 @@
-import { FiSend } from "react-icons/fi";
+import { IoMdSend } from "react-icons/io";
 import MessageBox from "./MessageBox";
 import moment from "moment";
 import api from "../api/axios";
@@ -26,7 +26,15 @@ const DiscussionBox = ({ applicant, discussion, fetchDiscussionInterview }) => {
     const [noteBody, setNoteBody] = useState("");
     const { user } = useUserStore();
     const dropdownRef = useRef(null);
+    const notesContainerRef = useRef(null);
     const [isOpen, setIsOpen] = useState(false);
+
+    useEffect(() => {
+        if (notesContainerRef.current) {
+            notesContainerRef.current.scrollTop = notesContainerRef.current.scrollHeight;
+        }
+    }, [discussion.interview_notes]);
+
 
     const editor = useEditor({
         extensions: [
@@ -50,14 +58,14 @@ const DiscussionBox = ({ applicant, discussion, fetchDiscussionInterview }) => {
     const handleSubmit = () => {
         const slackFormattedMessage = convertToSlack(noteBody);
 
-
         const data = {
             applicant_id: applicant.applicant_id,
             interview_id: discussion.interview_id,
             interviewer_id: user.user_id,
             note_type: "DISCUSSION",
-            note_body: slackFormattedMessage,
+            note_body: noteBody,
             noted_by: user.user_id,
+            slack_message: slackFormattedMessage,
         };
 
         api.post('/interview/note', data).then((response) => {
@@ -103,7 +111,9 @@ const DiscussionBox = ({ applicant, discussion, fetchDiscussionInterview }) => {
                 </div>
             </div>
 
-            <div className="px-6 max-h-130 min-h-40 overflow-y-auto rounded-lg py-2">
+            <div
+                ref={notesContainerRef}
+                className="px-6 max-h-130 min-h-40 overflow-y-auto rounded-lg py-2">
                 {discussion.interview_notes.map((note) =>
                     note.note_id != null ?
                         (<MessageBox
@@ -114,9 +124,9 @@ const DiscussionBox = ({ applicant, discussion, fetchDiscussionInterview }) => {
                 )}
             </div>
             {/* Message input */}
-            <div className=" items-center m-5 mt-0 gap-2">
-                <div className="mb-5 rounded-xl border border-gray-200 bg-white p-3">
-                    <div className="mb-4 flex gap-3 rounded-lg bg-white">
+            <div className="items-center">
+                <div className="border-t border-gray-200 rounded-b-lg p-2">
+                    <div className="mb-2 flex gap-3 rounded-lg" >
                         <BoldIcon
                             className={`h-6 w-6 cursor-pointer ${editor.isActive("bold") ? "text-teal-600" : "text-gray-600"}`}
                             onClick={() => editor.chain().focus().toggleBold().run()}
@@ -147,9 +157,10 @@ const DiscussionBox = ({ applicant, discussion, fetchDiscussionInterview }) => {
                             onClick={() => editor.chain().focus().setTextAlign("right").run()}
                         />
                     </div>
-                    <EditorContent
-                        editor={editor}
-                        className="
+                    <div className="relative">
+                        <EditorContent
+                            editor={editor}
+                            className="
                         [&_ul]:list-disc [&_ul]:pl-6
                         [&_ol]:list-decimal [&_ol]:pl-6
                         [&_em]:font-inherit
@@ -157,18 +168,17 @@ const DiscussionBox = ({ applicant, discussion, fetchDiscussionInterview }) => {
                         [&_strong_em]:font-inherit
                         [&_em_strong]:font-inherit
                     "
-                    />
+                        />
+                        <div className="absolute bottom-0 right-0 ">
+                            <button
+                                onClick={handleSubmit}
+                                className="rounded-xl text-teal p-2 m-1 hover:text-teal-soft cursor-pointer flex items-center"
+                            >
+                                <IoMdSend className="size-5" />
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div className="flex items-center justify-between body-regular">
-                    <button
-                        onClick={handleSubmit}
-                        className="rounded-lg bg-teal px-6 py-2 text-white hover:bg-teal-light cursor-pointer"
-                    >
-                        <FiSend className="mr-2" />
-                        Submit Note
-                    </button>
-                </div>
-
             </div>
         </div>
     );
