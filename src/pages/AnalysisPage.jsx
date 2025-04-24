@@ -96,6 +96,7 @@ const AnalysisPage = () => {
   const [summaryData, setSummaryData] = useState(null)
   const [statusDistribution, setStatusDistribution] = useState([])
   const [sourceDistribution, setSourceDistribution] = useState([])
+  const [applicationSource, setApplicationSource] = useState([])
   const [monthlyTrends, setMonthlyTrends] = useState([])
   const [jobPositions, setJobPositions] = useState([])
   const [hiringFunnel, setHiringFunnel] = useState(null)
@@ -136,6 +137,7 @@ const AnalysisPage = () => {
         summaryResponse,
         statusResponse,
         sourceResponse,
+        applicationSourceResponse,
         monthlyResponse,
         jobsResponse,
         applicantsResponse,
@@ -146,6 +148,7 @@ const AnalysisPage = () => {
         api.get(`/analytics/dashboard/summary?${queryString}`),
         api.get(`/analytics/dashboard/status-distribution?${queryString}`),
         api.get(`/analytics/dashboard/source-distribution?${queryString}`),
+        api.get(`/analytics/dashboard/application-source?${queryString}`),
         api.get(`/analytics/dashboard/monthly-trends?year=${year}`), // Keep this one year-only
         api.get(`/analytics/dashboard/job-positions?${queryString}`),
         api.get(`/analytics/dashboard/recent-applicants?${queryString}`),
@@ -158,6 +161,7 @@ const AnalysisPage = () => {
       setSummaryData(summaryResponse.data.data)
       setStatusDistribution(statusResponse.data.data)
       setSourceDistribution(sourceResponse.data.data)
+      setApplicationSource(applicationSourceResponse.data.data)
       setMonthlyTrends(monthlyResponse.data.data)
       setJobPositions(jobsResponse.data.data)
       setRecentApplicants(applicantsResponse.data.data)
@@ -422,11 +426,11 @@ const AnalysisPage = () => {
         className={`grid grid-cols-1 gap-3 xs:gap-4 sm:gap-5 md:gap-6 sm:grid-cols-2 lg:grid-cols-4 ${expandedCard ? "z-0" : ""}`}
       >
           <Card id="applications" title="Applications Received" icon={<FiUsers className="h-4 w-4 sm:h-5 sm:w-5" />}>
-          <ApplicationReceived totalApplications={totalApplications} months={months} year={year} month={month}/>
+          <ApplicationReceived totalApplications={totalApplications} months={months} year={year} month={month} isExpanded={expandedCard === "applications"}/>
         </Card>
 
         <Card id="positions" title="Top Job Positions" icon={<FiBriefcase className="h-4 w-4 sm:h-5 sm:w-5" />}>
-        <TopJobPositions jobPositions={jobPositions} loading={loading} year={year} month={month} />
+        <TopJobPositions jobPositions={jobPositions} loading={loading} year={year} month={month} isExpanded={expandedCard === "positions"} />
         </Card>
 
         <Card id="hires" title="Internal vs External Hires" icon={<FiRefreshCw className="h-4 w-4 sm:h-5 sm:w-5" />}>
@@ -434,7 +438,7 @@ const AnalysisPage = () => {
         </Card>
 
         <Card id="dropoff" title="Candidate Drop-off Rate" icon={<FiTrendingDown className="h-4 w-4 sm:h-5 sm:w-5" />}>
-          <CandidateDropOffRate overallRate={overallRate} monthlyRates={monthlyRates} year={year} month={month} />
+          <CandidateDropOffRate overallRate={overallRate} monthlyRates={monthlyRates} year={year} month={month} isExpanded={expandedCard === "dropoff"} />
         </Card>
       </div>
 
@@ -491,23 +495,88 @@ const AnalysisPage = () => {
             </div>
           ) : (
             <div className="h-[300px]">
-              <TopJobPositions jobPositions={jobPositions} loading={loading} year={year} month={month} />
+              {/* <TopJobPositions jobPositions={jobPositions} loading={loading} year={year} month={month} /> */}
+              <HiringFunnelChart data={hiringFunnel} />
             </div>
           )}
         </ChartCard>
       </div>
 
       {/* Bottom row with 2 cards */}
-      <div className={`grid grid-cols-1 gap-3 xs:gap-4 sm:gap-5 md:gap-6 lg:grid-cols-3 ${expandedCard ? "z-0" : ""}`}>
+      <div className={`grid grid-cols-1 gap-3 xs:gap-4 sm:gap-5 md:gap-6 lg:grid-cols-4 ${expandedCard ? "z-0" : ""}`}>
         <div className="lg:col-span-2">
-          <Card id="requisition" title="Requisition Analysis" icon={<FiBarChart2 className="h-4 w-4 sm:h-5 sm:w-5" />}>
-          <ApplicantStatusChart data={requisitionData} year={year} month={month} />
-          </Card>
+          <ChartCard 
+            id="requisition" 
+            title="Requisition Analysis" 
+            subtitle="Requisition Data"
+            icon={<FiBarChart2 className="h-4 w-4 sm:h-5 sm:w-5" />}
+          >
+            <div className="w-full h-[400px]">
+              <ApplicantStatusChart data={requisitionData} year={year} month={month} className/>
+            </div>
+          </ChartCard>
         </div>
-        <div>
-          <Card id="source" title="Source of Applications" icon={<FiPieChart className="h-4 w-4 sm:h-5 sm:w-5" />}>
-          <SourceOfApplication data={sourceData} year={year} month={month} />
-          </Card>
+        <div className="lg:col-span-2">
+          {/* Job Position Analytics */}
+          <ChartCard
+            id="positionAnalytics"
+            title="Top Job Positions"
+            subtitle="Applicants by job position"
+            icon={<FiBriefcase className="h-4 w-4 sm:h-5 sm:w-5" />}
+          >
+            {loading ? (
+              <div className="w-full h-[300px] flex items-center justify-center">
+                <Skeleton className="h-[250px] w-full" />
+              </div>
+            ) : (
+              <div className="w-full h-[400px]">
+                <Bar
+                  data={{
+                    labels: jobPositions.map((item) => item.title),
+                    datasets: [
+                      {
+                        label: "Applicants",
+                        data: jobPositions.map((item) => item.applicant_count),
+                        backgroundColor: "rgba(0, 128, 128, 0.8)", // teal
+                      },
+                      {
+                        label: "Hired",
+                        data: jobPositions.map((item) => item.hired_count),
+                        backgroundColor: "rgba(0, 96, 96, 0.8)", // darker teal
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        position: "top",
+                      },
+                      tooltip: {
+                        mode: "index",
+                        intersect: false,
+                      },
+                    },
+                    scales: {
+                      x: {
+                        ticks: {
+                          font: {
+                            size: 9,
+                          },
+                          maxRotation: 45,
+                          minRotation: 45,
+                        },
+                      },
+                      y: {
+                        beginAtZero: true,
+                      },
+                    },
+                  }}
+                />
+              </div>
+            )}
+          </ChartCard>
         </div>
       </div>
 
@@ -515,9 +584,57 @@ const AnalysisPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Source Distribution */}
         <ChartCard
-          id="sourceDistribution"
+          id="applicationSource"
           title="Applicant Sources"
-          subtitle="Where applicants are coming from"
+          subtitle="Where applicants applied from"
+          icon={<FiPieChart className="h-4 w-4 sm:h-5 sm:w-5" />}
+        >
+          {loading ? (
+            <div className="w-full h-[300px] flex items-center justify-center">
+              <Skeleton className="h-[250px] w-full" />
+            </div>
+          ) : (
+            <div className="h-[300px] flex justify-center">
+              <Pie
+                data={{
+                  labels: applicationSource.map((item) => item.applied_source),
+                  datasets: [
+                    {
+                      label: "Applicants",
+                      data: applicationSource.map((item) => item.count),
+                      backgroundColor: COLORS.map((color) => `${color}`),
+                      borderWidth: 1,
+                    },
+                  ],
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      display: true, // Hides the legend labels
+                    },
+                    tooltip: {
+                      callbacks: {
+                        label: (context) => {
+                          const value = context.raw || 0
+                          const total = context.dataset.data.reduce((a, b) => a + b, 0)
+                          const percentage = Math.round((value / total) * 100)
+                          return `${percentage}%`
+                        },
+                      },
+                    },
+                  },
+                }}
+              />
+            </div>
+          )}
+        </ChartCard>
+
+        <ChartCard
+          id="source"
+          title="Source of Application"
+          subtitle="Where applicants discovered this"
           icon={<FiPieChart className="h-4 w-4 sm:h-5 sm:w-5" />}
         >
           {loading ? (
@@ -562,66 +679,16 @@ const AnalysisPage = () => {
           )}
         </ChartCard>
 
-        {/* Job Position Analytics */}
-        <ChartCard
-          id="positionAnalytics"
-          title="Top Job Positions"
-          subtitle="Applicants by job position"
-          icon={<FiBriefcase className="h-4 w-4 sm:h-5 sm:w-5" />}
+        {/* <ChartCard 
+        id="source" 
+        title="Source of Applications" 
+        icon={<FiPieChart className="h-4 w-4 sm:h-5 sm:w-5" />}
+        subtitle="Where applicants applied"
         >
-          {loading ? (
-            <div className="w-full h-[300px] flex items-center justify-center">
-              <Skeleton className="h-[250px] w-full" />
-            </div>
-          ) : (
-            <div className="h-[300px]">
-              <Bar
-                data={{
-                  labels: jobPositions.map((item) => item.title),
-                  datasets: [
-                    {
-                      label: "Applicants",
-                      data: jobPositions.map((item) => item.applicant_count),
-                      backgroundColor: "rgba(0, 128, 128, 0.8)", // teal
-                    },
-                    {
-                      label: "Hired",
-                      data: jobPositions.map((item) => item.hired_count),
-                      backgroundColor: "rgba(0, 96, 96, 0.8)", // darker teal
-                    },
-                  ],
-                }}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
-                      position: "top",
-                    },
-                    tooltip: {
-                      mode: "index",
-                      intersect: false,
-                    },
-                  },
-                  scales: {
-                    x: {
-                      ticks: {
-                        font: {
-                          size: 9,
-                        },
-                        maxRotation: 45,
-                        minRotation: 45,
-                      },
-                    },
-                    y: {
-                      beginAtZero: true,
-                    },
-                  },
-                }}
-              />
-            </div>
-          )}
-        </ChartCard>
+            <div className="w-full h-[300px]">
+              <SourceOfApplication year={year} month={month} />
+            </div>    
+        </ChartCard> */}
       </div>
     </div>
   )

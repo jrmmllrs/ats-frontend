@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { FaInfoCircle } from "react-icons/fa";
 import api from "../../api/axios";
 
-const CandidateDropOffRate = ({ year, month }) => {
+const CandidateDropOffRate = ({ year, month, isExpanded }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -125,7 +125,7 @@ const CandidateDropOffRate = ({ year, month }) => {
       ) : (
         <>
           <div className="mb-6 text-center text-4xl font-semibold">
-            {overallRate}
+            {overallRate}%
           </div>
           {Object.keys(monthlyRates).length > 0 ? (
             <div className="space-y-2">
@@ -148,10 +148,11 @@ const CandidateDropOffRate = ({ year, month }) => {
                   ];
                   return months.indexOf(b[0]) - months.indexOf(a[0]);
                 })
+                .slice(0, isExpanded ? undefined : 3)
                 .map(([month, rate]) => (
                   <div key={month} className="flex justify-between">
                     <span className="font-medium">{month}</span>
-                    <span className="font-medium">{rate}</span>
+                    <span className="font-medium">{rate}%</span>
                   </div>
                 ))}
             </div>
