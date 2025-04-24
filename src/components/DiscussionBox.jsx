@@ -50,14 +50,14 @@ const DiscussionBox = ({ applicant, discussion, fetchDiscussionInterview }) => {
     const handleSubmit = () => {
         const slackFormattedMessage = convertToSlack(noteBody);
 
-
         const data = {
             applicant_id: applicant.applicant_id,
             interview_id: discussion.interview_id,
             interviewer_id: user.user_id,
             note_type: "DISCUSSION",
-            note_body: slackFormattedMessage,
+            note_body: noteBody,
             noted_by: user.user_id,
+            slack_message: slackFormattedMessage,
         };
 
         api.post('/interview/note', data).then((response) => {
