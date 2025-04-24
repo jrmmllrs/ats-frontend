@@ -123,19 +123,16 @@ export default function ATSHealthcheck({ onSelectApplicant }) {
     return status.replace(/_/g, " ");
   };
 
-  // const getStatusColor = (status) => {
-  //   return "text-black";
-  // };
-
-  // const getTimeAgoColor = (timeAgo) => {
-  //   if (timeAgo.includes("Applied")) return "text-teal";
-  //   if (timeAgo.includes("Last updated")) return "text-teal";
-  //   return "text-gray-500";
-  // };
-
-  const handleApplicantClick = (applicant) => {
-    onSelectApplicant(applicant);
-    setIsOpen(false); // Close the notification panel when an applicant is clicked
+  const handleApplicantClick = async (applicant) => {
+    try {
+      const response = await api.delete(`/notification/remove/${applicant.applicant_id}`);
+      if (response.status === 200) {
+        onSelectApplicant(applicant);
+        setIsOpen(false);
+      }
+    } catch (error) {
+      console.error('Failed to remove notification:', error);
+    }
   };
 
   // If not open, return null to hide the component
