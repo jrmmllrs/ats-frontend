@@ -9,6 +9,7 @@ import { statusMapping } from '../../hooks/statusMapping';
 import { useApplicantData } from '../../hooks/useApplicantData';
 import StatusHistoryModal from '../Modals/StatusHistoryModal';
 import SkipStatusWarningModal from "../Modals/SkipStatusModal";
+import { formatEnumForDisplay } from '../../utils/formatEnum';
 
 
 function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate }) {
@@ -512,7 +513,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                 : 'Not specified'}
             </div>
             <div className="text-teal">Applied from</div>
-            <div className="col-span-2">{applicant.applied_source || 'Not specified'}</div>
+            <div className="col-span-2">{applicant.applied_source ? formatEnumForDisplay(applicant.applied_source) : 'Not specified'}</div>
           </div>
 
           {/* Tabs */}
