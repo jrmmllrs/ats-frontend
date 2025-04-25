@@ -129,16 +129,28 @@ const ApplicantTable = ({ onSelectApplicant }) => {
 
   const columns = [
     {
+      name: 'Applicant ID',
+      selector: row => row.applicant_id,
+      wrap: true,
+      grow: 1.3,
+    },
+    {
       name: 'Date Applied',
       selector: row => moment(row.created_at).format('MMMM DD, YYYY'),
+      wrap: true,
+      grow: 1,
     },
     {
       name: 'Applicant Name',
       selector: row => `${row.first_name} ${row.last_name}`,
+      wrap: true,
+      grow: 2, // Give name more space
     },
     {
       name: 'Position Applied',
       selector: row => row.title,
+      wrap: true,
+      grow: 1.7,
     },
     {
       name: 'Status',
@@ -146,19 +158,28 @@ const ApplicantTable = ({ onSelectApplicant }) => {
         <select
           className='border border-gray-light max-w-[100px]'
           value={row.status}
-          onChange={(e) => handleStatusChange(row.applicant_id, row.progress_id, e.target.value, status)}
+          onChange={(e) =>
+            handleStatusChange(row.applicant_id, row.progress_id, e.target.value, status)
+          }
           style={{ padding: '5px', borderRadius: '5px' }}
-          disabled={showDatePicker} // Disable when date picker is open
+          disabled={showDatePicker}
         >
-          {statuses.map(status => (
+          {statuses.map((status) => (
             <option key={status} value={status}>
-              {status.toLowerCase().split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+              {status
+                .toLowerCase()
+                .split('_')
+                .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ')}
             </option>
           ))}
         </select>
       ),
+      wrap: true,
+      grow: 1,
     },
   ];
+
 
   return (
     <>
@@ -168,6 +189,15 @@ const ApplicantTable = ({ onSelectApplicant }) => {
         </div>
       ) : (
         <DataTable
+          customStyles={{
+            rows: {
+              style: {
+                fontSize: '12px',
+                paddingTop: '8px',
+                paddingBottom: '8px',
+              },
+            },
+          }}
           pointerOnHover
           highlightOnHover
           striped
