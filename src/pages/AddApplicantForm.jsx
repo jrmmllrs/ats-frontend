@@ -18,6 +18,8 @@ import Cookies from "js-cookie"
 import useUserStore from "../context/userStore"
 import api from "../api/axios"
 import ConfirmationModal from "../components/Modals/ConfirmationModal"
+import { fetchAppliedSources, fetchDiscoveredSources } from "../utils/sources"
+import { formatEnumForDisplay } from "../utils/formatEnum"
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -49,6 +51,8 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
   const user = useUserStore((state) => state.user)
   const [modalType, setModalType] = useState(null) // 'submit' or 'cancel'
   const [cvAttatchement, setcvAttatchement] = useState();
+  const [appliedSource, setAppliedSource] = useState([]);
+  const [discoveredSource, setDiscoveredSource] = useState([]);
 
 
   // Determine if we're editing or adding based on initialData
@@ -67,7 +71,7 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
         phone: initialData.mobile_number_1 || "",
         cvLink: initialData.cv_link || "",
         position: initialData.job_id || "",
-        source: initialData.discovered_at || "",
+        source: initialData.applied_source || "",
         referrer: initialData.referrer || "",
         testResult: initialData.test_result || "",
         dateApplied: initialData.applicant_created_at
@@ -95,6 +99,7 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
         console.error("Error fetching positions:", error)
       }
     }
+
     const fetchUsers = async () => {
       try {
         const token = Cookies.get("token")
@@ -108,6 +113,8 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
         console.error("Error fetching users:", error)
       }
     }
+    fetchAppliedSources(setAppliedSource);
+    fetchDiscoveredSources(setDiscoveredSource);
     fetchPositions()
     fetchUsers()
   }, [])
@@ -127,7 +134,7 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
         mobile_number_1: formData.phone,
         mobile_number_2: formData.additionalPhones[0] || null,
         cv_link: formData.cvLink,
-        discovered_at: formData.source,
+        applied_source: formData.source,
         referrer_id: formData.referrer,
         created_by: user.user_id,
         updated_by: user.user_id,
@@ -292,7 +299,8 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
         email_1: formData.email,
         mobile_number_1: formData.phone,
         cv_link: formData.cvLink,
-        discovered_at: formData.source,
+        applied_source: formData.source,
+        discovered_at: formData.discovered,
         referrer_id: formData.referrer,
         created_by: user.user_id,
         updated_by: user.user_id,
@@ -619,18 +627,19 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
                       onBlur={handleBlur}
                       className="w-full p-2 border border-gray-light rounded-md focus:outline-none body-regular"
                     >
-                      <option value="" disabled >Select Option</option>
-                      <option value="Referral">Referral</option>
-                      <option value="Website">Website</option>
-                      <option value="Social Media">Social Media</option>
-                      <option value="Podcast">Podcast</option>
-                      <option value="Career Fair (Startup Caravan, University Visit)">
-                        Career Fair (Startup Caravan, University Visit)
-                      </option>
+                      <option disabled value="">Select source</option>
+                      {appliedSource.map((source, index) => (
+                        <option key={index} value={source}>
+                          {
+                            formatEnumForDisplay(source)
+                          }
+                        </option>
+                      ))}
                     </select>
+
                   </div>
 
-                  {formData.source === "Referral" && (
+                  {formData.source === "REFERRAL" && (
                     <div>
                       <label className="mb-2 text-gray-dark body-bold flex items-center gap-2 ">Referrer</label>
                       <select
