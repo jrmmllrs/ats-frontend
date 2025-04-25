@@ -86,7 +86,7 @@ const UserTable = ({ users, jobTitles, loading, searchTerm, onEdit }) => {
       ),
       ignoreRowClick: true,
       // Remove allowOverflow and button props
-      width: '80px'
+      width: '120px'
     },
   ];
 
