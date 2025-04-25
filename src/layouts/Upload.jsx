@@ -152,6 +152,8 @@ function Upload({ onClose }) {
       position_name: positionName,
       applied_source: excelRow.source || excelRow.applied_source || "",
       source: excelRow.source || excelRow.applied_source || "",
+      reason: excelRow.reason_for_blacklisted || excelRow.reason_for_blacklisted || null,
+      reason_for_rejection: excelRow.reason_for_rejection || null,
       created_by: user?.user_id || excelRow.created_by || "system",
       updated_by: user?.user_id || excelRow.updated_by || "system",
       cv_link: excelRow.cv_link || null,
@@ -333,7 +335,10 @@ function Upload({ onClose }) {
           position_id: positionId,
           position: acceptedApplicant.position,
           test_result: acceptedApplicant.test_result,
-          applied_source: acceptedApplicant.applied_source,
+          applied_source: acceptedApplicant.source || acceptedApplicant.applied_source || "",
+          source: acceptedApplicant.source || acceptedApplicant.applied_source || "",
+          reason: acceptedApplicant.reason_for_blacklisted || acceptedApplicant.reason_for_blacklisted || null,
+          reason_for_rejection: acceptedApplicant.reason_for_rejection || null,
         }),
       };
 
