@@ -127,7 +127,7 @@ export default function ApplicantList({ onSelectApplicant, onAddApplicantClick }
         </div>
       </div>
 
-      <div className="rounded-lg bg-white" style={{ height: "", overflowY: "auto" }}>
+      <div className="rounded-lg bg-white overflow-x-auto" style={{ height: "", overflowY: "auto" }}>
         <ApplicantTable onSelectApplicant={onSelectApplicant} />
       </div>
 
