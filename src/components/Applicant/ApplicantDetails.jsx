@@ -8,7 +8,7 @@ import AddApplicantForm from '../../pages/AddApplicantForm';
 import { statusMapping } from '../../hooks/statusMapping';
 import { useApplicantData } from '../../hooks/useApplicantData';
 import StatusHistoryModal from '../Modals/StatusHistoryModal';
-import SkipStatusWarningModal from '../Modals/skipStatusModal';
+import SkipStatusWarningModal from "../Modals/SkipStatusModal";
 
 
 function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate }) {
