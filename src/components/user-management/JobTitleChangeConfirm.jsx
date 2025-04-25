@@ -11,23 +11,23 @@ const JobTitleChangeConfirm = ({ onCancel, onConfirm }) => {
               <FiAlertTriangle className="h-5 w-5 text-yellow-500" />
             </div>
             <div>
-              <h3 className="text-lg font-medium text-gray-800 mb-2">Change Job Title</h3>
+              <h3 className="text-lg font-medium text-gray-800 mb-2">Confirm Job Title Change</h3>
               <p className="text-sm text-gray-600 mb-4">
-                Changing this job title will modify the recommended permissions for this user.
-                Do you want to update the permissions to match the new job title's recommendations?
+                Changing the job title will update the recommended permissions for this user. 
+                Would you like to apply the new permissions or keep the current ones?
               </p>
               <div className="flex justify-end gap-3">
                 <button
                   onClick={onCancel}
                   className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
                 >
-                  Keep Current Permissions
+                  Keep Current
                 </button>
                 <button
                   onClick={onConfirm}
                   className="px-4 py-2 bg-[#008080] text-white rounded-lg hover:bg-[#006666] transition-colors text-sm font-medium"
                 >
-                  Update Permissions
+                  Apply New
                 </button>
               </div>
             </div>
