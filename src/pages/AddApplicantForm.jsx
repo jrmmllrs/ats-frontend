@@ -35,6 +35,7 @@ const formSchema = {
   position: "",
   source: "",
   referrer: "",
+  discovered: "",
   testResult: "",
   dateApplied: "",
   additionalEmails: ["", ""],
@@ -73,6 +74,7 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
         position: initialData.job_id || "",
         source: initialData.applied_source || "",
         referrer: initialData.referrer || "",
+        discovered_at: initialData.discovered_at || "",
         testResult: initialData.test_result || "",
         dateApplied: initialData.applicant_created_at
           ? new Date(initialData.applicant_created_at).toISOString().split("T")[0]
@@ -618,7 +620,7 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className="mb-2 text-gray-dark body-bold flex items-center gap-2">
-                      Source
+                      Applied Source
                     </label>
                     <select
                       name="source"
@@ -652,12 +654,37 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
                         <option value="" disabled>Select Option</option>
                         {users.map((user) => (
                           <option key={user.user_id} value={user.user_id}>
-                            {`${user.first_name} ${user.middle_name} ${user.last_name}`}
+                            {`${user.first_name} ${user.last_name}`}
                           </option>
                         ))}
                       </select>
                     </div>
                   )}
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-2 text-gray-dark body-bold flex items-center gap-2">
+                      Discovered Fullsuite At
+                    </label>
+                    <select
+                      name="discovered"
+                      value={formData.discovered}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      className="w-full p-2 border border-gray-light rounded-md focus:outline-none body-regular"
+                    >
+                      <option disabled value="">Select source</option>
+                      {discoveredSource.map((source, index) => (
+                        <option key={index} value={source}>
+                          {
+                            formatEnumForDisplay(source)
+                          }
+                        </option>
+                      ))}
+                    </select>
+
+                  </div>
                 </div>
 
                 {/* cv link */}
