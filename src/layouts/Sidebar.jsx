@@ -8,8 +8,6 @@ import {
 } from "react-icons/fa";
 import { FaUserGear } from "react-icons/fa6";
 import { NavLink } from "react-router-dom";
-
-
 import { FaGear } from "react-icons/fa6";
 import useUserStore from "../context/userStore";
 import Cookies from "js-cookie";
@@ -20,6 +18,7 @@ import profileUser from "../assets/profile-user.png";
 export default function Sidebar({ isOpen, onToggleSidebar, onSelectView, selectedView }) {
   const user = useUserStore((state) => state.user);
   const setUser = useUserStore((state) => state.setUser);
+  const hasFeature = useUserStore((state) => state.hasFeature);
   const navigate = useNavigate();
   const [currentView, setCurrentView] = useState(selectedView || "dashboard");
 
@@ -43,7 +42,7 @@ export default function Sidebar({ isOpen, onToggleSidebar, onSelectView, selecte
 
     // Remove all cookies
     const allCookies = Cookies.get();
-    Object.keys(allCookies).forEach(cookieName => {
+    Object.keys(allCookies).forEach((cookieName) => {
       Cookies.remove(cookieName);
     });
 
@@ -65,16 +64,18 @@ export default function Sidebar({ isOpen, onToggleSidebar, onSelectView, selecte
     <>
       {/* Overlay (closes sidebar when clicked) */}
       <div
-        className={`fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 ${isOpen ? "opacity-100" : "pointer-events-none opacity-0"
-          } md:hidden`}
+        className={`fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 ${
+          isOpen ? "opacity-100" : "pointer-events-none opacity-0"
+        } md:hidden`}
         onClick={onToggleSidebar}
         aria-hidden="true"
       ></div>
 
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 flex h-full w-72 flex-col justify-between bg-white p-6 shadow-lg transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "-translate-x-full"
-          } md:relative md:translate-x-0 md:shadow-none`}
+        className={`fixed inset-y-0 left-0 z-50 flex h-full w-72 flex-col justify-between bg-white p-6 shadow-lg transition-transform duration-300 ease-in-out ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        } md:relative md:translate-x-0 md:shadow-none`}
       >
         {/* Close Button (only for mobile) */}
         <button
@@ -112,13 +113,24 @@ export default function Sidebar({ isOpen, onToggleSidebar, onSelectView, selecte
           {/* Navigation */}
           <nav className="space-y-2">
             <hr className="border-gray-light" />
-            <SidebarLink to="/dashboard" text="Dashboard" icon={<FaTable />} />
-            <SidebarLink to="/applicants" text="Applicants" icon={<FaUsers />} />
-            <SidebarLink to="/analytics" text="Analytics" icon={<FaChartBar />} />
-            <SidebarLink to="/jobs" text="Jobs" icon={<FaBriefcase />} />
-            <SidebarLink to="/config" text="Configurations" icon={<FaGear />} />
-            <SidebarLink to="/usermanagement" text="User Management" icon={<FaUserGear />} />
-
+            {hasFeature("Dashboard") && (
+              <SidebarLink to="/dashboard" text="Dashboard" icon={<FaTable />} />
+            )}
+            {hasFeature("Applicant Listings") && (
+              <SidebarLink to="/applicants" text="Applicants" icon={<FaUsers />} />
+            )}
+            {hasFeature("Analytics") && (
+              <SidebarLink to="/analytics" text="Analytics" icon={<FaChartBar />} />
+            )}
+            {hasFeature("Job Listings") && (
+              <SidebarLink to="/jobs" text="Jobs" icon={<FaBriefcase />} />
+            )}
+            {hasFeature("Configurations") && (
+              <SidebarLink to="/config" text="Configurations" icon={<FaGear />} />
+            )}
+            {hasFeature("User Management") && (
+              <SidebarLink to="/usermanagement" text="User Management" icon={<FaUserGear />} />
+            )}
           </nav>
         </div>
 
@@ -144,7 +156,8 @@ function SidebarLink({ to, text, icon }) {
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `flex items-center gap-3 rounded-md px-4 py-2 font-medium transition ${isActive ? "bg-teal-600 text-white" : "text-gray-dark hover:bg-gray-100"
+        `flex items-center gap-3 rounded-md px-4 py-2 font-medium transition ${
+          isActive ? "bg-teal-600 text-white" : "text-gray-dark hover:bg-gray-100"
         }`
       }
     >

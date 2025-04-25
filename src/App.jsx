@@ -18,10 +18,22 @@ import PrivateRoute from "./context/PrivateRoute";
 import PublicRoute from "./context/PublicRoute";
 import FeatureProtectedRoute from "./context/FeatureProtectedRoute";
 
-
-
+import useUserStore from "./context/userStore";
 
 function App() {
+  const hasFeature = useUserStore((state) => state.hasFeature);
+
+  // Determine the default route based on user features
+  const getDefaultRoute = () => {
+    if (hasFeature("Dashboard")) return "/dashboard";
+    if (hasFeature("Applicant Listings")) return "/applicants";
+    if (hasFeature("Analytics")) return "/analytics";
+    if (hasFeature("Job Listings")) return "/jobs";
+    if (hasFeature("Configurations")) return "/config";
+    if (hasFeature("User Management")) return "/usermanagement";
+    return "/access-denied"; // Fallback if no features are available
+  };
+
   return (
     <BrowserRouter>
       <Routes>
@@ -30,11 +42,10 @@ function App() {
         <Route path="/fullofsuite" element={<PublicRoute element={<FullOfSuite />} />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
-
         {/* Private Routes with Layout */}
         <Route path="/" element={<PrivateRoute element={<MainLayout />} />}>
-        <Route path="/access-denied" element={<AccessDenied />} />
-          <Route index element={<Navigate to="/dashboard" />} />
+          <Route path="/access-denied" element={<AccessDenied />} />
+          <Route index element={<Navigate to={getDefaultRoute()} />} />
 
           {/* Feature-protected Routes */}
           <Route
