@@ -74,7 +74,7 @@ const ExportToPdf = ({
           row.middle_name || "N/A",
           row.last_name || "",
           row.gender || "N/A",
-          row.discovered_at || "N/A",
+          row.applied_source || "N/A",
           row.cv_link || "N/A",
           row.date_created ? moment(row.date_created).format("YYYY-MM-DD") : "N/A",
           row.mobile_number_1 || "",
