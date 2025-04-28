@@ -106,23 +106,6 @@ const AnalysisPage = () => {
   const [rejection, setRejection] = useState([])
   const [blacklisted, setBlacklisted] = useState([])
 
-  const internalHires = 30
-  const externalHires = 70
-
-  const overallRate = 10
-  const monthlyRates = {
-    January: 5,
-    February: 10,
-    March: 15,
-  }
-
-  const totalApplications = 100
-  const months = [
-    { name: "January", count: 30 },
-    { name: "February", count: 40 },
-    { name: "March", count: 30 },
-  ]
-
   // Fetch all dashboard data
   const fetchDashboardData = async () => {
     setLoading(true)
@@ -184,29 +167,6 @@ const AnalysisPage = () => {
     fetchDashboardData()
   }, [year, month]) // Add month to dependency array
 
-  const requisitionData = [
-    { month: "January", closed: 12, passed: 3, onProgress: 0 },
-    { month: "February", closed: 4, passed: 2, onProgress: 0 },
-    { month: "March", closed: 3, passed: 1, onProgress: 0 },
-    { month: "April", closed: 4, passed: 2, onProgress: 0 },
-    { month: "May", closed: 27, passed: 4, onProgress: 0 },
-    { month: "June", closed: 14, passed: 2, onProgress: 0 },
-    { month: "July", closed: 5, passed: 4, onProgress: 0 },
-    { month: "August", closed: 0, passed: 0, onProgress: 11 },
-    { month: "September", closed: 0, passed: 2, onProgress: 0 },
-    { month: "October", closed: 0, passed: 0, onProgress: 21 },
-    { month: "November", closed: 4, passed: 0, onProgress: 4 },
-    { month: "December", closed: 0, passed: 0, onProgress: 1 },
-  ]
-
-  const sourceData =
-    sourceDistribution.length > 0
-      ? sourceDistribution.map((item) => ({ name: item.applied_source, value: item.count }))
-      : [
-          { name: "Referral", value: 50 },
-          { name: "Website", value: 30 },
-          { name: "Caravan", value: 20 },
-        ]
 
   // Function to handle card expansion
   const toggleCardExpand = (id) => {
@@ -434,7 +394,7 @@ const AnalysisPage = () => {
         className={`grid grid-cols-1 gap-3 xs:gap-4 sm:gap-5 md:gap-6 sm:grid-cols-2 lg:grid-cols-4 ${expandedCard ? "z-0" : ""}`}
       >
           <Card id="applications" title="Applications Received" icon={<FiUsers className="h-4 w-4 sm:h-5 sm:w-5" />}>
-          <ApplicationReceived totalApplications={totalApplications} months={months} year={year} month={month} isExpanded={expandedCard === "applications"}/>
+          <ApplicationReceived year={year} month={month} isExpanded={expandedCard === "applications"}/>
         </Card>
 
         <Card id="positions" title="Top Job Positions" icon={<FiBriefcase className="h-4 w-4 sm:h-5 sm:w-5" />}>
@@ -442,11 +402,11 @@ const AnalysisPage = () => {
         </Card>
 
         <Card id="hires" title="Internal vs External Hires" icon={<FiRefreshCw className="h-4 w-4 sm:h-5 sm:w-5" />}>
-          <InternalVsExternalHires internalHires={internalHires} externalHires={externalHires} year={year} month={month}/>
+          <InternalVsExternalHires  year={year} month={month}/>
         </Card>
 
         <Card id="dropoff" title="Candidate Drop-off Rate" icon={<FiTrendingDown className="h-4 w-4 sm:h-5 sm:w-5" />}>
-          <CandidateDropOffRate overallRate={overallRate} monthlyRates={monthlyRates} year={year} month={month} isExpanded={expandedCard === "dropoff"} />
+          <CandidateDropOffRate year={year} month={month} isExpanded={expandedCard === "dropoff"} />
         </Card>
       </div>
 
@@ -546,7 +506,7 @@ const AnalysisPage = () => {
             icon={<FiBarChart2 className="h-4 w-4 sm:h-5 sm:w-5" />}
           >
             <div className="w-full h-[400px]">
-              <ApplicantStatusChart data={requisitionData} year={year} month={month} className/>
+              <ApplicantStatusChart year={year} month={month} className/>
             </div>
           </ChartCard>
         </div>
