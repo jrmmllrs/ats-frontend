@@ -103,12 +103,44 @@ const UserForm = ({ editId, jobTitles, serviceFeatures, onClose, onSuccess }) =>
 
         if (jobTitleName.includes('hr')) {
             recommendedFeatures = serviceFeatures.map(f => f.service_feature_id);
-        } else if (jobTitleName.includes('interviewer')) {
+        }
+        else if (jobTitleName.includes('recruiter')) {
             recommendedFeatures = serviceFeatures
-                .filter(f =>
-                    f.feature_name.toLowerCase().includes('interview notes') ||
-                    f.feature_name.toLowerCase().includes('applicant listing')
-                )
+                .filter(f => {
+                    const featureName = f.feature_name.toLowerCase();
+                    return featureName.includes('job listing') ||
+                        featureName.includes('export applicant') ||
+                        featureName.includes('receive email') ||
+                        featureName.includes('add applicant') ||
+                        featureName.includes('analytics') ||
+                        featureName.includes('send mail') ||
+                        featureName.includes('applicant listing') ||
+                        featureName.includes('edit applicant') ||
+                        featureName.includes('notification') ||
+                        featureName.includes('dashboard');
+                })
+                .map(f => f.service_feature_id);
+        }
+        else if (jobTitleName.includes('interviewer')) {
+            recommendedFeatures = serviceFeatures
+                .filter(f => {
+                    const featureName = f.feature_name.toLowerCase();
+                    return featureName.includes('interview notes') ||
+                        featureName.includes('applicant listing');
+                })
+                .map(f => f.service_feature_id);
+        }
+        else if (jobTitleName.includes('hiring manager')) {
+            recommendedFeatures = serviceFeatures
+                .filter(f => {
+                    const featureName = f.feature_name.toLowerCase();
+                    return featureName.includes('edit job') ||
+                        featureName.includes('job listings') ||
+                        featureName.includes('interview notes') ||
+                        featureName.includes('send mail') ||
+                        featureName.includes('applicant listing') ||
+                        featureName.includes('analytics');
+                })
                 .map(f => f.service_feature_id);
         }
 
