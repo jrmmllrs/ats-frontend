@@ -221,7 +221,7 @@ const AnalysisPage = () => {
   }
 
   const replaceText = (text) => {
-    return text ? text.toLowerCase().split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : ""
+    return text ? text.toLowerCase().split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : "Null"
   }
 
   // Card component with expansion functionality
@@ -606,39 +606,54 @@ const AnalysisPage = () => {
               <Skeleton className="h-[250px] w-full" />
             </div>
           ) : (
-            <div className="h-[300px] flex justify-center">
-              <Pie
-                data={{
-                  labels: applicationSource && applicationSource.length > 0 ? applicationSource.map((item) => replaceText(item.applied_source)) : ["No Data"],
-                  datasets: [
-                    {
-                      label: "Applicants",
-                      data: applicationSource && applicationSource.length > 0 ? applicationSource.map((item) => item.count) : [1],
-                      backgroundColor: COLORS.map((color) => `${color}`),
-                      borderWidth: 1,
-                    },
-                  ],
-                }}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
-                      display: true, // Hides the legend labels
-                    },
-                    tooltip: {
-                      callbacks: {
-                        label: (context) => {
-                          const value = context.raw || 0
-                          const total = context.dataset.data.reduce((a, b) => a + b, 0)
-                          const percentage = Math.round((value / total) * 100)
-                          return `${percentage}%`
+            <div>
+              <div className="h-[300px] flex justify-center">
+                <Pie
+                  data={{
+                    labels: applicationSource && applicationSource.length > 0 ? applicationSource.map((item) => replaceText(item.applied_source)) : ["No Data"],
+                    datasets: [
+                      {
+                        label: "Applicants",
+                        data: applicationSource && applicationSource.length > 0 ? applicationSource.map((item) => item.count) : [1],
+                        backgroundColor: COLORS.map((color) => `${color}`),
+                        borderWidth: 1,
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        display: true, // Hides the legend labels
+                      },
+                      tooltip: {
+                        callbacks: {
+                          label: (context) => {
+                            const value = context.raw || 0
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0)
+                            const percentage = Math.round((value / total) * 100)
+                            return `${percentage}%`
+                          },
                         },
                       },
                     },
-                  },
-                }}
-              />
+                  }}
+                />
+              </div>
+              {expandedCard === "applicationSource" && (
+                applicationSource && applicationSource.length > 0 ? (
+                  <ul className="mt-4 text-sm text-gray-600">
+                    {applicationSource.map((item, index) => (
+                      <li key={index}>
+                        {replaceText(item.applied_source)}: {item.count}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-4 text-sm text-gray-600">No Data</p>
+                )
+              )}
             </div>
           )}
         </ChartCard>
@@ -654,39 +669,54 @@ const AnalysisPage = () => {
               <Skeleton className="h-[250px] w-full" />
             </div>
           ) : (
-            <div className="h-[300px] flex justify-center">
-              <Pie
-                data={{
-                  labels: sourceDistribution && sourceDistribution.length > 0 ? sourceDistribution.map((item) => replaceText(item.applied_source)) : ["No Data"],
-                  datasets: [
-                    {
-                      label: "Applicants",
-                      data: sourceDistribution && sourceDistribution.length > 0 ? sourceDistribution.map((item) => item.count) : [1],
-                      backgroundColor: COLORS.map((color) => `${color}`),
-                      borderWidth: 1,
-                    },
-                  ],
-                }}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
-                      display: true, // Hides the legend labels
-                    },
-                    tooltip: {
-                      callbacks: {
-                        label: (context) => {
-                          const value = context.raw || 0
-                          const total = context.dataset.data.reduce((a, b) => a + b, 0)
-                          const percentage = Math.round((value / total) * 100)
-                          return `${percentage}%`
+            <div>
+              <div className="h-[300px] flex justify-center">
+                <Pie
+                  data={{
+                    labels: sourceDistribution && sourceDistribution.length > 0 ? sourceDistribution.map((item) => replaceText(item.applied_source)) : ["No Data"],
+                    datasets: [
+                      {
+                        label: "Applicants",
+                        data: sourceDistribution && sourceDistribution.length > 0 ? sourceDistribution.map((item) => item.count) : [1],
+                        backgroundColor: COLORS.map((color) => `${color}`),
+                        borderWidth: 1,
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        display: true, // Hides the legend labels
+                      },
+                      tooltip: {
+                        callbacks: {
+                          label: (context) => {
+                            const value = context.raw || 0
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0)
+                            const percentage = Math.round((value / total) * 100)
+                            return `${percentage}%`
+                          },
                         },
                       },
                     },
-                  },
-                }}
-              />
+                  }}
+                />
+              </div>
+              {expandedCard === "source" && (
+                sourceDistribution && sourceDistribution.length > 0 ? (
+                  <ul className="mt-4 text-sm text-gray-600">
+                    {sourceDistribution.map((item, index) => (
+                      <li key={index}>
+                        {replaceText(item.applied_source)}: {item.count}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-4 text-sm text-gray-600">No Data</p>
+                )
+              )}
             </div>
           )}
         </ChartCard>
@@ -702,39 +732,54 @@ const AnalysisPage = () => {
               <Skeleton className="h-[250px] w-full" />
             </div>
           ) : (
-            <div className="h-[300px] flex justify-center">
-              <Pie
-                data={{
-                  labels: rejection && rejection.length > 0 ? rejection.map((item) => replaceText(item.reason)) : ["No Data"],
-                  datasets: [
-                    {
-                      label: "Rejection",
-                      data: rejection && rejection.length > 0 ? rejection.map((item) => item.count) : [1],
-                      backgroundColor: COLORS.map((color) => `${color}`),
-                      borderWidth: 1,
-                    },
-                  ],
-                }}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
-                      display: true, // Hides the legend labels
-                    },
-                    tooltip: {
-                      callbacks: {
-                        label: (context) => {
-                          const value = context.raw || 0
-                          const total = context.dataset.data.reduce((a, b) => a + b, 0)
-                          const percentage = Math.round((value / total) * 100)
-                          return `${percentage}%`
+            <div>
+              <div className="h-[300px] flex justify-center">
+                <Pie
+                  data={{
+                    labels: rejection && rejection.length > 0 ? rejection.map((item) => replaceText(item.reason)) : ["No Data"],
+                    datasets: [
+                      {
+                        label: "Rejection",
+                        data: rejection && rejection.length > 0 ? rejection.map((item) => item.count) : [1],
+                        backgroundColor: COLORS.map((color) => `${color}`),
+                        borderWidth: 1,
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        display: true, // Hides the legend labels
+                      },
+                      tooltip: {
+                        callbacks: {
+                          label: (context) => {
+                            const value = context.raw || 0
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0)
+                            const percentage = Math.round((value / total) * 100)
+                            return `${percentage}%`
+                          },
                         },
                       },
                     },
-                  },
-                }}
-              />
+                  }}
+                />
+              </div>
+              {expandedCard === "rejection" && (
+                rejection && rejection.length > 0 ? (
+                  <ul className="mt-4 text-sm text-gray-600">
+                    {rejection.map((item, index) => (
+                      <li key={index}>
+                        {replaceText(item.reason)}: {item.count}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-4 text-sm text-gray-600">No Data</p>
+                )
+              )}
             </div>
           )}
         </ChartCard>
@@ -750,39 +795,54 @@ const AnalysisPage = () => {
               <Skeleton className="h-[250px] w-full" />
             </div>
           ) : (
-            <div className="h-[300px] flex justify-center">
-              <Pie
-                data={{
-                  labels: blacklisted && blacklisted.length > 0 ? blacklisted.map((item) => replaceText(item.reason)) : ["No Data"],
-                  datasets: [
-                    {
-                      label: "Rejection",
-                      data: blacklisted && blacklisted.length > 0 ? blacklisted.map((item) => item.count) : [1],
-                      backgroundColor: COLORS.map((color) => `${color}`),
-                      borderWidth: 1,
-                    },
-                  ],
-                }}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
-                      display: true, // Hides the legend labels
-                    },
-                    tooltip: {
-                      callbacks: {
-                        label: (context) => {
-                          const value = context.raw || 0
-                          const total = context.dataset.data.reduce((a, b) => a + b, 0)
-                          const percentage = Math.round((value / total) * 100)
-                          return `${percentage}%`
+            <div>
+              <div className="h-[300px] flex justify-center">
+                <Pie
+                  data={{
+                    labels: blacklisted && blacklisted.length > 0 ? blacklisted.map((item) => replaceText(item.reason)) : ["No Data"],
+                    datasets: [
+                      {
+                        label: "Rejection",
+                        data: blacklisted && blacklisted.length > 0 ? blacklisted.map((item) => item.count) : [1],
+                        backgroundColor: COLORS.map((color) => `${color}`),
+                        borderWidth: 1,
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        display: true, // Hides the legend labels
+                      },
+                      tooltip: {
+                        callbacks: {
+                          label: (context) => {
+                            const value = context.raw || 0
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0)
+                            const percentage = Math.round((value / total) * 100)
+                            return `${percentage}%`
+                          },
                         },
                       },
                     },
-                  },
-                }}
-              />
+                  }}
+                />
+              </div>
+              {expandedCard === "blacklisted" && (
+                blacklisted && blacklisted.length > 0 ? (
+                  <ul className="mt-4 text-sm text-gray-600">
+                    {blacklisted.map((item, index) => (
+                      <li key={index}>
+                        {replaceText(item.reason)}: {item.count}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-4 text-sm text-gray-600">No Data</p>
+                )
+              )}
             </div>
           )}
         </ChartCard>
