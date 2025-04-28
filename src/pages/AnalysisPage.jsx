@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import {
   FiUsers,
   FiBriefcase,
@@ -100,11 +100,15 @@ const AnalysisPage = () => {
   const [applicationSource, setApplicationSource] = useState([])
   const [monthlyTrends, setMonthlyTrends] = useState([])
   const [jobPositions, setJobPositions] = useState([])
+  const [positionsFilter, setPositionsFilter] = useState(null)
   const [hiringFunnel, setHiringFunnel] = useState(null)
   const [recentApplicants, setRecentApplicants] = useState([])
   const [interviewSchedule, setInterviewSchedule] = useState([])
   const [rejection, setRejection] = useState([])
   const [blacklisted, setBlacklisted] = useState([])
+
+
+  const [selectedPosition, setSelectedPosition] = useState(""); // Selected position ID
 
   // Fetch all dashboard data
   const fetchDashboardData = async () => {
@@ -162,11 +166,35 @@ const AnalysisPage = () => {
     }
   }
 
+  const fetchPositions = async () => {
+    try {
+      const response = await api.get(`/company/positions/all`);
+      setPositionsFilter(response.data.positions || []);
+      console.log("Fetched positions:", response.data.positions);
+    } catch (error) {
+      console.error("Error fetching job positions:", error);
+      setPositionsFilter([]); // Reset to empty array on error
+    }
+  };
+  // Fetch job positions data on component mount
+  // Fetch job positions data on component mount
+
   // Fetch data on component mount
   useEffect(() => {
-    fetchDashboardData()
-  }, [year, month]) // Add month to dependency array
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        await fetchPositions();
+        await fetchDashboardData();
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchData();
+  }, [year, month]);
 
   // Function to handle card expansion
   const toggleCardExpand = (id) => {
@@ -191,11 +219,10 @@ const AnalysisPage = () => {
       <div
         className={`
         rounded-xl bg-white/80 backdrop-blur-sm transition-all duration-300 ${className}
-        ${
-          isExpanded
+        ${isExpanded
             ? "fixed top-[10%] left-[10%] right-[10%] bottom-[10%] max-w-5xl mx-auto z-50"
             : "h-auto min-h-[12rem] xs:min-h-[13rem] sm:min-h-[15rem]"
-        }
+          }
         ${shouldHide ? "opacity-0 pointer-events-none" : "opacity-100"}
       `}
         style={{
@@ -222,11 +249,10 @@ const AnalysisPage = () => {
           </button>
         </div>
         <div
-          className={`p-2 xs:p-3 sm:p-4 ${
-            isExpanded
-              ? "h-[calc(100%-60px)] overflow-y-auto"
-              : "h-[calc(100%-40px)] xs:h-[calc(100%-44px)] sm:h-[calc(100%-56px)] custom-scrollbar"
-          }`}
+          className={`p-2 xs:p-3 sm:p-4 ${isExpanded
+            ? "h-[calc(100%-60px)] overflow-y-auto"
+            : "h-[calc(100%-40px)] xs:h-[calc(100%-44px)] sm:h-[calc(100%-56px)] custom-scrollbar"
+            }`}
           style={{ overflowY: "auto" }}
         >
           {children}
@@ -331,7 +357,6 @@ const AnalysisPage = () => {
           scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
         }
       `}</style>
-
       {/* Filter controls */}
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <div className="flex items-center gap-2">
@@ -340,6 +365,7 @@ const AnalysisPage = () => {
         </div>
 
         <div className="flex flex-wrap gap-2">
+          {/* Year Select */}
           <select
             value={year}
             onChange={(e) => setYear(e.target.value)}
@@ -352,6 +378,7 @@ const AnalysisPage = () => {
             ))}
           </select>
 
+          {/* Month Select */}
           <select
             value={month}
             onChange={(e) => setMonth(e.target.value)}
@@ -364,11 +391,31 @@ const AnalysisPage = () => {
             ))}
           </select>
 
+          {/* Position Select */}
+          <select
+            value={selectedPosition} // Use the new state for the selected position
+            onChange={(e) => setSelectedPosition(e.target.value)} // Update the selected position
+            className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
+            disabled={!positionsFilter || positionsFilter.length === 0} // Disable if no positions
+          >
+            <option value="">All Positions</option>
+            {positionsFilter && positionsFilter.length > 0 ? (
+              positionsFilter.map((position) => (
+                <option key={position._id} value={position._id}>
+                  {position.title}
+                </option>
+              ))
+            ) : (
+              <option value="" disabled>Loading positions...</option>
+            )}
+          </select>
+          {/* Reset Button */}
           <button
             onClick={() => {
-              setYear(new Date().getFullYear().toString())
-              setMonth("")
-              fetchDashboardData()
+              setYear(new Date().getFullYear().toString());
+              setMonth("");
+              setSelectedPosition(""); // Reset the selected position
+              fetchDashboardData();
             }}
             className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded-md flex items-center gap-1 transition-colors"
           >
@@ -393,16 +440,16 @@ const AnalysisPage = () => {
       <div
         className={`grid grid-cols-1 gap-3 xs:gap-4 sm:gap-5 md:gap-6 sm:grid-cols-2 lg:grid-cols-4 ${expandedCard ? "z-0" : ""}`}
       >
-          <Card id="applications" title="Applications Received" icon={<FiUsers className="h-4 w-4 sm:h-5 sm:w-5" />}>
-          <ApplicationReceived year={year} month={month} isExpanded={expandedCard === "applications"}/>
+        <Card id="applications" title="Applications Received" icon={<FiUsers className="h-4 w-4 sm:h-5 sm:w-5" />}>
+          <ApplicationReceived year={year} month={month} isExpanded={expandedCard === "applications"} />
         </Card>
 
         <Card id="positions" title="Top Job Positions" icon={<FiBriefcase className="h-4 w-4 sm:h-5 sm:w-5" />}>
-        <TopJobPositions jobPositions={jobPositions} loading={loading} year={year} month={month} isExpanded={expandedCard === "positions"} />
+          <TopJobPositions jobPositions={jobPositions} loading={loading} year={year} month={month} isExpanded={expandedCard === "positions"} />
         </Card>
 
         <Card id="hires" title="Internal vs External Hires" icon={<FiRefreshCw className="h-4 w-4 sm:h-5 sm:w-5" />}>
-          <InternalVsExternalHires  year={year} month={month}/>
+          <InternalVsExternalHires year={year} month={month} />
         </Card>
 
         <Card id="dropoff" title="Candidate Drop-off Rate" icon={<FiTrendingDown className="h-4 w-4 sm:h-5 sm:w-5" />}>
@@ -415,66 +462,66 @@ const AnalysisPage = () => {
 
         {/* Job Position Analytics */}
         <ChartCard
-            id="positionAnalytics"
-            title="Top Job Positions"
-            subtitle="Applicants by job position"
-            icon={<FiBriefcase className="h-4 w-4 sm:h-5 sm:w-5" />}
-          >
-            {loading ? (
-              <div className="w-full h-[300px] flex items-center justify-center">
-                <Skeleton className="h-[250px] w-full" />
-              </div>
-            ) : (
-              <div className="w-full h-[600px]">
-                <Bar
-                  data={{
-                    labels: jobPositions.map((item) => item.title),
-                    datasets: [
-                      {
-                        label: "Applicants",
-                        data: jobPositions.map((item) => item.applicant_count),
-                        backgroundColor: "rgba(0, 128, 128, 0.8)", // teal
-                      },
-                      {
-                        label: "Hired",
-                        data: jobPositions.map((item) => item.hired_count),
-                        backgroundColor: "rgba(0, 96, 96, 0.8)", // darker teal
-                      },
-                    ],
-                  }}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        position: "top",
-                      },
-                      tooltip: {
-                        mode: "index",
-                        intersect: false,
-                      },
+          id="positionAnalytics"
+          title="Top Job Positions"
+          subtitle="Applicants by job position"
+          icon={<FiBriefcase className="h-4 w-4 sm:h-5 sm:w-5" />}
+        >
+          {loading ? (
+            <div className="w-full h-[300px] flex items-center justify-center">
+              <Skeleton className="h-[250px] w-full" />
+            </div>
+          ) : (
+            <div className="w-full h-[600px]">
+              <Bar
+                data={{
+                  labels: jobPositions.map((item) => item.title),
+                  datasets: [
+                    {
+                      label: "Applicants",
+                      data: jobPositions.map((item) => item.applicant_count),
+                      backgroundColor: "rgba(0, 128, 128, 0.8)", // teal
                     },
-                    scales: {
-                      x: {
-                        ticks: {
-                          font: {
-                            size: 11,
-                          },
-                          callback: function (value) {
-                            const label = this.getLabelForValue(value);
-                            return label.split(' ');
-                          },
+                    {
+                      label: "Hired",
+                      data: jobPositions.map((item) => item.hired_count),
+                      backgroundColor: "rgba(0, 96, 96, 0.8)", // darker teal
+                    },
+                  ],
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      position: "top",
+                    },
+                    tooltip: {
+                      mode: "index",
+                      intersect: false,
+                    },
+                  },
+                  scales: {
+                    x: {
+                      ticks: {
+                        font: {
+                          size: 11,
+                        },
+                        callback: function (value) {
+                          const label = this.getLabelForValue(value);
+                          return label.split(' ');
                         },
                       },
-                      y: {
-                        beginAtZero: true,
-                      },
                     },
-                  }}
-                />
-              </div>
-            )}
-          </ChartCard>
+                    y: {
+                      beginAtZero: true,
+                    },
+                  },
+                }}
+              />
+            </div>
+          )}
+        </ChartCard>
 
         {/* Hiring Funnel Chart */}
         <ChartCard
@@ -499,55 +546,55 @@ const AnalysisPage = () => {
       {/* Bottom row with 2 cards */}
       <div className={`grid grid-cols-1 gap-3 xs:gap-4 sm:gap-5 md:gap-6 lg:grid-cols-4 ${expandedCard ? "z-0" : ""}`}>
         <div className="lg:col-span-2">
-          <ChartCard 
-            id="requisition" 
-            title="Requisition Analysis" 
+          <ChartCard
+            id="requisition"
+            title="Requisition Analysis"
             subtitle="Requisition Data"
             icon={<FiBarChart2 className="h-4 w-4 sm:h-5 sm:w-5" />}
           >
             <div className="w-full h-[400px]">
-              <ApplicantStatusChart year={year} month={month} className/>
+              <ApplicantStatusChart year={year} month={month} className />
             </div>
           </ChartCard>
         </div>
         <div className="lg:col-span-2">
           {/* Monthly Trends Chart */}
-        <ChartCard
-          id="monthlyTrends"
-          title="Monthly Applicant Trends"
-          subtitle="Applications and hires by month"
-          icon={<FiBarChart2 className="h-4 w-4 sm:h-5 sm:w-5" />}
-        >
-          {loading ? (
-            <div className="w-full h-[300px] flex items-center justify-center">
-              <Skeleton className="h-[250px] w-full" />
-            </div>
-          ) : (
-            <div className="h-[400px]">
-              <Line
-                data={monthlyTrendsChartData}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
-                      position: "top",
+          <ChartCard
+            id="monthlyTrends"
+            title="Monthly Applicant Trends"
+            subtitle="Applications and hires by month"
+            icon={<FiBarChart2 className="h-4 w-4 sm:h-5 sm:w-5" />}
+          >
+            {loading ? (
+              <div className="w-full h-[300px] flex items-center justify-center">
+                <Skeleton className="h-[250px] w-full" />
+              </div>
+            ) : (
+              <div className="h-[400px]">
+                <Line
+                  data={monthlyTrendsChartData}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        position: "top",
+                      },
+                      tooltip: {
+                        mode: "index",
+                        intersect: false,
+                      },
                     },
-                    tooltip: {
-                      mode: "index",
-                      intersect: false,
+                    scales: {
+                      y: {
+                        beginAtZero: true,
+                      },
                     },
-                  },
-                  scales: {
-                    y: {
-                      beginAtZero: true,
-                    },
-                  },
-                }}
-              />
-            </div>
-          )}
-        </ChartCard>
+                  }}
+                />
+              </div>
+            )}
+          </ChartCard>
         </div>
       </div>
 
@@ -805,7 +852,7 @@ const AnalysisPage = () => {
             </div>
           )}
         </ChartCard>
-        
+
 
         {/* <ChartCard 
         id="source" 
