@@ -10,7 +10,7 @@ const PermissionCheckbox = ({ feature, checked, autoAssigned, onChange }) => {
         hover:shadow-md hover:border-gray-300
       `}
     >
-      <div className="flex items-start w-full">
+      <div className="flex accent-[#008080] items-start w-full">
         <input
           type="checkbox"
           id={`feature-${feature.service_feature_id}`}
