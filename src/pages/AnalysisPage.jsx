@@ -32,6 +32,7 @@ import ApplicationReceived from "../components/AnalysisComponents/ApplicationRec
 import ApplicantStatusChart from "../components/AnalysisComponents/RequisitionAnalysisGraph"
 import SourceOfApplication from "../components/AnalysisComponents/SourceOfApplication"
 import HiringFunnelChart from "../components/AnalysisComponents/HiringFunnelChart"
+import BlacklistedRejected from "../components/AnalysisComponents/BlacklistedRejected"
 
 import api from "../api/axios"
 
@@ -103,6 +104,8 @@ const AnalysisPage = () => {
   const [recentApplicants, setRecentApplicants] = useState([])
   const [interviewSchedule, setInterviewSchedule] = useState([])
   const [timeToHire, setTimeToHire] = useState([])
+  const [rejection, setRejection] = useState([])
+  const [blacklisted, setBlacklisted] = useState([])
 
   const internalHires = 30
   const externalHires = 70
@@ -144,6 +147,7 @@ const AnalysisPage = () => {
         funnelResponse,
         interviewResponse,
         timeResponse,
+        rejectionResponse,
       ] = await Promise.all([
         api.get(`/analytics/dashboard/summary?${queryString}`),
         api.get(`/analytics/dashboard/status-distribution?${queryString}`),
@@ -155,6 +159,7 @@ const AnalysisPage = () => {
         api.get(`/analytics/dashboard/hiring-funnel?${queryString}`),
         api.get(`/analytics/dashboard/interview-schedule?${queryString}`),
         api.get(`/analytics/dashboard/time-to-hire?${queryString}`),
+        api.get(`/analytic/metrics?${queryString}`),
       ])
 
       // Update state with fetched data (axios puts response in .data)
@@ -168,6 +173,8 @@ const AnalysisPage = () => {
       setHiringFunnel(funnelResponse.data.data)
       setInterviewSchedule(interviewResponse.data.data)
       setTimeToHire(timeResponse.data.data)
+      setRejection(rejectionResponse.data.reasonForRejection)
+      setBlacklisted(rejectionResponse.data.reasonForBlacklisted)
     } catch (error) {
       console.error("Error fetching dashboard data:", error)
     } finally {
@@ -211,6 +218,10 @@ const AnalysisPage = () => {
 
     // Toggle body scroll lock when card is expanded
     document.body.style.overflow = newExpandedState ? "hidden" : "auto"
+  }
+
+  const replaceText = (text) => {
+    return text ? text.toLowerCase().split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : ""
   }
 
   // Card component with expansion functionality
@@ -444,81 +455,9 @@ const AnalysisPage = () => {
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Monthly Trends Chart */}
-        <ChartCard
-          id="monthlyTrends"
-          title="Monthly Applicant Trends"
-          subtitle="Applications and hires by month"
-          icon={<FiBarChart2 className="h-4 w-4 sm:h-5 sm:w-5" />}
-        >
-          {loading ? (
-            <div className="w-full h-[300px] flex items-center justify-center">
-              <Skeleton className="h-[250px] w-full" />
-            </div>
-          ) : (
-            <div className="h-[300px]">
-              <Line
-                data={monthlyTrendsChartData}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
-                      position: "top",
-                    },
-                    tooltip: {
-                      mode: "index",
-                      intersect: false,
-                    },
-                  },
-                  scales: {
-                    y: {
-                      beginAtZero: true,
-                    },
-                  },
-                }}
-              />
-            </div>
-          )}
-        </ChartCard>
 
-        {/* Hiring Funnel Chart */}
+        {/* Job Position Analytics */}
         <ChartCard
-          id="hiringFunnel"
-          title="Hiring Funnel"
-          subtitle="Applicants at each stage of the hiring process"
-          icon={<FiUsers className="h-4 w-4 sm:h-5 sm:w-5" />}
-        >
-          {loading ? (
-            <div className="w-full h-[300px] flex items-center justify-center">
-              <Skeleton className="h-[250px] w-full" />
-            </div>
-          ) : (
-            <div className="h-[300px]">
-              {/* <TopJobPositions jobPositions={jobPositions} loading={loading} year={year} month={month} /> */}
-              <HiringFunnelChart data={hiringFunnel} />
-            </div>
-          )}
-        </ChartCard>
-      </div>
-
-      {/* Bottom row with 2 cards */}
-      <div className={`grid grid-cols-1 gap-3 xs:gap-4 sm:gap-5 md:gap-6 lg:grid-cols-4 ${expandedCard ? "z-0" : ""}`}>
-        <div className="lg:col-span-2">
-          <ChartCard 
-            id="requisition" 
-            title="Requisition Analysis" 
-            subtitle="Requisition Data"
-            icon={<FiBarChart2 className="h-4 w-4 sm:h-5 sm:w-5" />}
-          >
-            <div className="w-full h-[400px]">
-              <ApplicantStatusChart data={requisitionData} year={year} month={month} className/>
-            </div>
-          </ChartCard>
-        </div>
-        <div className="lg:col-span-2">
-          {/* Job Position Analytics */}
-          <ChartCard
             id="positionAnalytics"
             title="Top Job Positions"
             subtitle="Applicants by job position"
@@ -529,7 +468,7 @@ const AnalysisPage = () => {
                 <Skeleton className="h-[250px] w-full" />
               </div>
             ) : (
-              <div className="w-full h-[400px]">
+              <div className="w-full h-[600px]">
                 <Bar
                   data={{
                     labels: jobPositions.map((item) => item.title),
@@ -562,7 +501,7 @@ const AnalysisPage = () => {
                       x: {
                         ticks: {
                           font: {
-                            size: 9,
+                            size: 11,
                           },
                           maxRotation: 45,
                           minRotation: 45,
@@ -577,6 +516,79 @@ const AnalysisPage = () => {
               </div>
             )}
           </ChartCard>
+
+        {/* Hiring Funnel Chart */}
+        <ChartCard
+          id="hiringFunnel"
+          title="Hiring Funnel"
+          subtitle="Applicants at each stage of the hiring process"
+          icon={<FiUsers className="h-4 w-4 sm:h-5 sm:w-5" />}
+        >
+          {loading ? (
+            <div className="w-full h-[300px] flex items-center justify-center">
+              <Skeleton className="h-[250px] w-full" />
+            </div>
+          ) : (
+            <div className="h-[600px]">
+              {/* <TopJobPositions jobPositions={jobPositions} loading={loading} year={year} month={month} /> */}
+              <HiringFunnelChart data={hiringFunnel} />
+            </div>
+          )}
+        </ChartCard>
+      </div>
+
+      {/* Bottom row with 2 cards */}
+      <div className={`grid grid-cols-1 gap-3 xs:gap-4 sm:gap-5 md:gap-6 lg:grid-cols-4 ${expandedCard ? "z-0" : ""}`}>
+        <div className="lg:col-span-2">
+          <ChartCard 
+            id="requisition" 
+            title="Requisition Analysis" 
+            subtitle="Requisition Data"
+            icon={<FiBarChart2 className="h-4 w-4 sm:h-5 sm:w-5" />}
+          >
+            <div className="w-full h-[400px]">
+              <ApplicantStatusChart data={requisitionData} year={year} month={month} className/>
+            </div>
+          </ChartCard>
+        </div>
+        <div className="lg:col-span-2">
+          {/* Monthly Trends Chart */}
+        <ChartCard
+          id="monthlyTrends"
+          title="Monthly Applicant Trends"
+          subtitle="Applications and hires by month"
+          icon={<FiBarChart2 className="h-4 w-4 sm:h-5 sm:w-5" />}
+        >
+          {loading ? (
+            <div className="w-full h-[300px] flex items-center justify-center">
+              <Skeleton className="h-[250px] w-full" />
+            </div>
+          ) : (
+            <div className="h-[400px]">
+              <Line
+                data={monthlyTrendsChartData}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      position: "top",
+                    },
+                    tooltip: {
+                      mode: "index",
+                      intersect: false,
+                    },
+                  },
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                    },
+                  },
+                }}
+              />
+            </div>
+          )}
+        </ChartCard>
         </div>
       </div>
 
@@ -597,11 +609,11 @@ const AnalysisPage = () => {
             <div className="h-[300px] flex justify-center">
               <Pie
                 data={{
-                  labels: applicationSource.map((item) => item.applied_source),
+                  labels: applicationSource && applicationSource.length > 0 ? applicationSource.map((item) => replaceText(item.applied_source)) : ["No Data"],
                   datasets: [
                     {
                       label: "Applicants",
-                      data: applicationSource.map((item) => item.count),
+                      data: applicationSource && applicationSource.length > 0 ? applicationSource.map((item) => item.count) : [1],
                       backgroundColor: COLORS.map((color) => `${color}`),
                       borderWidth: 1,
                     },
@@ -645,11 +657,11 @@ const AnalysisPage = () => {
             <div className="h-[300px] flex justify-center">
               <Pie
                 data={{
-                  labels: sourceDistribution.map((item) => item.applied_source),
+                  labels: sourceDistribution && sourceDistribution.length > 0 ? sourceDistribution.map((item) => replaceText(item.applied_source)) : ["No Data"],
                   datasets: [
                     {
                       label: "Applicants",
-                      data: sourceDistribution.map((item) => item.count),
+                      data: sourceDistribution && sourceDistribution.length > 0 ? sourceDistribution.map((item) => item.count) : [1],
                       backgroundColor: COLORS.map((color) => `${color}`),
                       borderWidth: 1,
                     },
@@ -678,6 +690,103 @@ const AnalysisPage = () => {
             </div>
           )}
         </ChartCard>
+
+        <ChartCard
+          id="rejection"
+          title="Rejected"
+          subtitle="Reason for Rejection"
+          icon={<FiPieChart className="h-4 w-4 sm:h-5 sm:w-5" />}
+        >
+          {loading ? (
+            <div className="w-full h-[300px] flex items-center justify-center">
+              <Skeleton className="h-[250px] w-full" />
+            </div>
+          ) : (
+            <div className="h-[300px] flex justify-center">
+              <Pie
+                data={{
+                  labels: rejection && rejection.length > 0 ? rejection.map((item) => replaceText(item.reason)) : ["No Data"],
+                  datasets: [
+                    {
+                      label: "Rejection",
+                      data: rejection && rejection.length > 0 ? rejection.map((item) => item.count) : [1],
+                      backgroundColor: COLORS.map((color) => `${color}`),
+                      borderWidth: 1,
+                    },
+                  ],
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      display: true, // Hides the legend labels
+                    },
+                    tooltip: {
+                      callbacks: {
+                        label: (context) => {
+                          const value = context.raw || 0
+                          const total = context.dataset.data.reduce((a, b) => a + b, 0)
+                          const percentage = Math.round((value / total) * 100)
+                          return `${percentage}%`
+                        },
+                      },
+                    },
+                  },
+                }}
+              />
+            </div>
+          )}
+        </ChartCard>
+
+        <ChartCard
+          id="blacklisted"
+          title="Blacklisted"
+          subtitle="Reason for Blacklisted"
+          icon={<FiPieChart className="h-4 w-4 sm:h-5 sm:w-5" />}
+        >
+          {loading ? (
+            <div className="w-full h-[300px] flex items-center justify-center">
+              <Skeleton className="h-[250px] w-full" />
+            </div>
+          ) : (
+            <div className="h-[300px] flex justify-center">
+              <Pie
+                data={{
+                  labels: blacklisted && blacklisted.length > 0 ? blacklisted.map((item) => replaceText(item.reason)) : ["No Data"],
+                  datasets: [
+                    {
+                      label: "Rejection",
+                      data: blacklisted && blacklisted.length > 0 ? blacklisted.map((item) => item.count) : [1],
+                      backgroundColor: COLORS.map((color) => `${color}`),
+                      borderWidth: 1,
+                    },
+                  ],
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      display: true, // Hides the legend labels
+                    },
+                    tooltip: {
+                      callbacks: {
+                        label: (context) => {
+                          const value = context.raw || 0
+                          const total = context.dataset.data.reduce((a, b) => a + b, 0)
+                          const percentage = Math.round((value / total) * 100)
+                          return `${percentage}%`
+                        },
+                      },
+                    },
+                  },
+                }}
+              />
+            </div>
+          )}
+        </ChartCard>
+        
 
         {/* <ChartCard 
         id="source" 
