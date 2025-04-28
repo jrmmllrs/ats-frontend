@@ -103,7 +103,6 @@ const AnalysisPage = () => {
   const [hiringFunnel, setHiringFunnel] = useState(null)
   const [recentApplicants, setRecentApplicants] = useState([])
   const [interviewSchedule, setInterviewSchedule] = useState([])
-  const [timeToHire, setTimeToHire] = useState([])
   const [rejection, setRejection] = useState([])
   const [blacklisted, setBlacklisted] = useState([])
 
@@ -146,7 +145,7 @@ const AnalysisPage = () => {
         applicantsResponse,
         funnelResponse,
         interviewResponse,
-        timeResponse,
+        //timeResponse,
         rejectionResponse,
       ] = await Promise.all([
         api.get(`/analytics/dashboard/summary?${queryString}`),
@@ -158,7 +157,6 @@ const AnalysisPage = () => {
         api.get(`/analytics/dashboard/recent-applicants?${queryString}`),
         api.get(`/analytics/dashboard/hiring-funnel?${queryString}`),
         api.get(`/analytics/dashboard/interview-schedule?${queryString}`),
-        api.get(`/analytics/dashboard/time-to-hire?${queryString}`),
         api.get(`/analytic/metrics?${queryString}`),
       ])
 
@@ -172,7 +170,6 @@ const AnalysisPage = () => {
       setRecentApplicants(applicantsResponse.data.data)
       setHiringFunnel(funnelResponse.data.data)
       setInterviewSchedule(interviewResponse.data.data)
-      setTimeToHire(timeResponse.data.data)
       setRejection(rejectionResponse.data.reasonForRejection)
       setBlacklisted(rejectionResponse.data.reasonForBlacklisted)
     } catch (error) {
@@ -503,8 +500,10 @@ const AnalysisPage = () => {
                           font: {
                             size: 11,
                           },
-                          maxRotation: 45,
-                          minRotation: 45,
+                          callback: function (value) {
+                            const label = this.getLabelForValue(value);
+                            return label.split(' ');
+                          },
                         },
                       },
                       y: {
