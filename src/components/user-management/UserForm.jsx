@@ -196,7 +196,7 @@ const UserForm = ({ editId, jobTitles, serviceFeatures, onClose, onSuccess }) =>
     return (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-                <div className="sticky top-0 bg-white px-6 py-4 border-b flex justify-between items-center z-10 shadow-sm">
+                <div className="sticky top-0 bg-white px-6 py-4 border-b border-gray-light flex justify-between items-center z-10 shadow-sm">
                     <h3 className="text-lg font-semibold text-gray-800">
                         {editId ? "Edit User" : "Add New User"}
                     </h3>
@@ -428,7 +428,7 @@ const UserForm = ({ editId, jobTitles, serviceFeatures, onClose, onSuccess }) =>
                         </div>
 
                         {/* Form actions */}
-                        <div className="flex justify-end gap-3 pt-6 border-t">
+                        <div className="flex justify-end gap-3 pt-6 border-t border-gray-light">
                             <button
                                 type="button"
                                 onClick={onClose}

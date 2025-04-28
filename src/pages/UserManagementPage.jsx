@@ -46,7 +46,7 @@ function UserManagementPage() {
   return (
     <div className="min-h-screen">
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+        <div className="bg-white rounded-3xl overflow-hidden border border-gray-light">
           {/* Header */}
           <div className="px-6 py-5 bg-[#008080]/5 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex items-center gap-3">
