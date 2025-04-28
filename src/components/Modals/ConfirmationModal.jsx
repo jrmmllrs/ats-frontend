@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
 
-const ConfirmationModal = ({ title, message, confirmText, cancelText, onConfirm, onCancel }) => {
+const ConfirmationModal = ({ title, message, confirmText, cancelText, onConfirm, onCancel, isSaving }) => {
   useEffect(() => {
     // Disable scrolling when modal opens
     document.body.style.overflow = 'hidden';
-    
+
     // Re-enable scrolling when modal closes
     return () => {
       document.body.style.overflow = '';
@@ -21,12 +21,14 @@ const ConfirmationModal = ({ title, message, confirmText, cancelText, onConfirm,
             <button
               className="rounded-md bg-teal-600/10 px-4 py-2 text-teal-600 hover:bg-teal-600/20 hover:text-teal-700"
               onClick={onCancel}
+              disabled={isSaving}
             >
               {cancelText}
             </button>
             <button
               className="rounded-md bg-[#008080] px-4 py-2 text-white hover:bg-teal-700"
               onClick={onConfirm}
+              disabled={isSaving}
             >
               {confirmText}
             </button>

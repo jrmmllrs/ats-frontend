@@ -65,15 +65,18 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
       const skippedMap = {};
 
       history.forEach((record, index) => {
-        if (record.previous_status && record.new_status) {
-          const prevIndex = statuses.indexOf(record.previous_status);
-          const newIndex = statuses.indexOf(record.new_status);
+        if (index != 0) {
+          if (record.status && history[index - 1]) {
+            const prevIndex = statuses.indexOf(history[index - 1]);
+            const newIndex = statuses.indexOf(record.new_status);
 
-          if (newIndex > prevIndex + 1) {
-            // Get the skipped statuses
-            const skipped = statuses.slice(prevIndex + 1, newIndex);
-            if (skipped.length > 0) {
-              skippedMap[index] = skipped;
+
+            if (newIndex > prevIndex + 1) {
+              // Get the skipped statuses
+              const skipped = statuses.slice(prevIndex + 1, newIndex);
+              if (skipped.length > 0) {
+                skippedMap[index] = skipped;
+              }
             }
           }
         }
@@ -375,7 +378,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                   </option>
                 ))}
               </select>
-              {statusHistory.length > 0 && (
+              {statusHistory.some(record => record.deleted) && (
                 <button
                   onClick={toggleStatusHistoryModal}
                   className="ml-2 p-2.5 rounded-full bg-teal-soft hover:bg-teal/20 cursor-pointer"
@@ -384,6 +387,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                   <FaHistory className="w-4 h-4 text-teal" />
                 </button>
               )}
+
               <button
                 onClick={handleEditClick}
                 className="ml-2 p-2.5 rounded-full bg-teal hover:bg-teal/70 cursor-pointer"
@@ -500,6 +504,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
               handleRowMouseLeave={handleRowMouseLeave}
               currentSkippedStatuses={currentSkippedStatuses}
               skippedStatusPosition={skippedStatusPosition}
+              refreshStatusHistory={() => fetchStatusHistory(applicant.progress_id)}
             />
           )}
 

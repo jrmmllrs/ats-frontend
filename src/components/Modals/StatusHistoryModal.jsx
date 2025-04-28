@@ -5,27 +5,60 @@ import { FaTimes } from "react-icons/fa";
 import { FaArrowRight } from "react-icons/fa6";
 import { PiWarningFill } from "react-icons/pi";
 import { MdEdit } from "react-icons/md";
-import { updateStatusHistory } from "../../services/statusService";
+import { updateStatusHistory, deleteStatusHistory } from "../../services/statusService";
+import DropDownOption from "../DropDownOption";
+import ConfirmationModal from "./ConfirmationModal";
+import useUserStore from "../../context/userStore";
 
 export default function StatusHistoryModal({
     show,
     toggle,
+    statuses,
     statusHistory,
     skippedStatusesByHistory,
     hoverIndex,
     handleRowMouseEnter,
     handleRowMouseLeave,
     currentSkippedStatuses,
-    skippedStatusPosition
+    skippedStatusPosition,
+    refreshStatusHistory
 }) {
     if (!show) return null;
 
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [editRecord, setEditRecord] = useState(null);
-
+    const [deleteRecord, setDeleteRecord] = useState(null);
     const scrollRef = useRef();
-
     const [isSaving, setIsSaving] = useState(false);
+    const { user } = useUserStore();
+
+    // Function to handle the confirmation action
+    const handleConfirmDelete = async () => {
+        try {
+            setIsSaving(true);
+            await deleteStatusHistory(deleteRecord, user.user_id);
+            await refreshStatusHistory();
+
+            setIsSaving(false);
+
+        } catch (err) {
+            setIsSaving(false);
+            alert("Failed to save changes. Please try again.");
+            console.error("Failed to update status history", err);
+        } finally {
+            await refreshStatusHistory();
+            setIsDeleteModalOpen(false);
+            setDeleteRecord(null);
+            toggle();
+        }
+
+    };
+
+    const handleCancelDelete = () => {
+        alert("Action Canceled!");
+        setIsDeleteModalOpen(false);
+    };
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -36,20 +69,22 @@ export default function StatusHistoryModal({
     const handleSaveEdit = async () => {
         try {
             setIsSaving(true);
-            await updateStatusHistory(editRecord);
+            await updateStatusHistory(editRecord, user.user_id);
+            await refreshStatusHistory();
+
             setIsSaving(false);
 
-            // Refresh and reset modal state
-            setIsEditModalOpen(false);
-            setEditRecord(null);  // Clear editRecord to reset modal data
-            toggle();
-            setTimeout(() => toggle(), 100); // Optional quick refresh
+
         } catch (err) {
             setIsSaving(false);
             alert("Failed to save changes. Please try again.");
             console.error("Failed to update status history", err);
+        } finally {
+            await refreshStatusHistory();
+            setIsEditModalOpen(false);
+            setEditRecord(null);
+            toggle();
         }
-
     };
 
 
@@ -69,57 +104,55 @@ export default function StatusHistoryModal({
 
                 <div ref={scrollRef} className="relative overflow-y-auto p-2">
                     {statusHistory.map((record, index) => (
-                        <div
-                            key={index}
-                            className="mb-3 relative group"
-                            onMouseEnter={(e) => handleRowMouseEnter(index, e)}
-                            onMouseLeave={handleRowMouseLeave}
-                        >
-                            <div className="bg-gray-50 p-4 rounded-md border border-gray-light  hover:bg-gray-100">
-                                <div className="text-sm text-gray-500 flex items-center justify-between">
-                                    <div className="flex items-center body-tiny">
-                                        {record.change_date === "N/A"
-                                            ? "N/A"
-                                            : record.changed_at
-                                                ? formatDate(record.changed_at)
-                                                : "N/A"}
+                        (!record.deleted) ?
+                            <div
+                                key={index}
+                                className="mb-3 relative group"
+                                onMouseEnter={(e) => handleRowMouseEnter(index, e)}
+                                onMouseLeave={handleRowMouseLeave}
+                            >
+                                <div className="bg-gray-50 p-4 rounded-md border border-gray-light  hover:bg-gray-100">
+                                    <div className="text-sm text-gray-500 flex items-center justify-between">
+                                        <div className="flex items-center body-tiny">
+                                            {record.change_date === "N/A"
+                                                ? "N/A"
+                                                : record.changed_at
+                                                    ? formatDate(record.changed_at)
+                                                    : "N/A"}
 
-                                        {skippedStatusesByHistory[index] && (
-                                            <span className="ml-1  text-amber-500 flex items-center">
-                                                <PiWarningFill className="inline-block mr-1 size-4" />
-                                            </span>
-                                        )}
-                                    </div>
-                                    <button
-                                        onClick={() => {
+                                            {skippedStatusesByHistory[index] && (
+                                                <span className="ml-1  text-amber-500 flex items-center">
+                                                    <PiWarningFill className="inline-block mr-1 size-4" />
+                                                </span>
+                                            )}
+                                        </div>
+                                        <DropDownOption onEdit={() => {
                                             setEditRecord(record);
                                             setIsEditModalOpen(true);
                                         }}
-                                        aria-label="Edit Status History"
-                                        className="p-1 rounded-full hover:bg-gray-200 cursor-pointer items-center flex justify-center"
-                                    >
-                                        <MdEdit className="text-gray-600" size={15} />
-                                    </button>
+                                            onDelete={() => {
+                                                setDeleteRecord(record);
+                                                setIsDeleteModalOpen(true);
+                                            }} />
 
-                                </div>
-                                <div className="flex text-sm">
-                                    <span className="font-semibold text-gray-700">
-                                        {record.previous_status
-                                            ? formatStatusForDisplay(record.previous_status)
-                                            : "Initial Status"}
-                                    </span>
-                                    <FaArrowRight className="mx-2 mt-1 items-center text-gray-400" />
+                                    </div>
+                                    <div className="flex text-sm">
+                                        <span className="font-semibold text-gray-700">
+                                            {formatStatusForDisplay(record.status)}
+                                        </span>
+                                        {/* <FaArrowRight className="mx-2 mt-1 items-center text-gray-400" />
                                     <span className="font-semibold text-gray-700 flex items-center">
                                         {formatStatusForDisplay(record.new_status)}
-                                    </span>
-                                </div>
-                                <div className="text-xs text-gray-500 mt-1 flex items-center justify-between">
-                                    <div>Changed by: <span className=" text-gray-700">{record.user_name || record.changed_by}</span></div>
-                                    <div className="">(edited)</div>
-                                </div>
+                                    </span> */}
+                                    </div>
+                                    <div className="text-xs text-gray-500 mt-1 flex items-center justify-between">
+                                        <div>Changed by: <span className=" text-gray-700">{record.user_name || record.changed_by}</span></div>
+                                        <div className={`${record.edited ? "block" : "hidden"}`}>(edited)</div>
+                                    </div>
 
+                                </div>
                             </div>
-                        </div>
+                            : ""
                     ))}
                 </div>
             </div>
@@ -154,25 +187,13 @@ export default function StatusHistoryModal({
                         <h2 className="text-lg font-semibold mb-4">Edit Changed At</h2>
 
                         <div className="space-y-4">
-                            <div className="hidden">
-                                <label className="text-sm font-medium text-gray-700">Previous Status</label>
-                                <input
-                                    disabled
-                                    type="text"
-                                    className="w-full mt-1 border rounded border-gray-light px-3 py-2 text-sm"
-                                    value={editRecord.previous_status}
-                                    onChange={(e) =>
-                                        setEditRecord({ ...editRecord, previous_status: e.target.value })
-                                    }
-                                />
-                            </div>
-                            <div className="hidden">
-                                <label className="text-sm font-medium text-gray-700">New Status</label>
+                            <div className="">
+                                <label className="text-sm font-medium text-gray-700">Status</label>
                                 <input
                                     type="text"
                                     disabled
                                     className="w-full mt-1 border rounded border-gray-light px-3 py-2 text-sm"
-                                    value={editRecord.new_status}
+                                    value={editRecord.status}
                                     onChange={(e) =>
                                         setEditRecord({ ...editRecord, new_status: e.target.value })
                                     }
@@ -210,6 +231,19 @@ export default function StatusHistoryModal({
                     </div>
                 </div>
             )}
+
+            {isDeleteModalOpen && (
+                <ConfirmationModal
+                    title="Delete Confirmation"
+                    message="Are you sure you want to delete this history?"
+                    confirmText="Yes, Confirm"
+                    cancelText="No, Cancel"
+                    isSaving={isSaving}
+                    onConfirm={handleConfirmDelete}
+                    onCancel={handleCancelDelete}
+                />
+            )}
+
 
         </div >
     );
