@@ -8,7 +8,6 @@ import useUserStore from "../context/userStore";
 const TEST_CREDENTIALS = [
   { email: "percy@fullsuite.ph", password: "password", label: "Test User" },
   { email: "jun.zaragosa@fullsuite.ph", password: "password", label: "HR User" },
-  { email: "ats_interviewer@example.com", password: "password", label: "Interviewer" },
 ];
 
 export default function LoginPage() {
