@@ -498,17 +498,16 @@ const AnalysisPage = () => {
                       x: {
                         ticks: {
                           font: {
-                            size: 11, // Sets the font size for x-axis labels
+                            size: 11,
                           },
-                          callback: function (value, index, values) {
-                            // Split the label into multiple lines if it's too long
+                          callback: function (value) {
                             const label = this.getLabelForValue(value);
-                            return label.split(' '); // Splits the label into an array of words
+                            return label.split(' ');
                           },
                         },
                       },
                       y: {
-                        beginAtZero: true, // Ensures the y-axis starts at 0
+                        beginAtZero: true,
                       },
                     },
                   }}
