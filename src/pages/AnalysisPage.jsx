@@ -498,14 +498,17 @@ const AnalysisPage = () => {
                       x: {
                         ticks: {
                           font: {
-                            size: 11,
+                            size: 11, // Sets the font size for x-axis labels
                           },
-                          maxRotation: 45,
-                          minRotation: 45,
+                          callback: function (value, index, values) {
+                            // Split the label into multiple lines if it's too long
+                            const label = this.getLabelForValue(value);
+                            return label.split(' '); // Splits the label into an array of words
+                          },
                         },
                       },
                       y: {
-                        beginAtZero: true,
+                        beginAtZero: true, // Ensures the y-axis starts at 0
                       },
                     },
                   }}
