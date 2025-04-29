@@ -295,7 +295,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   };
 
   return (
-    <div className="border border-gray-light bg-white rounded-xl mx-auto flex flex-col lg:flex-row overflow-hidden body-regular">
+    <div className="border border-gray-light bg-white rounded-2xl mx-auto flex flex-col lg:flex-row overflow-hidden body-regular">
 
       {/* Left side */}
       <div className='p-5 pl-8 w-full lg:w-[350px] text-gray-dark h-full'>
