@@ -78,15 +78,18 @@ const SummarySection = ({ onRefresh, setActiveTab }) => {
         <div
           className="bg-white rounded-2xl border border-gray-200 cursor-pointer hover:bg-teal-soft transition duration-200 ease-in-out"
         >
-          <div className="p-6 flex flex-col">
-            <span className="body-regular text-gray-500">Total Applicants</span>
+          <div className="p-6">
+            <div className="flex justify-center">
+              <FiUsers className="mr-2 h-5 w-5 text-teal" />
+              <span className="body-regular text-gray-500">Total Applicants</span>
+            </div>
+            
             {loading ? (
               <Skeleton className="h-8 w-24 mt-2" />
             ) : error ? (
               <div className="text-red-500 body-regular mt-2">Error loading data</div>
             ) : (
-              <div className="flex items-center mt-2">
-                <FiUsers className="mr-2 h-5 w-5 text-teal" />
+              <div className="text-center mt-2">
                 <div className="text-2xl font-bold">{summaryData?.total_applicants.toLocaleString()}</div>
               </div>
             )}
@@ -98,15 +101,17 @@ const SummarySection = ({ onRefresh, setActiveTab }) => {
         <div
           className="bg-white rounded-2xl border border-gray-200 cursor-pointer hover:bg-teal-soft transition duration-200 ease-in-out"
         >
-          <div className="p-6 flex flex-col">
-            <span className="body-regular text-gray-500">Hired</span>
+          <div className="p-6">
+            <div className="flex justify-center">
+              <FiUserCheck className="mr-2 h-5 w-5 text-teal" />
+              <span className="body-regular text-gray-500">Hired</span>
+            </div>        
             {loading ? (
               <Skeleton className="h-8 w-24 mt-2" />
             ) : error ? (
               <div className="text-red-500 body-regular mt-2">Error loading data</div>
             ) : (
-              <div className="flex items-center mt-2">
-                <FiUserCheck className="mr-2 h-5 w-5 text-teal" />
+              <div className="text-center mt-2">               
                 <div className="text-2xl font-bold">{summaryData?.hired_applicants.toLocaleString()}</div>
               </div>
             )}
@@ -118,15 +123,17 @@ const SummarySection = ({ onRefresh, setActiveTab }) => {
         onClick={() => handleCardClick("interviews")}
         className="bg-white rounded-2xl border border-gray-200 cursor-pointer hover:bg-teal-soft transition duration-200 ease-in-out"
       >
-        <div className="p-6 flex flex-col">
-          <span className="body-regular text-gray-500">In Interview Process</span>
+        <div className="p-6">
+          <div className="flex justify-center">
+            <FiCalendar className="mr-2 h-5 w-5 text-teal" />
+            <span className="body-regular text-gray-500">In Interview Process</span>
+          </div>  
           {loading ? (
             <Skeleton className="h-8 w-24 mt-2" />
           ) : error ? (
             <div className="text-red-500 body-regular mt-2">Error loading data</div>
           ) : (
-            <div className="flex items-center mt-2">
-              <FiCalendar className="mr-2 h-5 w-5 text-teal" />
+            <div className="text-center mt-2">             
               <div className="text-2xl font-bold">{summaryData?.in_interview.toLocaleString()}</div>
             </div>
           )}
@@ -137,15 +144,17 @@ const SummarySection = ({ onRefresh, setActiveTab }) => {
         <div
           className="bg-white rounded-2xl border border-gray-200 cursor-pointer hover:bg-teal-soft transition duration-200 ease-in-out"
         >
-          <div className="p-6 flex flex-col">
-            <span className="body-regular text-gray-500">Open Positions</span>
+          <div className="p-6">
+            <div className="flex justify-center">
+              <FiBriefcase className="mr-2 h-5 w-5 text-teal" />
+              <span className="body-regular text-gray-500">Open Positions</span>
+            </div>           
             {loading ? (
               <Skeleton className="h-8 w-24 mt-2" />
             ) : error ? (
               <div className="text-red-500 body-regular mt-2">Error loading data</div>
             ) : (
-              <div className="flex items-center mt-2">
-                <FiBriefcase className="mr-2 h-5 w-5 text-teal" />
+              <div className="text-center mt-2">        
                 <div className="text-2xl font-bold">{summaryData?.open_positions.toLocaleString()}</div>
               </div>
             )}

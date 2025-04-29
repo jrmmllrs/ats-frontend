@@ -26,7 +26,8 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   const [isDateApplicable, setIsDateApplicable] = useState(true);
   const [pendingStatus, setPendingStatus] = useState('');
   const [showStatusHistoryModal, setShowStatusHistoryModal] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isResumeNull, setIsResumeNull] = useState(false);
+  const [isTestResultNull, setIsTestResultNull] = useState(false);
 
   // Skip status warning modal
   const [showSkipWarningModal, setShowSkipWarningModal] = useState(false);
@@ -337,10 +338,16 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
           <div className="mt-1 flex items-center">
             <FaFileLines className="mr-2 h-4 w-4" />
             <a
-              href={applicant.resume_url}
-              target="_blank"
+              href={applicant.test_result || "#"}
+              target={applicant.cv_link ? "_blank" : "_self"}
               rel="noopener noreferrer"
               className="underline block mt-1 cursor-pointer"
+              onClick={(e) => {
+                if (!applicant.cv_link) {
+                  e.preventDefault();
+                  setIsTestResultNull(true);
+                }
+              }}
             >
               Test Result
             </a>
@@ -355,7 +362,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
               onClick={(e) => {
                 if (!applicant.cv_link) {
                   e.preventDefault();
-                  setIsModalOpen(true);
+                  setIsResumeNull(true);
                 }
               }}
             >
@@ -588,8 +595,8 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
           </div>
         </div>
       )}
-      {isModalOpen && (
-        <Modal onClose={() => setIsModalOpen(false)}>
+      {isResumeNull && (
+        <Modal onClose={() => setIsResumeNull(false)}>
           <div className="flex items-center justify-center">
             <AiFillWarning className="w-20 h-20 text-amber-500"/>
           </div>
@@ -600,7 +607,28 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
             </p>
             <div className="mt-4 flex justify-center">
               <button
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => setIsResumeNull(false)}
+                className="px-4 py-2 bg-teal text-white rounded hover:bg-teal/80"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+      {isTestResultNull && (
+        <Modal onClose={() => setIsTestResultNull(false)}>
+          <div className="flex items-center justify-center">
+            <AiFillWarning className="w-20 h-20 text-amber-500"/>
+          </div>
+          <div className="p-6">
+            <h1 className="text-lg font-bold text-center mb-4">No Test Result Available</h1>
+            <p className="text-center text-gray-600">
+              The applicant did not take the test.
+            </p>
+            <div className="mt-4 flex justify-center">
+              <button
+                onClick={() => setIsTestResultNull(false)}
                 className="px-4 py-2 bg-teal text-white rounded hover:bg-teal/80"
               >
                 Close
