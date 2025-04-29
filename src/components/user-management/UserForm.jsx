@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { FiX } from "react-icons/fi";
 import api from "../../api/axios";
-import {
-    FiX, FiAlertCircle, FiInfo, FiCheck, FiAlertTriangle
-} from "react-icons/fi";
 import JobTitleChangeConfirm from "./JobTitleChangeConfirm";
 import PermissionCheckbox from "./PermissionCheckbox";
+import ConfirmationModal from "../Modals/ConfirmationModal";
 
 const UserForm = ({ editId, jobTitles, serviceFeatures, onClose, onSuccess }) => {
+    // Form state
     const [form, setForm] = useState({
         user_email: "",
         user_password: "",
@@ -24,6 +24,16 @@ const UserForm = ({ editId, jobTitles, serviceFeatures, onClose, onSuccess }) =>
         service_feature_ids: []
     });
 
+    // UI state
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+    const [prevJobTitleId, setPrevJobTitleId] = useState(null);
+    const [autoAssignedFeatures, setAutoAssignedFeatures] = useState([]);
+    const [showJobChangeConfirm, setShowJobChangeConfirm] = useState(false);
+    const [pendingJobTitleId, setPendingJobTitleId] = useState(null);
+    const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+
+    // Categorize features by their category
     const categorizedFeatures = serviceFeatures.reduce((acc, feature) => {
         if (!acc[feature.category]) {
             acc[feature.category] = [];
@@ -32,13 +42,7 @@ const UserForm = ({ editId, jobTitles, serviceFeatures, onClose, onSuccess }) =>
         return acc;
     }, {});
 
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-    const [prevJobTitleId, setPrevJobTitleId] = useState(null);
-    const [autoAssignedFeatures, setAutoAssignedFeatures] = useState([]);
-    const [showJobChangeConfirm, setShowJobChangeConfirm] = useState(false);
-    const [pendingJobTitleId, setPendingJobTitleId] = useState(null);
-
+    // Fetch user data when editing
     useEffect(() => {
         if (editId) {
             fetchUserData();
@@ -48,7 +52,6 @@ const UserForm = ({ editId, jobTitles, serviceFeatures, onClose, onSuccess }) =>
     const fetchUserData = async () => {
         try {
             setLoading(true);
-            // Changed to use the correct endpoint from your original code
             const res = await api.get("/user/user-accounts");
             const userData = res.data.userAccounts.find(user => user.user_id === editId);
 
@@ -87,6 +90,7 @@ const UserForm = ({ editId, jobTitles, serviceFeatures, onClose, onSuccess }) =>
         }
     };
 
+    // Get recommended features based on job title
     const getRecommendedFeatures = (jobTitleId) => {
         if (!jobTitleId || jobTitles.length === 0 || serviceFeatures.length === 0) {
             return [];
@@ -103,8 +107,7 @@ const UserForm = ({ editId, jobTitles, serviceFeatures, onClose, onSuccess }) =>
 
         if (jobTitleName.includes('hr')) {
             recommendedFeatures = serviceFeatures.map(f => f.service_feature_id);
-        }
-        else if (jobTitleName.includes('recruiter')) {
+        } else if (jobTitleName.includes('recruiter')) {
             recommendedFeatures = serviceFeatures
                 .filter(f => {
                     const featureName = f.feature_name.toLowerCase();
@@ -120,8 +123,7 @@ const UserForm = ({ editId, jobTitles, serviceFeatures, onClose, onSuccess }) =>
                         featureName.includes('dashboard');
                 })
                 .map(f => f.service_feature_id);
-        }
-        else if (jobTitleName.includes('interviewer')) {
+        } else if (jobTitleName.includes('interviewer')) {
             recommendedFeatures = serviceFeatures
                 .filter(f => {
                     const featureName = f.feature_name.toLowerCase();
@@ -129,8 +131,7 @@ const UserForm = ({ editId, jobTitles, serviceFeatures, onClose, onSuccess }) =>
                         featureName.includes('applicant listing');
                 })
                 .map(f => f.service_feature_id);
-        }
-        else if (jobTitleName.includes('hiring manager')) {
+        } else if (jobTitleName.includes('hiring manager')) {
             recommendedFeatures = serviceFeatures
                 .filter(f => {
                     const featureName = f.feature_name.toLowerCase();
@@ -147,6 +148,7 @@ const UserForm = ({ editId, jobTitles, serviceFeatures, onClose, onSuccess }) =>
         return recommendedFeatures;
     };
 
+    // Handle job title change with confirmation
     const handleJobTitleChange = (e) => {
         const newJobTitleId = e.target.value;
 
@@ -178,6 +180,7 @@ const UserForm = ({ editId, jobTitles, serviceFeatures, onClose, onSuccess }) =>
         setShowJobChangeConfirm(false);
     };
 
+    // Handle form input changes
     const handleChange = (e) => {
         const { name, value } = e.target;
 
@@ -188,6 +191,7 @@ const UserForm = ({ editId, jobTitles, serviceFeatures, onClose, onSuccess }) =>
         }
     };
 
+    // Toggle feature permissions
     const handleFeatureToggle = (featureId) => {
         setForm(prev => {
             const newFeatures = prev.service_feature_ids.includes(featureId)
@@ -197,8 +201,14 @@ const UserForm = ({ editId, jobTitles, serviceFeatures, onClose, onSuccess }) =>
         });
     };
 
-    const handleSubmit = async (e) => {
+    // Handle form submission
+    const handleSubmit = (e) => {
         e.preventDefault();
+        setShowConfirmationModal(true);
+    };
+
+    // Confirm submission
+    const confirmSubmit = async () => {
         setLoading(true);
         setError("");
 
@@ -209,10 +219,8 @@ const UserForm = ({ editId, jobTitles, serviceFeatures, onClose, onSuccess }) =>
             };
 
             if (editId) {
-                // Using PUT to /user/user-accounts for updates (adjust if your API is different)
                 await api.put(`/user/user-management/${encodeURIComponent(editId)}`, payload);
             } else {
-                // Using POST to /user/create-user as in your original code
                 await api.post("/user/create-user", payload);
             }
 
@@ -222,6 +230,7 @@ const UserForm = ({ editId, jobTitles, serviceFeatures, onClose, onSuccess }) =>
                 (editId ? "Failed to update user" : "Failed to create user"));
         } finally {
             setLoading(false);
+            setShowConfirmationModal(false);
         }
     };
 
@@ -241,6 +250,12 @@ const UserForm = ({ editId, jobTitles, serviceFeatures, onClose, onSuccess }) =>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6">
+                    {error && (
+                        <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">
+                            {error}
+                        </div>
+                    )}
+
                     <div className="space-y-6">
                         {/* Account Information */}
                         <div className="space-y-4">
@@ -488,6 +503,18 @@ const UserForm = ({ editId, jobTitles, serviceFeatures, onClose, onSuccess }) =>
                     </div>
                 </form>
             </div>
+
+            {/* Confirmation Modal */}
+            {showConfirmationModal && (
+                <ConfirmationModal
+                    title={editId ? "Confirm Update" : "Confirm Creation"}
+                    message={editId ? "Are you sure you want to update this user?" : "Are you sure you want to create this user?"}
+                    confirmText="Yes"
+                    cancelText="No"
+                    onConfirm={confirmSubmit}
+                    onCancel={() => setShowConfirmationModal(false)}
+                />
+            )}
 
             {/* Job Title Change Confirmation */}
             {showJobChangeConfirm && (
