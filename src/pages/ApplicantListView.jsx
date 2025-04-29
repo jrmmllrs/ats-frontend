@@ -9,9 +9,11 @@ import ApplicantList from "../layouts/ApplicantList";
 import ApplicantDetail from "./ApplicantDetailsPage";
 import StatusCounter from "../layouts/StatusCounter";
 import AddApplicantForm from "./AddApplicantForm";
+import ConfirmationModal from "../components/Modals/ConfirmationModal"; // Import the modal
 
 export default function ApplicantListView() {
     const [showAddForm, setShowAddForm] = useState(false);
+    const [showConfirmationModal, setShowConfirmationModal] = useState(false); // State for modal visibility
     const navigate = useNavigate();
     const { id } = useParams();
 
@@ -53,14 +55,21 @@ export default function ApplicantListView() {
         navigate(`/applicants/${tabId}`);
     };
 
-    // In ApplicantListView.jsx
     const handleCloseTab = (tabId) => {
         if (activeTab === tabId) {
-            // If closing the active tab, navigate back to the list first
             navigate("/applicants");
         }
-        // Then close the tab in state
         closeTab(tabId);
+    };
+
+    const handleClearAllTabs = () => {
+        setShowConfirmationModal(true); // Show the confirmation modal
+    };
+
+    const confirmClearAllTabs = () => {
+        closeAll();
+        navigate("/applicants");
+        setShowConfirmationModal(false); // Close the modal
     };
 
     if (showAddForm) return <AddApplicantForm onClose={() => setShowAddForm(false)} />;
@@ -108,12 +117,7 @@ export default function ApplicantListView() {
                 {tabs.length > 0 && (
                     <div
                         className="px-3 py-1 mb-1 ml-2 text-gray-light hover:text-gray-dark cursor-pointer"
-                        onClick={() => {
-                            if (confirm("Are you sure you want to close all tabs?")) {
-                                closeAll();
-                                navigate("/applicants");
-                            }
-                        }}
+                        onClick={handleClearAllTabs} // Use the modal trigger
                     >
                         Clear
                     </div>
@@ -136,6 +140,18 @@ export default function ApplicantListView() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Confirmation Modal */}
+            {showConfirmationModal && (
+                <ConfirmationModal
+                    title="Clear All Tabs"
+                    message="Are you sure you want to close all tabs?"
+                    confirmText="Yes"
+                    cancelText="No"
+                    onConfirm={confirmClearAllTabs} // Confirm action
+                    onCancel={() => setShowConfirmationModal(false)} // Cancel action
+                />
             )}
 
             {/* Main View */}
