@@ -2,7 +2,7 @@ import saveAs from 'file-saver';
 
 const downloadTemplate = async () => {
     try {
-        const response = await fetch('/upload-applicant-template-new.xlsx'); // Access directly from public folder
+        const response = await fetch('/upload-applicant-template-newest.xlsx'); // Access directly from public folder
         if (!response.ok) throw new Error('Network response was not ok');
 
         const blob = await response.blob();

@@ -29,6 +29,8 @@ const ExportToPdf = ({
           position,
           status
         );
+
+        console.log("applicants: ", applicants);
         const doc = new jsPDF({
           orientation: "landscape",
           unit: "mm",
@@ -72,7 +74,7 @@ const ExportToPdf = ({
           row.middle_name || "N/A",
           row.last_name || "",
           row.gender || "N/A",
-          row.discovered_at || "N/A",
+          row.applied_source || "N/A",
           row.cv_link || "N/A",
           row.date_created ? moment(row.date_created).format("YYYY-MM-DD") : "N/A",
           row.mobile_number_1 || "",
@@ -181,7 +183,7 @@ const ExportToPdf = ({
       <div className="bg-white rounded-lg shadow-xl w-4/5 h-5/6 flex flex-col max-h-[90vh] overflow-hidden">
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-light">
-          <h2 className="text-xl font-semibold text-gray-800">PDF Preview</h2>
+          <h2 className="text-xl font-semibold text-gray-800">Preview</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"

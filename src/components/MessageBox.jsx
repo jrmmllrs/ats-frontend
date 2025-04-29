@@ -21,8 +21,20 @@ export default function MessageBox({ message, sender, date }) {
                     <p className="body-tiny text-gray-400">{date}</p>
                 </div>
             </div>
+            <style>
+            </style>
             <div className="space-y-4 text-gray-dark body-regular">
-                <p>{message}</p>
+                <div
+                    dangerouslySetInnerHTML={{
+                        __html: message,
+                    }}
+                    className="[&_ul]:list-disc [&_ul]:pl-6
+            [&_ol]:list-decimal [&_ol]:pl-6
+            [&_em]:font-inherit
+            [&_strong]:font-avenir-black
+            [&_strong_em]:font-inherit
+            [&_em_strong]:font-inherit"
+                />
             </div>
         </div>
 

@@ -88,7 +88,6 @@ export const handleStageClick = (stage, setSelectedStatuses, search, toggleStage
 
 
     setStatusStage(updatedStatuses);
-    console.log(updatedStatuses);
     
     
     // Call filterApplicants with the updated statuses

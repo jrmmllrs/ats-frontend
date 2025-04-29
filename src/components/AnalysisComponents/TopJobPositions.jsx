@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { FaInfoCircle } from "react-icons/fa";
 import api from "../../api/axios";
 
-const TopJobPositions = ({ year, month }) => { // Receive year and month props
+const TopJobPositions = ({ year, month, isExpanded }) => { // Receive year and month props
   const [showTooltip, setShowTooltip] = useState(false);
   const [jobPositions, setJobPositions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -110,14 +110,25 @@ const TopJobPositions = ({ year, month }) => { // Receive year and month props
         <div className="py-8 text-center text-gray-500">No job position data available</div>
       ) : (
         <div className="space-y-4 py-2">
-          {jobPositions.map((position, index) => (
-            <div key={index} className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <span className="font-medium">{position.title}</span>
+          {isExpanded ? (
+            jobPositions.map((position, index) => (
+              <div key={index} className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{position.title}</span>
+                </div>
+                <span className="font-semibold display">{position.percentage}%</span>
               </div>
-              <span className="font-semibold display">{position.percentage}%</span>
-            </div>
-          ))}
+            ))
+          ) : (
+            jobPositions.slice(0, 3).map((position, index) => (
+              <div key={index} className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{position.title}</span>
+                </div>
+                <span className="font-semibold display">{position.percentage}%</span>
+              </div>
+            ))
+          )}
         </div>
       )}
     </>

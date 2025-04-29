@@ -26,7 +26,7 @@ const InternalVsExternalHires = ({ year, month }) => {
         const cacheAge = currentTime - cachedTime;
         
         // Cache valid for 5 minutes (300000 ms)
-        if (cacheAge < 300000) {
+        if (cacheAge < 100000) {
           const parsedData = JSON.parse(cachedDataString);
           setInternalData(parsedData.internal);
           setExternalData(parsedData.external);
@@ -46,9 +46,10 @@ const InternalVsExternalHires = ({ year, month }) => {
       if (month !== "all" && month !== "") {
         url += (url.includes("?") ? "&" : "?") + `month=${month}`;
       }
-      
+          
       const response = await api.get(url);
-
+      console.log(url);
+      
       if (response.data && response.data.internalExternalHires) {
         const { internal, external, internalRate, externalRate } = response.data.internalExternalHires;
         

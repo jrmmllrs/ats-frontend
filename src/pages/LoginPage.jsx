@@ -1,11 +1,18 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { FiMail, FiLock, FiEye, FiEyeOff, FiUser, FiCopy } from "react-icons/fi";
 import api from "../api/axios";
 import Cookies from "js-cookie";
-import { Link } from "react-router-dom";
+import useUserStore from "../context/userStore";
+
+const TEST_CREDENTIALS = [
+  { email: "percy@fullsuite.ph", password: "password", label: "Test User" },
+  { email: "jun.zaragosa@fullsuite.ph", password: "password", label: "HR User" },
+];
+
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { setUser } = useUserStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -20,17 +27,19 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const response = await api.post("/auth/login", {
+      const { data: { token } } = await api.post("/auth/login", {
         user_email: email,
         user_password: password,
       });
 
-      if (response.status === 200) {
-        Cookies.set("token", response.data.token, { expires: rememberMe ? 7 : 1 });
-        navigate("/ats");
-      } else {
-        setError("Invalid email or password");
-      }
+      Cookies.set("token", token, { expires: rememberMe ? 7 : 1 });
+
+      const { data: userInfo } = await api.get("/user/getuserinfo", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setUser(userInfo);
+      navigate("/");
     } catch (error) {
       setError(error.response?.data?.message || "An error occurred. Please try again.");
     } finally {
@@ -43,42 +52,34 @@ export default function LoginPage() {
     setPassword(userPassword);
   };
 
-  const toggleTestCredentials = () => {
-    setShowTestCredentials(!showTestCredentials);
-  };
-
-  useEffect(() => {
-    const konamiCode = [
-      "ArrowUp",
-      "ArrowUp",
-      "ArrowDown",
-      "ArrowDown",
-      "ArrowLeft",
-      "ArrowRight",
-      "ArrowLeft",
-      "ArrowRight",
-      "b",
-      "a",
-    ];
-    let konamiCodePosition = 0;
-
-    const handleKeyDown = (e) => {
-      if (e.key === konamiCode[konamiCodePosition]) {
-        konamiCodePosition++;
-        if (konamiCodePosition === konamiCode.length) {
-          setShowTestCredentials(true);
-          konamiCodePosition = 0;
-        }
-      } else {
-        konamiCodePosition = 0;
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
+  const renderInputField = (label, type, value, onChange, placeholder, icon, toggleIcon) => (
+    <div className="space-y-2">
+      <label className="text-sm font-medium text-gray-700 block">{label}</label>
+      <div className="relative">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          {icon}
+        </div>
+        <input
+          type={toggleIcon ? (showPassword ? "text" : "password") : type}
+          className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange}
+          autoComplete={type}
+          required
+        />
+        {toggleIcon && (
+          <button
+            type="button"
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 transition"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? <FiEyeOff /> : <FiEye />}
+          </button>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-cyan-100 p-4">
@@ -86,141 +87,77 @@ export default function LoginPage() {
         {/* Login Card */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-teal-500 to-teal-600 p-6">
-            <div className="flex justify-center relative">
-              <div className="bg-white/20 p-3 rounded-full cursor-pointer" onClick={toggleTestCredentials}>
+          <div className="bg-gradient-to-r from-teal-500 to-teal-600 p-6 text-center">
+            <div className="flex justify-center mb-3">
+              <div className="bg-white/20 p-3 rounded-full cursor-pointer" onClick={() => setShowTestCredentials(!showTestCredentials)}>
                 <FiUser className="text-white text-2xl" />
               </div>
             </div>
-            <h2 className="text-2xl font-bold text-center text-white mt-3">Welcome Back</h2>
-            <p className="text-center text-teal-100 text-sm mt-1">Sign in to your account</p>
+            <h2 className="text-2xl font-bold text-white">Welcome Back</h2>
+            <p className="text-sm text-teal-100 mt-1">Sign in to your account</p>
           </div>
+
           {/* Form */}
-          <div className="p-6">
+          <div className="p-6 space-y-5">
             <form onSubmit={handleLogin} className="space-y-5">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 block">Email</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiMail className="text-gray-400" />
-                  </div>
-                  <input
-                    type="email"
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    autoComplete="email"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 block">Password</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiLock className="text-gray-400" />
-                  </div>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="current-password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 transition"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <FiEyeOff className="text-gray-500" /> : <FiEye className="text-gray-500" />}
-                  </button>
-                </div>
-              </div>
-
-
+              {renderInputField("Email", "email", email, (e) => setEmail(e.target.value), "Enter your email", <FiMail />)}
+              {renderInputField("Password", "password", password, (e) => setPassword(e.target.value), "Enter your password", <FiLock />, true)}
 
               {error && (
-                <div className="bg-red-50 text-red-500 p-3 rounded-lg text-sm flex items-center">
-                  <span>{error}</span>
+                <div className="bg-red-50 text-red-500 p-3 rounded-lg text-sm">
+                  {error}
                 </div>
               )}
 
               <button
                 type="submit"
-                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition ${isLoading ? "opacity-75 cursor-not-allowed" : ""
-                  }`}
+                className={`w-full flex justify-center items-center py-3 rounded-lg text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition ${isLoading ? "opacity-75 cursor-not-allowed" : ""}`}
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <>
-                    <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Signing in...
-                  </>
+                  <svg
+                    className="animate-spin h-5 w-5 mr-2 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.37 0 0 5.37 0 12h4zm2 5.29A7.96 7.96 0 014 12H0c0 3.04 1.13 5.82 3 7.94l3-2.65z" />
+                  </svg>
                 ) : (
-                  "Sign in"
+                  "Sign In"
                 )}
               </button>
             </form>
 
             <div className="text-center">
-                <Link to="/reset-password" className="text-sm text-teal-600 hover:text-teal-700 hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
+              <Link to="/reset-password" className="text-sm text-teal-600 hover:text-teal-700 hover:underline">
+                Forgot password?
+              </Link>
+            </div>
           </div>
         </div>
 
-        {/* Debug Credentials */}
+        {/* Test Credentials */}
         {showTestCredentials && (
-          <div className="mt-6 bg-white rounded-xl shadow-lg p-5">
-            <p className="text-gray-600 text-center font-medium mb-3">Test Credentials</p>
-            <div className="space-y-4">
-              {[
-                { email: "percy@fullsuite.ph", password: "password", label: "Test User" },
-                { email: "jun.zaragosa@fullsuite.ph", password: "password", label: "HR User" },
-                { email: "ats_interviewer@example.com", password: "password", label: "Interviewer" },
-              ].map((cred, index) => (
-                <div key={index} className="bg-gray-50 rounded-lg p-3">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">{cred.label}</p>
-                      <p className="text-xs text-gray-500">{cred.email}</p>
-                      <p className="text-xs text-gray-500">Password: {cred.password}</p>
-                    </div>
-                    <button
-                      onClick={() => handleCopyCredentials(cred.email, cred.password)}
-                      className="flex items-center space-x-1 bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded-lg text-sm transition"
-                    >
-                      <FiCopy size={14} />
-                      <span>Use</span>
-                    </button>
-                  </div>
+          <div className="mt-6 bg-white rounded-xl shadow-lg p-5 space-y-4">
+            <p className="text-center text-gray-600 font-medium">Test Credentials</p>
+            {TEST_CREDENTIALS.map((cred, idx) => (
+              <div key={idx} className="bg-gray-50 p-3 rounded-lg flex justify-between items-center">
+                <div>
+                  <p className="text-sm font-medium text-gray-700">{cred.label}</p>
+                  <p className="text-xs text-gray-500">{cred.email}</p>
+                  <p className="text-xs text-gray-500">Password: {cred.password}</p>
                 </div>
-              ))}
-            </div>
+                <button
+                  onClick={() => handleCopyCredentials(cred.email, cred.password)}
+                  className="flex items-center space-x-1 bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded-lg text-sm"
+                >
+                  <FiCopy size={14} />
+                  <span>Use</span>  
+                </button>
+              </div>
+            ))}
           </div>
         )}
       </div>

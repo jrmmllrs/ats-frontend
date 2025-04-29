@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FaFileExport } from "react-icons/fa";
@@ -7,37 +7,39 @@ import ApplicantTable from "../components/ApplicantTable";
 import ExportToPdf from "../utils/ExportToPdf";
 import moment from "moment";
 import applicantDataStore from "../context/applicantDataStore";
-import { searchApplicant } from "../utils/applicantDataUtils";
+import { filterApplicants, searchApplicant } from "../utils/applicantDataUtils";
 import positionStore from "../context/positionStore";
 import applicantFilterStore from "../context/applicantFilterStore";
 import { clearFilter } from "../utils/applicantListUtils";
+import { useStages } from "../hooks/useStages";
+import { fetchCounts } from "../utils/statusCounterFunctions";
+import { initialStages } from "../utils/StagesData";
+import useUserStore from "../context/userStore"; // Import the Zustand store
 
-export default function ApplicantList({
-  onSelectApplicant,
-  onAddApplicantClick,
-}) {
-  const { search, setSearch, status, dateFilter, setDateFilter, dateFilterType, setDateFilterType } = applicantFilterStore();
-  const [selectedDate, setSelectedDate] = useState(null);
+export default function ApplicantList({ onSelectApplicant, onAddApplicantClick }) {
+  const { search, setSearch, status, setStatus, clearStatus, dateFilter, setDateFilter, dateFilterType, setDateFilterType, selectedDate, setSelectedDate } = applicantFilterStore();
   const [exportValue, setExportValue] = useState("");
   const { setApplicantData } = applicantDataStore();
-  const { positionFilter } = positionStore();
+  const { positionFilter, setPositionFilter } = positionStore();
+  const { stages, setStages } = useStages();
 
-  // PDF Export modal state
   const [showPdfModal, setShowPdfModal] = useState(false);
 
-  // Handle body scroll when modal is open
+  const { hasFeature } = useUserStore(); // Access the hasFeature function
+  const canExportApplicant = hasFeature("Export Applicant"); // Check if the user has the "Export Applicant" feature
+  const canAddApplicant = hasFeature("Add Applicant"); // Check if the user has the "Add Applicant" feature
+
   useEffect(() => {
     if (showPdfModal) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = "auto";
     }
     return () => {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = "auto";
     };
   }, [showPdfModal]);
 
-  // Open PDF export modal directly
   const handlePdfExport = () => {
     let value = "";
     if (dateFilterType === "year" && selectedDate) {
@@ -51,18 +53,22 @@ export default function ApplicantList({
 
   return (
     <div className="relative mx-auto max-w-[1200px] rounded-3xl bg-white p-6 border border-gray-light">
-      <div className="mb-4 flex items-center justify-between rounded-lg ">
+      <div className="mb-4 flex items-center justify-between rounded-lg">
         <h1 className="headline text-gray-dark font-semibold md:mb-0">Applicant List</h1>
         <div className="center flex gap-2">
-          <div className="relative inline-block text-left">
-            <button
-              className="flex items-center rounded-md bg-white border border-teal px-2 py-1 text-sm text-teal hover:bg-gray-light cursor-pointer"
-              onClick={handlePdfExport}
-            >
-              <FaFileExport className="mr-2 h-4 w-4 " /> Export
-            </button>
-          </div>
-          <AddApplicantDropdown className="" onAddManually={onAddApplicantClick} />
+          {canExportApplicant && (
+            <div className="relative inline-block text-left">
+              <button
+                className="flex items-center rounded-md bg-white border border-teal px-2 py-1 text-sm text-teal hover:bg-gray-light cursor-pointer"
+                onClick={handlePdfExport}
+              >
+                <FaFileExport className="mr-2 h-4 w-4" /> Export
+              </button>
+            </div>
+          )}
+          {canAddApplicant && (
+            <AddApplicantDropdown className="" onAddManually={onAddApplicantClick} />
+          )}
         </div>
       </div>
 
@@ -72,7 +78,12 @@ export default function ApplicantList({
             type="text"
             placeholder="Search"
             value={search}
-            onChange={(e) => { setSearch(e.target.value); searchApplicant(e.target.value, setApplicantData, positionFilter, status, dateFilterType, dateFilter) }}
+            onChange={(e) => {
+              clearStatus([]);
+              setSearch(e.target.value);
+              searchApplicant(e.target.value, setApplicantData, stages, setStages, setPositionFilter, setSelectedDate);
+              fetchCounts(setStages, initialStages);
+            }}
             className="w-full body-regular rounded-md border border-gray-300 p-2"
           />
         </div>
@@ -89,7 +100,16 @@ export default function ApplicantList({
           </select>
           <DatePicker
             selected={selectedDate}
-            onChange={(date) => { setSelectedDate(date); setDateFilter(date); searchApplicant(search, setApplicantData, positionFilter, status, dateFilterType, date) }}
+            onChange={(date) => {
+              setSelectedDate(date);
+              setDateFilter(date);
+              setSearch("");
+              const formattedDate =
+                dateFilterType === "month"
+                  ? moment(date).format("MMMM")
+                  : moment(date).format("YYYY");
+              filterApplicants(positionFilter, setApplicantData, status, formattedDate, dateFilterType);
+            }}
             showMonthYearPicker={dateFilterType === "month"}
             showYearPicker={dateFilterType === "year"}
             dateFormat={dateFilterType === "month" ? "MM/yyyy" : "yyyy"}
@@ -98,21 +118,19 @@ export default function ApplicantList({
           />
           <button
             className="flex w-auto body-regular rounded-md bg-teal-600 px-4 py-2 text-white hover:bg-teal-700"
-            onClick={() => clearFilter(setSelectedDate, setApplicantData, setDateFilterType, setDateFilter, setSearch, status, dateFilterType, positionFilter)}
+            onClick={() =>
+              clearFilter(setSelectedDate, setApplicantData, setDateFilterType, setDateFilter, setSearch, status, positionFilter)
+            }
           >
             Clear
           </button>
         </div>
       </div>
 
-      <div
-        className="rounded-lg bg-white"
-        style={{ height: "", overflowY: "auto" }}
-      >
+      <div className="rounded-lg bg-white overflow-x-auto" style={{ height: "", overflowY: "auto" }}>
         <ApplicantTable onSelectApplicant={onSelectApplicant} />
       </div>
 
-      {/* PDF Export Modal */}
       {showPdfModal && (
         <ExportToPdf
           dateFilter={dateFilterType}

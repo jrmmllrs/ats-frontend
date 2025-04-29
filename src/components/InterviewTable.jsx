@@ -11,7 +11,7 @@ const InterviewTable = ({ applicants, onSelectApplicant }) => {
         setInterviews(applicants || []);
     }, [applicants]);
 
- 
+
     const handleJobRowClick = (row) => {
         console.log("Clicked row:", row);
         if (onSelectApplicant) {
@@ -21,9 +21,9 @@ const InterviewTable = ({ applicants, onSelectApplicant }) => {
 
         const applicantId = row.applicant_id || row.id;
         // Use state to pass data instead of query parameters
-        navigate("/ats", {
+        navigate("/applicant:id", {
             state: {
-                view: "listings",
+                view: "applicants",
                 applicantId: applicantId
             }
         });

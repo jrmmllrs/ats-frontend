@@ -41,7 +41,7 @@ export const filterCounter = async (position, setStages, initialStages, setPosit
   })));
 }
 
-export const clearSelections = (stages, setStages, setSelectedStatuses, clearStatus, setStatus, setPositionFilter, search, dateFilterType, dateFilter, setApplicantData) => {
+export const clearSelections = (stages, setStages, setSelectedStatuses, clearStatus, setStatus, setPositionFilter, setApplicantData,date , dateType, status) => {
   setStages(
     stages.map((stage) => ({
       ...stage,
@@ -59,14 +59,7 @@ export const clearSelections = (stages, setStages, setSelectedStatuses, clearSta
 
   fetchCounts(setStages, initialStages);
 
-  if (search === "") {
-    dateFilterType === 'month' ?
-      filterApplicants("All", setApplicantData, [], moment(dateFilter).format("MMMM"), dateFilterType) :
-      filterApplicants("All", setApplicantData, [], moment(dateFilter).format("YYYY"), dateFilterType)
-  }
-  else {
-    dateFilterType === 'month' ?
-      searchApplicant(search, setApplicantData, "All", [], dateFilterType, moment(dateFilter).format("MMMM")) :
-      searchApplicant(search, setApplicantData, "All", [], dateFilterType, moment(dateFilter).format("YYYY"));
-  }
+  dateType === "month" ? date = moment(date).format("MMMM") : date = moment(date).format("YYYY");
+
+  filterApplicants("All", setApplicantData, [], date, dateType);
 };

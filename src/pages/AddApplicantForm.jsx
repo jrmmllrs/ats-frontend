@@ -18,6 +18,8 @@ import Cookies from "js-cookie"
 import useUserStore from "../context/userStore"
 import api from "../api/axios"
 import ConfirmationModal from "../components/Modals/ConfirmationModal"
+import { fetchAppliedSources, fetchDiscoveredSources } from "../utils/sources"
+import { formatEnumForDisplay } from "../utils/formatEnum"
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -33,6 +35,7 @@ const formSchema = {
   position: "",
   source: "",
   referrer: "",
+  discovered: "",
   testResult: "",
   dateApplied: "",
   additionalEmails: ["", ""],
@@ -48,7 +51,9 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
   const [pendingSubmit, setPendingSubmit] = useState(false)
   const user = useUserStore((state) => state.user)
   const [modalType, setModalType] = useState(null) // 'submit' or 'cancel'
-  const [cvAttatchement, setcvAttatchement] = useState(); 
+  const [cvAttatchement, setcvAttatchement] = useState();
+  const [appliedSource, setAppliedSource] = useState([]);
+  const [discoveredSource, setDiscoveredSource] = useState([]);
 
 
   // Determine if we're editing or adding based on initialData
@@ -67,8 +72,9 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
         phone: initialData.mobile_number_1 || "",
         cvLink: initialData.cv_link || "",
         position: initialData.job_id || "",
-        source: initialData.discovered_at || "",
+        source: initialData.applied_source || "",
         referrer: initialData.referrer || "",
+        discovered_at: initialData.discovered_at || "",
         testResult: initialData.test_result || "",
         dateApplied: initialData.applicant_created_at
           ? new Date(initialData.applicant_created_at).toISOString().split("T")[0]
@@ -80,7 +86,7 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
     }
   }, [initialData])
 
-  useEffect(() => {   
+  useEffect(() => {
     if (formData.firstName || formData.lastName || formData.email || formData.phone) {
       checkForDuplicates()
     }
@@ -95,6 +101,7 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
         console.error("Error fetching positions:", error)
       }
     }
+
     const fetchUsers = async () => {
       try {
         const token = Cookies.get("token")
@@ -108,6 +115,8 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
         console.error("Error fetching users:", error)
       }
     }
+    fetchAppliedSources(setAppliedSource);
+    fetchDiscoveredSources(setDiscoveredSource);
     fetchPositions()
     fetchUsers()
   }, [])
@@ -127,7 +136,7 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
         mobile_number_1: formData.phone,
         mobile_number_2: formData.additionalPhones[0] || null,
         cv_link: formData.cvLink,
-        discovered_at: formData.source,
+        applied_source: formData.source,
         referrer_id: formData.referrer,
         created_by: user.user_id,
         updated_by: user.user_id,
@@ -179,7 +188,7 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
   }
 
   const handleRemoveEmail = async (index) => {
-    
+
     await setFormData((prev) => {
       const newEmails = [...prev.additionalEmails];
       newEmails[index] = '';
@@ -214,31 +223,31 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
     }
   }
 
-  const handleCVAttachementChange  = (e) => {
+  const handleCVAttachementChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       console.log(e.target.files[0]);
-      const file = e.target.files[0]; 
-      handleUploadCV(file); 
-    }else {
+      const file = e.target.files[0];
+      handleUploadCV(file);
+    } else {
       console.log('file unsuccessfully read');
     }
   }
 
   const handleUploadCV = async (file) => {
-      const formdata = new FormData(); 
-      formdata.append('file', file); 
-      formdata.append('company_id', user.company_id); 
+    const formdata = new FormData();
+    formdata.append('file', file);
+    formdata.append('company_id', user.company_id);
 
-      await api.post("/upload/gdrive/cv", formdata).then((response) => {
-        console.log('response', response);
-        
-        setFormData((prev) => ({
-          ...prev, 
-          cvLink: response.data.fileUrl
-        }))
-      }).catch((error) => {
-        console.log(error);
-      })
+    await api.post("/upload/gdrive/cv", formdata).then((response) => {
+      console.log('response', response);
+
+      setFormData((prev) => ({
+        ...prev,
+        cvLink: response.data.fileUrl
+      }))
+    }).catch((error) => {
+      console.log(error);
+    })
   }
 
   const handleRemovePhone = async (index) => {
@@ -248,7 +257,7 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
       return { ...prev, additionalPhones: newPhones };
     });
   }
-  const handleChange = async(e) => {
+  const handleChange = async (e) => {
     const { name, value } = e.target
     if (name.startsWith("additionalEmail")) {
       const index = Number.parseInt(name.split("_")[1], 10)
@@ -292,11 +301,12 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
         email_1: formData.email,
         mobile_number_1: formData.phone,
         cv_link: formData.cvLink,
-        discovered_at: formData.source,
+        applied_source: formData.source,
+        discovered_at: formData.discovered,
         referrer_id: formData.referrer,
         created_by: user.user_id,
         updated_by: user.user_id,
-        user_id: user.user_id, 
+        user_id: user.user_id,
         company_id: user.company_id,
         position_id: formData.position,
         test_result: formData.testResult,
@@ -610,7 +620,7 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className="mb-2 text-gray-dark body-bold flex items-center gap-2">
-                      Source
+                      Applied Source
                     </label>
                     <select
                       name="source"
@@ -619,18 +629,19 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
                       onBlur={handleBlur}
                       className="w-full p-2 border border-gray-light rounded-md focus:outline-none body-regular"
                     >
-                      <option value="" disabled >Select Option</option>
-                      <option value="Referral">Referral</option>
-                      <option value="Website">Website</option>
-                      <option value="Social Media">Social Media</option>
-                      <option value="Podcast">Podcast</option>
-                      <option value="Career Fair (Startup Caravan, University Visit)">
-                        Career Fair (Startup Caravan, University Visit)
-                      </option>
+                      <option disabled value="">Select source</option>
+                      {appliedSource.map((source, index) => (
+                        <option key={index} value={source}>
+                          {
+                            formatEnumForDisplay(source)
+                          }
+                        </option>
+                      ))}
                     </select>
+
                   </div>
 
-                  {formData.source === "Referral" && (
+                  {formData.source === "REFERRAL" && (
                     <div>
                       <label className="mb-2 text-gray-dark body-bold flex items-center gap-2 ">Referrer</label>
                       <select
@@ -643,12 +654,37 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
                         <option value="" disabled>Select Option</option>
                         {users.map((user) => (
                           <option key={user.user_id} value={user.user_id}>
-                            {`${user.first_name} ${user.middle_name} ${user.last_name}`}
+                            {`${user.first_name} ${user.last_name}`}
                           </option>
                         ))}
                       </select>
                     </div>
                   )}
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-2 text-gray-dark body-bold flex items-center gap-2">
+                      Discovered Fullsuite At
+                    </label>
+                    <select
+                      name="discovered"
+                      value={formData.discovered}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      className="w-full p-2 border border-gray-light rounded-md focus:outline-none body-regular"
+                    >
+                      <option disabled value="">Select source</option>
+                      {discoveredSource.map((source, index) => (
+                        <option key={index} value={source}>
+                          {
+                            formatEnumForDisplay(source)
+                          }
+                        </option>
+                      ))}
+                    </select>
+
+                  </div>
                 </div>
 
                 {/* cv link */}
@@ -783,19 +819,19 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
 
         </div>
         {showConfirmationModal && (
-  <ConfirmationModal
-  title={modalType === 'submit' ? "Confirm Submission" : "Cancel Form"}
-  message={
-    modalType === 'submit' 
-      ? "Are you sure you want to submit this form?" 
-      : "Are you sure you want to cancel? All unsaved changes will be lost."
-  }
-  confirmText={modalType === 'submit' ? "Submit" : "Confirm"}
-  cancelText={modalType === 'submit' ? "Back" : "Back"}
-  onConfirm={modalType === 'submit' ? confirmSubmit : confirmCancel}
-  onCancel={closeModal}
-/>
-)}
+          <ConfirmationModal
+            title={modalType === 'submit' ? "Confirm Submission" : "Cancel Form"}
+            message={
+              modalType === 'submit'
+                ? "Are you sure you want to submit this form?"
+                : "Are you sure you want to cancel? All unsaved changes will be lost."
+            }
+            confirmText={modalType === 'submit' ? "Submit" : "Confirm"}
+            cancelText={modalType === 'submit' ? "Back" : "Back"}
+            onConfirm={modalType === 'submit' ? confirmSubmit : confirmCancel}
+            onCancel={closeModal}
+          />
+        )}
       </div>
     </>
   )

@@ -8,6 +8,7 @@ import RecentTable from "../components/RecentTable"
 import PendingTable from "../components/PendingTable"
 import InterviewTable from "../components/InterviewTable"
 import { useNavigate } from "react-router-dom"
+import { NavLink } from "react-router-dom"
 
 // Custom Tabs component
 const Tabs = ({ tabs, activeTab, setActiveTab }) => {
@@ -43,7 +44,6 @@ const SummarySection = ({ onRefresh, setActiveTab }) => {
   const [error, setError] = useState(null)
   const navigate = useNavigate();
 
-
   const fetchSummaryData = async () => {
     setLoading(true)
     setError(null)
@@ -69,95 +69,98 @@ const SummarySection = ({ onRefresh, setActiveTab }) => {
   }, [onRefresh])
 
   const handleCardClick = (tab) => {
-    if (tab === "interviews") {
-      setActiveTab(tab)
-      return;
-    }
-
-    navigate("/ats", {
-      state: {
-        view: tab,
-      }
-    });
+    setActiveTab(tab)
   }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-      <div
-        onClick={() => handleCardClick("listings")}
-        className="bg-white rounded-2xl border border-gray-200 cursor-pointer hover:bg-teal-soft transition duration-200 ease-in-out"
-      >
-        <div className="p-6 flex flex-col">
-          <span className="body-regular text-gray-500">Total Applicants</span>
-          {loading ? (
-            <Skeleton className="h-8 w-24 mt-2" />
-          ) : error ? (
-            <div className="text-red-500 body-regular mt-2">Error loading data</div>
-          ) : (
-            <div className="flex items-center mt-2">
+      <NavLink to="/applicants">
+        <div
+          className="bg-white rounded-2xl border border-gray-200 cursor-pointer hover:bg-teal-soft transition duration-200 ease-in-out"
+        >
+          <div className="p-6">
+            <div className="flex justify-center">
               <FiUsers className="mr-2 h-5 w-5 text-teal" />
-              <div className="text-2xl font-bold">{summaryData?.total_applicants.toLocaleString()}</div>
+              <span className="body-regular text-gray-500">Total Applicants</span>
             </div>
-          )}
+            
+            {loading ? (
+              <Skeleton className="h-8 w-24 mt-2" />
+            ) : error ? (
+              <div className="text-red-500 body-regular mt-2">Error loading data</div>
+            ) : (
+              <div className="text-center mt-2">
+                <div className="text-2xl font-bold">{summaryData?.total_applicants.toLocaleString()}</div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </NavLink>
 
-      <div
-        onClick={() => handleCardClick("analytics")}
-        className="bg-white rounded-2xl border border-gray-200 cursor-pointer hover:bg-teal-soft transition duration-200 ease-in-out"
-      >
-        <div className="p-6 flex flex-col">
-          <span className="body-regular text-gray-500">Hired</span>
-          {loading ? (
-            <Skeleton className="h-8 w-24 mt-2" />
-          ) : error ? (
-            <div className="text-red-500 body-regular mt-2">Error loading data</div>
-          ) : (
-            <div className="flex items-center mt-2">
+      <NavLink to="/analytics">
+        <div
+          className="bg-white rounded-2xl border border-gray-200 cursor-pointer hover:bg-teal-soft transition duration-200 ease-in-out"
+        >
+          <div className="p-6">
+            <div className="flex justify-center">
               <FiUserCheck className="mr-2 h-5 w-5 text-teal" />
-              <div className="text-2xl font-bold">{summaryData?.hired_applicants.toLocaleString()}</div>
-            </div>
-          )}
+              <span className="body-regular text-gray-500">Hired</span>
+            </div>        
+            {loading ? (
+              <Skeleton className="h-8 w-24 mt-2" />
+            ) : error ? (
+              <div className="text-red-500 body-regular mt-2">Error loading data</div>
+            ) : (
+              <div className="text-center mt-2">               
+                <div className="text-2xl font-bold">{summaryData?.hired_applicants.toLocaleString()}</div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </NavLink>
 
       <div
         onClick={() => handleCardClick("interviews")}
         className="bg-white rounded-2xl border border-gray-200 cursor-pointer hover:bg-teal-soft transition duration-200 ease-in-out"
       >
-        <div className="p-6 flex flex-col">
-          <span className="body-regular text-gray-500">In Interview Process</span>
+        <div className="p-6">
+          <div className="flex justify-center">
+            <FiCalendar className="mr-2 h-5 w-5 text-teal" />
+            <span className="body-regular text-gray-500">In Interview Process</span>
+          </div>  
           {loading ? (
             <Skeleton className="h-8 w-24 mt-2" />
           ) : error ? (
             <div className="text-red-500 body-regular mt-2">Error loading data</div>
           ) : (
-            <div className="flex items-center mt-2">
-              <FiCalendar className="mr-2 h-5 w-5 text-teal" />
+            <div className="text-center mt-2">             
               <div className="text-2xl font-bold">{summaryData?.in_interview.toLocaleString()}</div>
             </div>
           )}
         </div>
       </div>
 
-      <div
-        onClick={() => handleCardClick("jobs")}
-        className="bg-white rounded-2xl border border-gray-200 cursor-pointer hover:bg-teal-soft transition duration-200 ease-in-out"
-      >
-        <div className="p-6 flex flex-col">
-          <span className="body-regular text-gray-500">Open Positions</span>
-          {loading ? (
-            <Skeleton className="h-8 w-24 mt-2" />
-          ) : error ? (
-            <div className="text-red-500 body-regular mt-2">Error loading data</div>
-          ) : (
-            <div className="flex items-center mt-2">
+      <NavLink to="/jobs">
+        <div
+          className="bg-white rounded-2xl border border-gray-200 cursor-pointer hover:bg-teal-soft transition duration-200 ease-in-out"
+        >
+          <div className="p-6">
+            <div className="flex justify-center">
               <FiBriefcase className="mr-2 h-5 w-5 text-teal" />
-              <div className="text-2xl font-bold">{summaryData?.open_positions.toLocaleString()}</div>
-            </div>
-          )}
+              <span className="body-regular text-gray-500">Open Positions</span>
+            </div>           
+            {loading ? (
+              <Skeleton className="h-8 w-24 mt-2" />
+            ) : error ? (
+              <div className="text-red-500 body-regular mt-2">Error loading data</div>
+            ) : (
+              <div className="text-center mt-2">        
+                <div className="text-2xl font-bold">{summaryData?.open_positions.toLocaleString()}</div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </NavLink>
     </div>
   )
 }
