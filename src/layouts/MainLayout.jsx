@@ -1,4 +1,3 @@
-// MainLayout.jsx
 import { useState, useEffect, useRef } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar.jsx";
@@ -12,6 +11,7 @@ export default function MainLayout() {
     const location = useLocation();
     const navigate = useNavigate();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [showATSHealthcheck, setShowATSHealthcheck] = useState(false);
     const atsModalRef = useRef(null);
 
@@ -57,6 +57,7 @@ export default function MainLayout() {
     }, [setUser]);
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+    const toggleSidebarCollapse = () => setIsSidebarCollapsed(!isSidebarCollapsed);
     const toggleATSHealthcheck = () => setShowATSHealthcheck(!showATSHealthcheck);
 
     // Function to handle applicant selection (for ATS Healthcheck)
@@ -75,12 +76,16 @@ export default function MainLayout() {
                 <Sidebar
                     isOpen={isSidebarOpen}
                     onToggleSidebar={toggleSidebar}
+                    isCollapsed={isSidebarCollapsed}
+                    onToggleCollapse={toggleSidebarCollapse}
                     selectedView={currentView}
                 />
             </div>
 
             {/* Main Content */}
-            <div className="flex flex-col md:ml-72 w-full lg:px-5">
+            <div className={`flex flex-col w-full transition-all duration-300 ease-in-out ${
+                isSidebarCollapsed ? "md:ml-20" : "md:ml-72"
+            } lg:px-5`}>
                 {/* Only show header if not on dashboard */}
                 {currentView !== "dashboard" && (
                     <Header
@@ -90,7 +95,7 @@ export default function MainLayout() {
                     />
                 )}
 
-                {/* Main Content Section - Render the current route */}
+                {/* Main Content Section */}
                 <main className="flex-1 overflow-auto rounded-lg">
                     <Outlet />
                 </main>
