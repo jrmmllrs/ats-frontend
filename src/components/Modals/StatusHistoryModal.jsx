@@ -9,6 +9,7 @@ import { updateStatusHistory, deleteStatusHistory } from "../../services/statusS
 import DropDownOption from "../DropDownOption";
 import ConfirmationModal from "./ConfirmationModal";
 import useUserStore from "../../context/userStore";
+import { formatEnumForDisplay } from "../../utils/formatEnum";
 
 export default function StatusHistoryModal({
     show,
@@ -189,15 +190,20 @@ export default function StatusHistoryModal({
                         <div className="space-y-4">
                             <div className="">
                                 <label className="text-sm font-medium text-gray-700">Status</label>
-                                <input
-                                    type="text"
-                                    disabled
+                                <select
                                     className="w-full mt-1 border rounded border-gray-light px-3 py-2 text-sm"
                                     value={editRecord.status}
                                     onChange={(e) =>
-                                        setEditRecord({ ...editRecord, new_status: e.target.value })
+                                        setEditRecord({ ...editRecord, status: e.target.value })
                                     }
-                                />
+                                >
+                                    <option value="" disabled>Select status</option>
+                                    {statuses.map((statusOption) => (
+                                        <option key={statusOption} value={statusOption}>
+                                            {formatEnumForDisplay(statusOption)}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                             <div>
                                 <label className="text-sm font-medium text-gray-700">Changed At</label>

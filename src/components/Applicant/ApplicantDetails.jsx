@@ -29,6 +29,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   const [showSkipWarningModal, setShowSkipWarningModal] = useState(false);
   const [skippedStatuses, setSkippedStatuses] = useState([]);
 
+
   // For status history hover
   const [hoverIndex, setHoverIndex] = useState(null);
   const [skippedStatusesByHistory, setSkippedStatusesByHistory] = useState({});
@@ -378,7 +379,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                   </option>
                 ))}
               </select>
-              {statusHistory.some(record => record.deleted) && (
+              {statusHistory.some(record => !record.deleted) && (
                 <button
                   onClick={toggleStatusHistoryModal}
                   className="ml-2 p-2.5 rounded-full bg-teal-soft hover:bg-teal/20 cursor-pointer"
@@ -387,6 +388,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                   <FaHistory className="w-4 h-4 text-teal" />
                 </button>
               )}
+
 
               <button
                 onClick={handleEditClick}
@@ -505,6 +507,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
               currentSkippedStatuses={currentSkippedStatuses}
               skippedStatusPosition={skippedStatusPosition}
               refreshStatusHistory={() => fetchStatusHistory(applicant.progress_id)}
+              statuses={statuses}
             />
           )}
 
