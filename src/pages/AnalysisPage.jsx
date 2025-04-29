@@ -160,6 +160,8 @@ const AnalysisPage = () => {
     fetchData()
   }, [year, month])
 
+  
+
   const replaceText = (text) => {
     return text ? text.toLowerCase().split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : "Null"
   }
@@ -230,117 +232,50 @@ const AnalysisPage = () => {
 
       <Overlay expandedCard={expandedCard} setExpandedCard={setExpandedCard} />
 
-      {/* Top row with 4 equal cards */}
-      <div className={`grid grid-cols-1 gap-3 xs:gap-4 sm:gap-5 md:gap-6 sm:grid-cols-2 lg:grid-cols-4 ${expandedCard ? "z-0" : ""}`}>
-        <Card 
-          id="applications" 
-          title="Applications Received" 
+      {/* Top row with 2 equal cards */}
+      <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${expandedCard ? "z-0" : ""}`}>
+        <Card
+          id="applications"
+          title="Applications Received"
           icon={<FiUsers className="h-4 w-4 sm:h-5 sm:w-5" />}
           expandedCard={expandedCard}
           setExpandedCard={setExpandedCard}
+          selectedPosition={selectedPosition}// Pass selectedPosition
         >
-          <ApplicationReceived year={year} month={month} isExpanded={expandedCard === "applications"} />
+          <ApplicationReceived year={year} month={month} selectedPosition={selectedPosition} isExpanded={expandedCard === "applications"} />
+
         </Card>
 
-        <Card 
-          id="positions" 
-          title="Top Job Positions" 
-          icon={<FiBriefcase className="h-4 w-4 sm:h-5 sm:w-5" />}
-          expandedCard={expandedCard}
-          setExpandedCard={setExpandedCard}
-        >
-          <TopJobPositions jobPositions={jobPositions} loading={loading} year={year} month={month} isExpanded={expandedCard === "positions"} />
-        </Card>
-
-        <Card 
-          id="hires" 
-          title="Internal vs External Hires" 
-          icon={<FiRefreshCw className="h-4 w-4 sm:h-5 sm:w-5" />}
-          expandedCard={expandedCard}
-          setExpandedCard={setExpandedCard}
-        >
-          <InternalVsExternalHires year={year} month={month} />
-        </Card>
-
-        <Card 
-          id="dropoff" 
-          title="Candidate Drop-off Rate" 
+        <Card
+          id="dropoff"
+          title="Candidate Drop-off Rate"
           icon={<FiTrendingDown className="h-4 w-4 sm:h-5 sm:w-5" />}
           expandedCard={expandedCard}
           setExpandedCard={setExpandedCard}
+          selectedPosition={selectedPosition} // Pass selectedPosition
         >
-          <CandidateDropOffRate year={year} month={month} isExpanded={expandedCard === "dropoff"} />
+          <CandidateDropOffRate year={year} month={month} selectedPosition={selectedPosition} isExpanded={expandedCard === "dropoff"} />
         </Card>
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Job Position Analytics */}
+      {/* Requisition Analysis - Full width */}
+      <div className="grid grid-cols-1 gap-6">
         <ChartCard
-          id="positionAnalytics"
-          title="Top Job Positions"
-          subtitle="Applicants by job position"
-          icon={<FiBriefcase className="h-4 w-4 sm:h-5 sm:w-5" />}
+          id="requisition"
+          title="Requisition Analysis"
+          subtitle="Requisition Data"
+          icon={<FiBarChart2 className="h-4 w-4 sm:h-5 sm:w-5" />}
           expandedCard={expandedCard}
           setExpandedCard={setExpandedCard}
         >
-          {loading ? (
-            <div className="w-full h-[300px] flex items-center justify-center">
-              <Skeleton className="h-[250px] w-full" />
-            </div>
-          ) : (
-            <div className="w-full h-[600px]">
-              <Bar
-                data={{
-                  labels: jobPositions.map((item) => item.title),
-                  datasets: [
-                    {
-                      label: "Applicants",
-                      data: jobPositions.map((item) => item.applicant_count),
-                      backgroundColor: "rgba(0, 128, 128, 0.8)",
-                    },
-                    {
-                      label: "Hired",
-                      data: jobPositions.map((item) => item.hired_count),
-                      backgroundColor: "rgba(0, 96, 96, 0.8)",
-                    },
-                  ],
-                }}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
-                      position: "top",
-                    },
-                    tooltip: {
-                      mode: "index",
-                      intersect: false,
-                    },
-                  },
-                  scales: {
-                    x: {
-                      ticks: {
-                        font: {
-                          size: 11,
-                        },
-                        callback: function (value) {
-                          const label = this.getLabelForValue(value)
-                          return label.split(' ')
-                        },
-                      },
-                    },
-                    y: {
-                      beginAtZero: true,
-                    },
-                  },
-                }}
-              />
-            </div>
-          )}
+          <div className="w-full h-[400px]">
+            <ApplicantStatusChart year={year} month={month} className />
+          </div>
         </ChartCard>
+      </div>
 
-        {/* Hiring Funnel Chart */}
+      {/* Middle row with 2 charts */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <ChartCard
           id="hiringFunnel"
           title="Hiring Funnel"
@@ -354,75 +289,54 @@ const AnalysisPage = () => {
               <Skeleton className="h-[250px] w-full" />
             </div>
           ) : (
-            <div className="h-[600px]">
+            <div className="h-[400px]">
               <HiringFunnelChart data={hiringFunnel} />
+            </div>
+          )}
+        </ChartCard>
+
+        <ChartCard
+          id="monthlyTrends"
+          title="Monthly Applicant Trends"
+          subtitle="Applications and hires by month"
+          icon={<FiBarChart2 className="h-4 w-4 sm:h-5 sm:w-5" />}
+          expandedCard={expandedCard}
+          setExpandedCard={setExpandedCard}
+        >
+          {loading ? (
+            <div className="w-full h-[300px] flex items-center justify-center">
+              <Skeleton className="h-[250px] w-full" />
+            </div>
+          ) : (
+            <div className="h-[400px]">
+              <Line
+                data={monthlyTrendsChartData}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      position: "top",
+                    },
+                    tooltip: {
+                      mode: "index",
+                      intersect: false,
+                    },
+                  },
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                    },
+                  },
+                }}
+              />
             </div>
           )}
         </ChartCard>
       </div>
 
-      {/* Bottom row with 2 cards */}
-      <div className={`grid grid-cols-1 gap-3 xs:gap-4 sm:gap-5 md:gap-6 lg:grid-cols-4 ${expandedCard ? "z-0" : ""}`}>
-        <div className="lg:col-span-2">
-          <ChartCard
-            id="requisition"
-            title="Requisition Analysis"
-            subtitle="Requisition Data"
-            icon={<FiBarChart2 className="h-4 w-4 sm:h-5 sm:w-5" />}
-            expandedCard={expandedCard}
-            setExpandedCard={setExpandedCard}
-          >
-            <div className="w-full h-[400px]">
-              <ApplicantStatusChart year={year} month={month} className />
-            </div>
-          </ChartCard>
-        </div>
-        <div className="lg:col-span-2">
-          {/* Monthly Trends Chart */}
-          <ChartCard
-            id="monthlyTrends"
-            title="Monthly Applicant Trends"
-            subtitle="Applications and hires by month"
-            icon={<FiBarChart2 className="h-4 w-4 sm:h-5 sm:w-5" />}
-            expandedCard={expandedCard}
-            setExpandedCard={setExpandedCard}
-          >
-            {loading ? (
-              <div className="w-full h-[300px] flex items-center justify-center">
-                <Skeleton className="h-[250px] w-full" />
-              </div>
-            ) : (
-              <div className="h-[400px]">
-                <Line
-                  data={monthlyTrendsChartData}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        position: "top",
-                      },
-                      tooltip: {
-                        mode: "index",
-                        intersect: false,
-                      },
-                    },
-                    scales: {
-                      y: {
-                        beginAtZero: true,
-                      },
-                    },
-                  }}
-                />
-              </div>
-            )}
-          </ChartCard>
-        </div>
-      </div>
-
-      {/* Distribution Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Source Distribution */}
+      {/* Bottom row with 4 pie charts */}
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <ChartCard
           id="applicationSource"
           title="Applicant Sources"
