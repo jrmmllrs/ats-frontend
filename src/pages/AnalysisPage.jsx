@@ -267,9 +267,10 @@ const AnalysisPage = () => {
           icon={<FiBarChart2 className="h-4 w-4 sm:h-5 sm:w-5" />}
           expandedCard={expandedCard}
           setExpandedCard={setExpandedCard}
+          selectedPosition={selectedPosition} 
         >
           <div className="w-full h-[400px]">
-            <ApplicantStatusChart year={year} month={month} className />
+            <ApplicantStatusChart year={year} month={month} selectedPosition={selectedPosition} className />
           </div>
         </ChartCard>
       </div>
