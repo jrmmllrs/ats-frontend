@@ -60,28 +60,26 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   const fetchStatusHistory = async (progressId) => {
     try {
       const response = await api.get(`/applicant/status-history/${progressId}`);
-      const history = response.data;
 
-      // Sort history from older to newer
-      // const sortedHistory = history.sort((a, b) => new Date(a.changed_at) - new Date(b.changed_at));
+      // Reverse the history so it's oldest to newest
+      const history = response.data.reverse();
+
       setStatusHistory(history);
 
-      // Calculate skipped statuses for each history entry
       const skippedMap = {};
 
       history.forEach((record, index) => {
-        if (index != 0) {
-          if (record.status && history[index - 1]) {
-            const prevIndex = statuses.indexOf(history[index - 1]);
-            const newIndex = statuses.indexOf(record.new_status);
+        if (index > 0) {
+          const prevStatus = history[index - 1].status;
+          const currentStatus = record.status;
 
+          const prevIndex = statuses.indexOf(prevStatus);
+          const currentIndex = statuses.indexOf(currentStatus);
 
-            if (newIndex > prevIndex + 1) {
-              // Get the skipped statuses
-              const skipped = statuses.slice(prevIndex + 1, newIndex);
-              if (skipped.length > 0) {
-                skippedMap[index] = skipped;
-              }
+          if (currentIndex > prevIndex + 1) {
+            const skipped = statuses.slice(prevIndex + 1, currentIndex);
+            if (skipped.length > 0) {
+              skippedMap[index] = skipped;
             }
           }
         }
@@ -92,6 +90,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
       console.error("Error fetching status history:", error);
     }
   };
+
 
   // Function to check if statuses are being skipped
   const checkForSkippedStatuses = (currentStatus, newStatus) => {
@@ -541,7 +540,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
             <div className="text-teal">Discovered Company at</div>
             <div className="col-span-2">{applicant.discovered_at ? formatEnumForDisplay(applicant.discovered_at) : 'Not specified'}</div>
           </div>
-          
+
 
           {/* Tabs */}
           <div className="mt-auto pt-5 flex justify-end">
@@ -573,7 +572,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
           </div>
         </div>
 
-        
+
 
         {toasts.length > 0 && (
           <Toast toasts={toasts} onUndo={undoStatusUpdate} onDismiss={removeToast} />
@@ -606,7 +605,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
       {isResumeNull && (
         <Modal onClose={() => setIsResumeNull(false)}>
           <div className="flex items-center justify-center">
-            <AiFillWarning className="w-20 h-20 text-amber-500"/>
+            <AiFillWarning className="w-20 h-20 text-amber-500" />
           </div>
           <div className="p-6">
             <h1 className="text-lg font-bold text-center mb-4">No Resume Available</h1>
@@ -627,7 +626,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
       {isTestResultNull && (
         <Modal onClose={() => setIsTestResultNull(false)}>
           <div className="flex items-center justify-center">
-            <AiFillWarning className="w-20 h-20 text-amber-500"/>
+            <AiFillWarning className="w-20 h-20 text-amber-500" />
           </div>
           <div className="p-6">
             <h1 className="text-lg font-bold text-center mb-4">No Test Result Available</h1>
