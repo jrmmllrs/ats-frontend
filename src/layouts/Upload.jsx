@@ -4,6 +4,7 @@ import { FiUpload, FiX, FiCheck, FiChevronLeft, FiChevronRight, FiAlertCircle, F
 import useUserStore from "../context/userStore";
 import api from "../api/axios";
 import ReviewApplicants from "../components/Applicant/ReviewApplicants";
+import { formatStatusForDisplay } from "../utils/formatStatus";
 
 function Upload({ onClose }) {
   const [showFailedDetails, setShowFailedDetails] = useState(false);
@@ -67,6 +68,14 @@ function Upload({ onClose }) {
     setFailedCount(0);
     setFailedApplicants([]);
   };
+
+  function convertToTitleSnakeCase(input) {
+    return input
+      .split(" ") // Split the string into words
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalize the first letter of each word
+      .join("_") // Join the words with underscores
+      .toUpperCase(); // Convert the entire string to uppercase
+  }
 
   // Function to find position ID by name
   const findPositionIdByName = (positionName) => {
@@ -327,7 +336,7 @@ function Upload({ onClose }) {
           email_1: acceptedApplicant.email_1,
           mobile_number_1: acceptedApplicant.mobile_number_1,
           cv_link: acceptedApplicant.cv_link,
-          discovered_at: acceptedApplicant.discovered_at,
+          discovered_at: convertToTitleSnakeCase(acceptedApplicant.discovered_at),
           referrer_id: acceptedApplicant.referrer_id,
           created_by: user?.user_id || acceptedApplicant.created_by || "system",
           updated_by: user?.user_id || acceptedApplicant.updated_by || "system",
@@ -335,8 +344,8 @@ function Upload({ onClose }) {
           position_id: positionId,
           position: acceptedApplicant.position,
           test_result: acceptedApplicant.test_result,
-          applied_source: acceptedApplicant.source || acceptedApplicant.applied_source || "",
-          source: acceptedApplicant.source || acceptedApplicant.applied_source || "",
+          applied_source: convertToTitleSnakeCase(acceptedApplicant.source) || convertToTitleSnakeCase(acceptedApplicant.applied_source) || "",
+          source: convertToTitleSnakeCase(acceptedApplicant.source) || convertToTitleSnakeCase(acceptedApplicant.applied_source) || "",
           reason: acceptedApplicant.reason_for_blacklisted || acceptedApplicant.reason_for_blacklisted || null,
           reason_for_rejection: acceptedApplicant.reason_for_rejection || null,
         }),
