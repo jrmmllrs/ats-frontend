@@ -274,7 +274,6 @@ function Upload({ onClose }) {
       return;
     }
 
-
     try {
       setMessage({ type: "info", text: "Reading Excel file..." });
       setIsUploading(true);
@@ -392,14 +391,12 @@ function Upload({ onClose }) {
   };
 
   const handleClose = () => {
-    // Only reset states and close everything if we're not in review mode
     if (!reviewing) {
       resetStates();
       if (onClose && typeof onClose === "function") {
         onClose();
       }
     } else {
-      // If we're in review mode, just exit review mode without closing the whole upload
       setReviewing(false);
     }
   };
@@ -466,7 +463,7 @@ function Upload({ onClose }) {
             </button>
 
             {showFailedDetails && (
-              <div className="mt-2 bg-red-50 rounded-lg p-4 max-h-60 overflow-y-auto">
+              <div className="mt-2 bg-red-50 rounded-lg p-4 max-h-40 overflow-y-auto">
                 <h4 className="font-medium text-red-700 mb-2">Failed Applicants:</h4>
                 <div className="space-y-3">
                   {failedApplicants.map((item, index) => (
@@ -486,7 +483,7 @@ function Upload({ onClose }) {
           </div>
         )}
 
-        <div className="flex justify-end mt-4">
+        <div className="flex justify-end sticky bottom-0 bg-white pt-4">
           <button
             onClick={onClose}
             className="bg-[#008080] hover:bg-[#006666] text-white px-4 py-2 rounded-md transition-colors duration-200"
@@ -633,7 +630,6 @@ function Upload({ onClose }) {
               onPrevious={handlePrevious}
               onAccept={handleAccept}
               onReject={handleReject}
-              // Change this to a new function that only exits review mode
               onClose={() => setReviewing(false)}
             />
 
