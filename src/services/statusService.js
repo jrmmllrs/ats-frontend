@@ -1,4 +1,4 @@
-import api from "../services/api";
+import api from "./api";
 
 export const updateStatusHistory = (record, userID) => {
   const res = api.put(`applicant/status-history/${record.history_id}`, {

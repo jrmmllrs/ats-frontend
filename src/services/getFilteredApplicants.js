@@ -1,4 +1,4 @@
-import api from '../services/api';
+import api from './api';
 
 const getFilteredApplicants = async (dateFilter, dateFilterValue, position, status) => {
     const params = new URLSearchParams();
