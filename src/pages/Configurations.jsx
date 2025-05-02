@@ -3,7 +3,7 @@ import GdriveConfig from '../components/Gdrive';
 import SMTPConfiguration from '../components/SmtpConfig.';
 import api from '../services/api';
 import useUserStore from '../context/userStore';
-import Loader from '../assets/Loader';
+import Loader from '../components/Loader';
 
 const Configurations = () => {
     const [hasGdriveConfig, setHasGdriveConfig] = useState(false);

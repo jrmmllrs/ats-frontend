@@ -3,7 +3,7 @@ import JobCountStore from "../context/jobsCountStore";
 import { useEffect, useState } from "react";
 import { fetchCloseJobsCount, fetchIndustriesCount, fetchJobs, fetchOpenJobsCount, getCloseJobs, getOpenJobs } from "../utils/jobListing";
 import jobStore from "../context/jobListingStore";
-import Loader from "../assets/Loader";
+import Loader from "../components/Loader";
 
 
 
