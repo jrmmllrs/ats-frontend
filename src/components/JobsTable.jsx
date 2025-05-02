@@ -7,7 +7,7 @@ import JobCountStore from '../context/jobsCountStore';
 import setupStore from '../context/setupStore';
 import industriesStore from '../context/industriesStore';
 import { fetchSetups } from '../utils/setupUtils';
-import { fetchIndustries } from '../utils/industriesUtils';
+import { fetchIndustries } from '../services/industriesService';
 import { FaTrash } from "react-icons/fa";
 
 const JobsTable = () => {

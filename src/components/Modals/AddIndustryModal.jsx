@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { FaTimes } from "react-icons/fa";
-import { addIndustry, editIndustry } from "../../utils/industriesUtils";
+import { addIndustry, editIndustry } from "../../services/industriesService";
 import industriesStore from "../../context/industriesStore";
 import useUserStore from "../../context/userStore";
 

@@ -1,9 +1,7 @@
 
 import DataTable from 'react-data-table-component';
-import { useState, useEffect } from 'react';
-import Toast from '../assets/Toast';
+import { useState } from 'react';
 import industriesStore from '../context/industriesStore';
-import { fetchIndustries } from '../utils/industriesUtils';
 import moment from 'moment';
 import AddIndustryModal from './Modals/AddIndustryModal';
 
