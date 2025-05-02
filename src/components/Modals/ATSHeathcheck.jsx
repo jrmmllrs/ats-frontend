@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import api from "../../api/axios.js"; // Import the axios instance
+import api from "../../services/api";
 import { startCase } from "lodash";
 export default function ATSHealthcheck({ onSelectApplicant }) {
   const [activeTab, setActiveTab] = useState("general");

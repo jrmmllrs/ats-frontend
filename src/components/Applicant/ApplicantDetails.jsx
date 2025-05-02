@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Children } from 'react';
 import { FaAddressCard, FaEnvelope, FaPen, FaPhone, FaUser, FaHistory } from 'react-icons/fa';
 import useUserStore from '../../context/userStore';
-import api from '../../api/axios';
+import api from '../../services/api';
 import Toast from '../../assets/Toast';
 import { FaCakeCandles, FaFileLines } from 'react-icons/fa6';
 import AddApplicantForm from '../../pages/AddApplicantForm';

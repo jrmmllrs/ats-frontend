@@ -1,7 +1,7 @@
 import { IoMdSend } from "react-icons/io";
 import MessageBox from "./MessageBox";
 import moment from "moment";
-import api from "../api/axios";
+import api from "../services/api";
 import useUserStore from "../context/userStore";
 import { SlOptionsVertical } from "react-icons/sl";
 import React, { useState, useEffect, useRef } from "react";

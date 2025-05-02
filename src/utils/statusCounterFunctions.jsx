@@ -1,4 +1,4 @@
-import api from "../api/axios";
+import api from "../services/api";
 import moment from "moment";
 import { initialStages } from "./StagesData";
 import { filterApplicants } from "./applicantDataUtils";
@@ -41,7 +41,7 @@ export const filterCounter = async (position, setStages, initialStages, setPosit
   })));
 }
 
-export const clearSelections = (stages, setStages, setSelectedStatuses, clearStatus, setStatus, setPositionFilter, setApplicantData,date , dateType, status) => {
+export const clearSelections = (stages, setStages, setSelectedStatuses, clearStatus, setStatus, setPositionFilter, setApplicantData, date, dateType, status) => {
   setStages(
     stages.map((stage) => ({
       ...stage,

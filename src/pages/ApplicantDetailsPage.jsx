@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import ApplicantDetails from "../components/Applicant/ApplicantDetails";
 import ApplicantDiscussionPage from "../components/Applicant/ApplicantDiscussionPage";
 import ApplicantSendMailPage from "../components/Applicant/ApplicantSendMailPage";
-import api from "../api/axios";
+import api from "../services/api";
 import Loader from "../assets/Loader";
 import useUserStore from "../context/userStore"; // Import the Zustand store
 import AccessDenied from "../assets/AccessDenied.svg"; // Import the Access Denied SVG

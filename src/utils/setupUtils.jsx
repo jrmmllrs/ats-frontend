@@ -1,4 +1,4 @@
-import api from "../api/axios";
+import api from "../services/api";
 
 export const fetchSetups = async (setSetupData) => {
     const { data } = await api.get('/setups')

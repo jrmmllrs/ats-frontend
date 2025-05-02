@@ -11,7 +11,7 @@ import useUserStore from '../context/userStore';
 import { useToastManager } from '../utils/toastManager';
 import { updateStatus } from '../utils/applicantDataUtils';
 import { statusMapping } from '../hooks/statusMapping';
-import api from '../api/axios';
+import api from '../services/api';
 
 const ApplicantTable = ({ onSelectApplicant }) => {
   const { applicantData, setApplicantData, statuses } = useApplicantData();

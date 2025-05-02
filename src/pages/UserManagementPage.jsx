@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import api from "../api/axios";
+import api from "../services/api";
 import { FiUsers, FiPlus } from "react-icons/fi";
 import UserTable from "../components/user-management/UserTable";
 import UserForm from "../components/user-management/UserForm";

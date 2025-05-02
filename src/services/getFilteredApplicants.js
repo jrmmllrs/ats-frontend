@@ -1,4 +1,4 @@
-import api from '../api/axios';
+import api from '../services/api';
 
 const getFilteredApplicants = async (dateFilter, dateFilterValue, position, status) => {
     const params = new URLSearchParams();

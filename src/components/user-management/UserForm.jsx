@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FiX } from "react-icons/fi";
-import api from "../../api/axios";
+import api from "../../services/api";
 import JobTitleChangeConfirm from "./JobTitleChangeConfirm";
 import PermissionCheckbox from "./PermissionCheckbox";
 import ConfirmationModal from "../Modals/ConfirmationModal";

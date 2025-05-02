@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { FaInfoCircle } from "react-icons/fa";
-import api from "../../api/axios";
+import api from "../../services/api";
 
 const TopJobPositions = ({ year, month, isExpanded }) => { // Receive year and month props
   const [showTooltip, setShowTooltip] = useState(false);
@@ -13,17 +13,17 @@ const TopJobPositions = ({ year, month, isExpanded }) => { // Receive year and m
   const fetchTopJobs = useCallback(async (forceRefresh = false) => {
     try {
       setIsLoading(true);
-      
+
       // Check if we have valid cached data
       const cacheKey = `topJobsData_${year}_${month}`;
       const cachedDataString = sessionStorage.getItem(cacheKey);
       const cachedTimeString = sessionStorage.getItem(`${cacheKey}_timestamp`);
-      
+
       if (!forceRefresh && cachedDataString && cachedTimeString) {
         const cachedTime = parseInt(cachedTimeString);
         const currentTime = new Date().getTime();
         const cacheAge = currentTime - cachedTime;
-        
+
         // Cache valid for 5 minutes (300000 ms)
         if (cacheAge < 300000) {
           const parsedData = JSON.parse(cachedDataString);
@@ -33,7 +33,7 @@ const TopJobPositions = ({ year, month, isExpanded }) => { // Receive year and m
           return;
         }
       }
-      
+
       // If no valid cache or force refresh, fetch from API
       let url = `/analytic/metrics`;
 
@@ -44,9 +44,9 @@ const TopJobPositions = ({ year, month, isExpanded }) => { // Receive year and m
       if (month !== "all") {
         url += (url.includes("?") ? "&" : "?") + `month=${month}`;
       }
-      
+
       const response = await api.get(url);
-      
+
       if (response.data && response.data.topJobs && response.data.topJobs.formattedTopJobs) {
         // Transform the data to match our component's expected format
         const formattedJobs = response.data.topJobs.formattedTopJobs.map(job => ({
@@ -54,11 +54,11 @@ const TopJobPositions = ({ year, month, isExpanded }) => { // Receive year and m
           percentage: parseFloat(job.percentage.replace('%', '')), // Remove % sign and convert to number
           count: job.hires
         }));
-        
+
         // Store in session storage with timestamp
         sessionStorage.setItem(cacheKey, JSON.stringify(formattedJobs));
         sessionStorage.setItem(`${cacheKey}_timestamp`, new Date().getTime().toString());
-        
+
         setJobPositions(formattedJobs);
         setLastFetch(new Date().getTime());
       }
@@ -101,7 +101,7 @@ const TopJobPositions = ({ year, month, isExpanded }) => { // Receive year and m
           </button> */}
         </div>
       </div>
-      
+
       {isLoading ? (
         <div className="py-8 text-center text-gray-500">Loading job data...</div>
       ) : error ? (
