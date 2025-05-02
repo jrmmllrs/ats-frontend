@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import useUserStore from "../../context/userStore";
-import { addSetup, editSetup } from "../../utils/setupUtils";
+import { addSetup, editSetup } from "../../services/setupService";
 import setupStore from "../../context/setupStore";
 
 const AddSetupModal = ({ onClose, setupName, setupId }) => {
@@ -16,16 +16,16 @@ const AddSetupModal = ({ onClose, setupName, setupId }) => {
             setsetup((prev) => ({
                 setup_name: setupName ? setupName : "",
                 userId: user.user_id,
-            }))  
+            }))
         }
-    },[user]);
+    }, [user]);
 
     const handleChange = (e) => {
         setsetup({ ...setup, [e.target.name]: e.target.value });
     };
 
     const handleSubmit = (e) => {
-        e.preventDefault();  
+        e.preventDefault();
         setupName ? editSetup(setSetupData, setup, setupId) : addSetup(setSetupData, setup);
         onClose();
     };

@@ -5,7 +5,7 @@ import { fetchJobs, updateJob, fetchCloseJobsCount, fetchOpenJobsCount, getOpenJ
 import JobCountStore from '../context/jobsCountStore';
 import setupStore from '../context/setupStore';
 import industriesStore from '../context/industriesStore';
-import { fetchSetups } from '../utils/setupUtils';
+import { fetchSetups } from '../services/setupService';
 import { fetchIndustries } from '../services/industriesService';
 import { FaTrash } from "react-icons/fa";
 
