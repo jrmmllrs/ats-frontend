@@ -4,6 +4,7 @@ import { FiUpload, FiX, FiCheck, FiChevronLeft, FiChevronRight, FiAlertCircle, F
 import useUserStore from "../context/userStore";
 import api from "../api/axios";
 import ReviewApplicants from "../components/Applicant/ReviewApplicants";
+import { formatStatusForDisplay } from "../utils/formatStatus";
 
 function Upload({ onClose }) {
   const [showFailedDetails, setShowFailedDetails] = useState(false);
@@ -67,6 +68,14 @@ function Upload({ onClose }) {
     setFailedCount(0);
     setFailedApplicants([]);
   };
+
+  function convertToTitleSnakeCase(input) {
+    return input
+      .split(" ") // Split the string into words
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalize the first letter of each word
+      .join("_") // Join the words with underscores
+      .toUpperCase(); // Convert the entire string to uppercase
+  }
 
   // Function to find position ID by name
   const findPositionIdByName = (positionName) => {
@@ -274,7 +283,6 @@ function Upload({ onClose }) {
       return;
     }
 
-
     try {
       setMessage({ type: "info", text: "Reading Excel file..." });
       setIsUploading(true);
@@ -327,7 +335,7 @@ function Upload({ onClose }) {
           email_1: acceptedApplicant.email_1,
           mobile_number_1: acceptedApplicant.mobile_number_1,
           cv_link: acceptedApplicant.cv_link,
-          discovered_at: acceptedApplicant.discovered_at,
+          discovered_at: convertToTitleSnakeCase(acceptedApplicant.discovered_at),
           referrer_id: acceptedApplicant.referrer_id,
           created_by: user?.user_id || acceptedApplicant.created_by || "system",
           updated_by: user?.user_id || acceptedApplicant.updated_by || "system",
@@ -335,8 +343,8 @@ function Upload({ onClose }) {
           position_id: positionId,
           position: acceptedApplicant.position,
           test_result: acceptedApplicant.test_result,
-          applied_source: acceptedApplicant.source || acceptedApplicant.applied_source || "",
-          source: acceptedApplicant.source || acceptedApplicant.applied_source || "",
+          applied_source: convertToTitleSnakeCase(acceptedApplicant.source) || convertToTitleSnakeCase(acceptedApplicant.applied_source) || "",
+          source: convertToTitleSnakeCase(acceptedApplicant.source) || convertToTitleSnakeCase(acceptedApplicant.applied_source) || "",
           reason: acceptedApplicant.reason_for_blacklisted || acceptedApplicant.reason_for_blacklisted || null,
           reason_for_rejection: acceptedApplicant.reason_for_rejection || null,
         }),
@@ -392,14 +400,12 @@ function Upload({ onClose }) {
   };
 
   const handleClose = () => {
-    // Only reset states and close everything if we're not in review mode
     if (!reviewing) {
       resetStates();
       if (onClose && typeof onClose === "function") {
         onClose();
       }
     } else {
-      // If we're in review mode, just exit review mode without closing the whole upload
       setReviewing(false);
     }
   };
@@ -466,7 +472,7 @@ function Upload({ onClose }) {
             </button>
 
             {showFailedDetails && (
-              <div className="mt-2 bg-red-50 rounded-lg p-4 max-h-60 overflow-y-auto">
+              <div className="mt-2 bg-red-50 rounded-lg p-4 max-h-40 overflow-y-auto">
                 <h4 className="font-medium text-red-700 mb-2">Failed Applicants:</h4>
                 <div className="space-y-3">
                   {failedApplicants.map((item, index) => (
@@ -486,7 +492,7 @@ function Upload({ onClose }) {
           </div>
         )}
 
-        <div className="flex justify-end mt-4">
+        <div className="flex justify-end sticky bottom-0 bg-white pt-4">
           <button
             onClick={onClose}
             className="bg-[#008080] hover:bg-[#006666] text-white px-4 py-2 rounded-md transition-colors duration-200"
@@ -633,7 +639,6 @@ function Upload({ onClose }) {
               onPrevious={handlePrevious}
               onAccept={handleAccept}
               onReject={handleReject}
-              // Change this to a new function that only exits review mode
               onClose={() => setReviewing(false)}
             />
 

@@ -34,7 +34,7 @@ const BlacklistedRejected = ({ year, month }) => {
       }
 
       // Fetch data from API
-      const response = await api.get(`/analytic/metrics`, {
+      const response = await api.get(`/analytic/metrics/reason-for-blacklisted`, {
         params: { year, month },
       });
 

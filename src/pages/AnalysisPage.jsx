@@ -23,6 +23,7 @@ import {
 } from "chart.js"
 import { Line, Bar, Pie } from "react-chartjs-2"
 
+// Import your components
 import TopJobPositions from "../components/AnalysisComponents/TopJobPositions"
 import InternalVsExternalHires from "../components/AnalysisComponents/InternalVsExternalHires"
 import CandidateDropOffRate from "../components/AnalysisComponents/CandidateDropOffRate"
@@ -54,14 +55,16 @@ ChartJS.register(
   Filler,
 )
 
-// Helper function to get month name
-const getMonthName = (monthNum) => {
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-  return months[monthNum - 1]
-}
-
-// Custom colors for charts - teal palette
-const COLORS = ["#004040", "#006060", "#008080", "#00a0a0", "#00bfbf", "#e0f7fa", "#e6ffff"]
+// Updated color palette with #008080 as primary
+const COLORS = [
+  "#008080", // Primary teal
+  "#006666", // Darker teal
+  "#00A0A0", // Lighter teal
+  "#00C0C0", // Very light teal
+  "#004D4D", // Dark teal
+  "#00E0E0", // Bright teal
+  "#002B2B"  // Very dark teal
+]
 
 const AnalysisPage = () => {
   const [expandedCard, setExpandedCard] = useState(null)
@@ -94,14 +97,21 @@ const AnalysisPage = () => {
     }
   }
 
-  const fetchDashboardData = async () => {
-    setLoading(true)
-    try {
-      const queryParams = new URLSearchParams()
-      if (year) queryParams.append("year", year)
-      if (month) queryParams.append("month", month)
-      const queryString = queryParams.toString()
+  // Helper function to get month name
+  const getMonthName = (monthNum) => {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    return months[monthNum - 1]
+  }
 
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+      const queryParams = new URLSearchParams();
+      if (year) queryParams.append("year", year);
+      if (month) queryParams.append("month", month);
+      if (selectedPosition) queryParams.append("position_id", selectedPosition);
+      const queryString = queryParams.toString();
+  
       const [
         summaryResponse,
         statusResponse,
@@ -112,37 +122,39 @@ const AnalysisPage = () => {
         applicantsResponse,
         funnelResponse,
         interviewResponse,
-        rejectionResponse,
+        blacklistedResponse,
+        rejectionResponse
       ] = await Promise.all([
         api.get(`/analytics/dashboard/summary?${queryString}`),
         api.get(`/analytics/dashboard/status-distribution?${queryString}`),
         api.get(`/analytics/dashboard/source-distribution?${queryString}`),
         api.get(`/analytics/dashboard/application-source?${queryString}`),
-        api.get(`/analytics/dashboard/monthly-trends?year=${year}`),
+        api.get(`/analytics/dashboard/monthly-trends?${queryString}`),
         api.get(`/analytics/dashboard/job-positions?${queryString}`),
         api.get(`/analytics/dashboard/recent-applicants?${queryString}`),
         api.get(`/analytics/dashboard/hiring-funnel?${queryString}`),
         api.get(`/analytics/dashboard/interview-schedule?${queryString}`),
-        api.get(`/analytic/metrics?${queryString}`),
-      ])
-
-      setSummaryData(summaryResponse.data.data)
-      setStatusDistribution(statusResponse.data.data)
-      setSourceDistribution(sourceResponse.data.data)
-      setApplicationSource(applicationSourceResponse.data.data)
-      setMonthlyTrends(monthlyResponse.data.data)
-      setJobPositions(jobsResponse.data.data)
-      setRecentApplicants(applicantsResponse.data.data)
-      setHiringFunnel(funnelResponse.data.data)
-      setInterviewSchedule(interviewResponse.data.data)
-      setRejection(rejectionResponse.data.reasonForRejection)
-      setBlacklisted(rejectionResponse.data.reasonForBlacklisted)
+        api.get(`/analytic/metrics/reason-for-blacklisted?${queryString}`),
+        api.get(`/analytic/metrics/reason-for-rejection?${queryString}`),
+      ]);
+  
+      setSummaryData(summaryResponse.data.data);
+      setStatusDistribution(statusResponse.data.data);
+      setSourceDistribution(sourceResponse.data.data);
+      setApplicationSource(applicationSourceResponse.data.data);
+      setMonthlyTrends(monthlyResponse.data.data);
+      setJobPositions(jobsResponse.data.data);
+      setRecentApplicants(applicantsResponse.data.data);
+      setHiringFunnel(funnelResponse.data.data);
+      setInterviewSchedule(interviewResponse.data.data);
+      setRejection(rejectionResponse.data.reason_for_rejection);
+      setBlacklisted(blacklistedResponse.data.reason_for_blacklisted);
     } catch (error) {
-      console.error("Error fetching dashboard data:", error)
+      console.error("Error fetching dashboard data:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -158,9 +170,7 @@ const AnalysisPage = () => {
     }
 
     fetchData()
-  }, [year, month])
-
-  
+  }, [year, month, selectedPosition])
 
   const replaceText = (text) => {
     return text ? text.toLowerCase().split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : "Null"
@@ -175,427 +185,613 @@ const AnalysisPage = () => {
         data: monthlyTrends.map((item) => item.applicant_count),
         fill: true,
         backgroundColor: "rgba(0, 128, 128, 0.2)",
-        borderColor: "rgba(0, 128, 128, 1)",
+        borderColor: "#008080",
         tension: 0.4,
+        borderWidth: 2,
+        pointBackgroundColor: "#fff",
+        pointBorderColor: "#008080",
+        pointRadius: 4,
+        pointHoverRadius: 6
       },
       {
         label: "Hired",
         data: monthlyTrends.map((item) => item.hired_count),
         fill: true,
         backgroundColor: "rgba(0, 96, 96, 0.2)",
-        borderColor: "rgba(0, 96, 96, 1)",
+        borderColor: "#006666",
         tension: 0.4,
+        borderWidth: 2,
+        pointBackgroundColor: "#fff",
+        pointBorderColor: "#006666",
+        pointRadius: 4,
+        pointHoverRadius: 6
       },
     ],
   }
 
   return (
-    <div className="space-y-4 xs:space-y-6 sm:space-y-8 p-2 xs:p-4 sm:p-6 min-h-screen">
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-          height: 4px;
-        }
-        @media (min-width: 640px) {
-          .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-          }
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(0, 0, 0, 0.1);
-          border-radius: 3px;
-          transition: background 0.2s ease;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(0, 0, 0, 0.2);
-        }
-        .custom-scrollbar {
-          scrollbar-width: thin;
-          scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
-        }
-      `}</style>
-
-      <FilterControls
-        year={year}
-        setYear={setYear}
-        month={month}
-        setMonth={setMonth}
-        selectedPosition={selectedPosition}
-        setSelectedPosition={setSelectedPosition}
-        positionsFilter={positionsFilter}
-        fetchDashboardData={fetchDashboardData}
-      />
+    <div className="min-h-screen bg-gray-50 p-4 md:p-6 space-y-6">
+      {/* Modern header with filter controls */}
+      <div className="bg-white rounded-xl shadow-sm p-4 md:p-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Recruitment Analytics</h1>
+            <p className="text-gray-500 mt-1">
+              {selectedPosition ? `Showing data for ${selectedPosition}` : "Company-wide overview"}
+            </p>
+          </div>
+          <FilterControls
+            year={year}
+            setYear={setYear}
+            month={month}
+            setMonth={setMonth}
+            selectedPosition={selectedPosition}
+            setSelectedPosition={setSelectedPosition}
+            positionsFilter={positionsFilter}
+            fetchDashboardData={fetchDashboardData}
+          />
+        </div>
+      </div>
 
       <Overlay expandedCard={expandedCard} setExpandedCard={setExpandedCard} />
 
-      {/* Top row with 2 equal cards */}
+      {/* KPI Cards */}
       <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${expandedCard ? "z-0" : ""}`}>
         <Card
           id="applications"
           title="Applications Received"
-          icon={<FiUsers className="h-4 w-4 sm:h-5 sm:w-5" />}
+          icon={<FiUsers className="h-5 w-5 text-teal-600" />}
           expandedCard={expandedCard}
           setExpandedCard={setExpandedCard}
-          selectedPosition={selectedPosition}// Pass selectedPosition
+          selectedPosition={selectedPosition}
+          className="bg-neutral-50"
         >
-          <ApplicationReceived year={year} month={month} selectedPosition={selectedPosition} isExpanded={expandedCard === "applications"} />
-
+          <ApplicationReceived 
+            year={year} 
+            month={month} 
+            selectedPosition={selectedPosition} 
+            isExpanded={expandedCard === "applications"} 
+          />
         </Card>
 
         <Card
           id="dropoff"
           title="Candidate Drop-off Rate"
-          icon={<FiTrendingDown className="h-4 w-4 sm:h-5 sm:w-5" />}
+          icon={<FiTrendingDown className="h-5 w-5 text-teal-500" />}
           expandedCard={expandedCard}
           setExpandedCard={setExpandedCard}
-          selectedPosition={selectedPosition} // Pass selectedPosition
+          selectedPosition={selectedPosition}
+          className="bg-neutral-50"
         >
-          <CandidateDropOffRate year={year} month={month} selectedPosition={selectedPosition} isExpanded={expandedCard === "dropoff"} />
+          <CandidateDropOffRate 
+            year={year} 
+            month={month} 
+            selectedPosition={selectedPosition} 
+            isExpanded={expandedCard === "dropoff"} 
+          />
         </Card>
       </div>
 
-      {/* Requisition Analysis - Full width */}
-      <div className="grid grid-cols-1 gap-6">
-        <ChartCard
-          id="requisition"
-          title="Requisition Analysis"
-          subtitle="Requisition Data"
-          icon={<FiBarChart2 className="h-4 w-4 sm:h-5 sm:w-5" />}
-          expandedCard={expandedCard}
-          setExpandedCard={setExpandedCard}
-        >
-          <div className="w-full h-[400px]">
-            <ApplicantStatusChart year={year} month={month} className />
+      {/* Main Charts Section */}
+      <div className="space-y-6">
+        {/* Requisition Analysis - Full width */}
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div className="p-4 md:p-6 border-b border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-800">Requisition Analysis</h2>
+                <p className="text-sm text-gray-500">Detailed breakdown of applicant status</p>
+              </div>
+              <FiBarChart2 className="h-5 w-5 text-teal-600" />
+            </div>
           </div>
-        </ChartCard>
-      </div>
-
-      {/* Middle row with 2 charts */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <ChartCard
-          id="hiringFunnel"
-          title="Hiring Funnel"
-          subtitle="Applicants at each stage of the hiring process"
-          icon={<FiUsers className="h-4 w-4 sm:h-5 sm:w-5" />}
-          expandedCard={expandedCard}
-          setExpandedCard={setExpandedCard}
-        >
-          {loading ? (
-            <div className="w-full h-[300px] flex items-center justify-center">
-              <Skeleton className="h-[250px] w-full" />
-            </div>
-          ) : (
-            <div className="h-[400px]">
-              <HiringFunnelChart data={hiringFunnel} />
-            </div>
-          )}
-        </ChartCard>
-
-        <ChartCard
-          id="monthlyTrends"
-          title="Monthly Applicant Trends"
-          subtitle="Applications and hires by month"
-          icon={<FiBarChart2 className="h-4 w-4 sm:h-5 sm:w-5" />}
-          expandedCard={expandedCard}
-          setExpandedCard={setExpandedCard}
-        >
-          {loading ? (
-            <div className="w-full h-[300px] flex items-center justify-center">
-              <Skeleton className="h-[250px] w-full" />
-            </div>
-          ) : (
-            <div className="h-[400px]">
-              <Line
-                data={monthlyTrendsChartData}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
-                      position: "top",
-                    },
-                    tooltip: {
-                      mode: "index",
-                      intersect: false,
-                    },
-                  },
-                  scales: {
-                    y: {
-                      beginAtZero: true,
-                    },
-                  },
-                }}
+          <div className="p-4 md:p-6">
+            <div className="w-full h-[400px]">
+              <ApplicantStatusChart 
+                year={year} 
+                month={month} 
+                selectedPosition={selectedPosition} 
               />
             </div>
-          )}
-        </ChartCard>
-      </div>
+          </div>
+        </div>
 
-      {/* Bottom row with 4 pie charts */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <ChartCard
-          id="applicationSource"
-          title="Applicant Sources"
-          subtitle="Where applicants applied from"
-          icon={<FiPieChart className="h-4 w-4 sm:h-5 sm:w-5" />}
-          expandedCard={expandedCard}
-          setExpandedCard={setExpandedCard}
-        >
-          {loading ? (
-            <div className="w-full h-[300px] flex items-center justify-center">
-              <Skeleton className="h-[250px] w-full" />
-            </div>
-          ) : (
-            <div>
-              <div className="h-[300px] flex justify-center">
-                <Pie
-                  data={{
-                    labels: applicationSource && applicationSource.length > 0 ? applicationSource.map((item) => replaceText(item.applied_source)) : ["No Data"],
-                    datasets: [
-                      {
-                        label: "Applicants",
-                        data: applicationSource && applicationSource.length > 0 ? applicationSource.map((item) => item.count) : [1],
-                        backgroundColor: COLORS.map((color) => `${color}`),
-                        borderWidth: 1,
-                      },
-                    ],
-                  }}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        display: true,
-                      },
-                      tooltip: {
-                        callbacks: {
-                          label: (context) => {
-                            const value = context.raw || 0
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0)
-                            const percentage = Math.round((value / total) * 100)
-                            return `${percentage}%`
-                          },
-                        },
-                      },
-                    },
-                  }}
-                />
+        {/* Two-column charts */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {/* Hiring Funnel */}
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="p-4 md:p-6 border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-800">Hiring Funnel</h2>
+                  <p className="text-sm text-gray-500">Applicants at each stage</p>
+                </div>
+                <FiUsers className="h-5 w-5 text-teal-600" />
               </div>
-              {expandedCard === "applicationSource" && (
-                applicationSource && applicationSource.length > 0 ? (
-                  <ul className="mt-4 text-sm text-gray-600">
-                    {applicationSource.map((item, index) => (
-                      <li key={index}>
-                        {replaceText(item.applied_source)}: {item.count}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="mt-4 text-sm text-gray-600">No Data</p>
-                )
+            </div>
+            <div className="p-4 md:p-6">
+              {loading ? (
+                <div className="w-full h-[300px] flex items-center justify-center">
+                  <Skeleton className="h-full w-full rounded-lg" />
+                </div>
+              ) : (
+                <div className="h-[400px]">
+                  <HiringFunnelChart 
+                    data={hiringFunnel} 
+                    colors={COLORS}
+                  />
+                </div>
               )}
             </div>
-          )}
-        </ChartCard>
+          </div>
 
-        <ChartCard
-          id="source"
-          title="Source of Application"
-          subtitle="Where applicants discovered this"
-          icon={<FiPieChart className="h-4 w-4 sm:h-5 sm:w-5" />}
-          expandedCard={expandedCard}
-          setExpandedCard={setExpandedCard}
-        >
-          {loading ? (
-            <div className="w-full h-[300px] flex items-center justify-center">
-              <Skeleton className="h-[250px] w-full" />
+          {/* Monthly Trends */}
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="p-4 md:p-6 border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-800">Monthly Trends</h2>
+                  <p className="text-sm text-gray-500">Applications and hires by month</p>
+                </div>
+                <FiBarChart2 className="h-5 w-5 text-teal-600" />
+              </div>
             </div>
-          ) : (
-            <div>
-              <div className="h-[300px] flex justify-center">
-                <Pie
-                  data={{
-                    labels: sourceDistribution && sourceDistribution.length > 0 ? sourceDistribution.map((item) => replaceText(item.applied_source)) : ["No Data"],
-                    datasets: [
-                      {
-                        label: "Applicants",
-                        data: sourceDistribution && sourceDistribution.length > 0 ? sourceDistribution.map((item) => item.count) : [1],
-                        backgroundColor: COLORS.map((color) => `${color}`),
-                        borderWidth: 1,
-                      },
-                    ],
-                  }}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        display: true,
-                      },
-                      tooltip: {
-                        callbacks: {
-                          label: (context) => {
-                            const value = context.raw || 0
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0)
-                            const percentage = Math.round((value / total) * 100)
-                            return `${percentage}%`
-                          },
+            <div className="p-4 md:p-6">
+              {loading ? (
+                <div className="w-full h-[300px] flex items-center justify-center">
+                  <Skeleton className="h-full w-full rounded-lg" />
+                </div>
+              ) : (
+                <div className="h-[400px]">
+                  <Line
+                    data={monthlyTrendsChartData}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          position: "top",
+                          labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            color: "#4B5563"
+                          }
+                        },
+                        tooltip: {
+                          mode: "index",
+                          intersect: false,
+                          backgroundColor: "rgba(0,0,0,0.8)",
+                          titleFont: { size: 14, weight: "bold" },
+                          bodyFont: { size: 12 },
+                          padding: 12,
+                          cornerRadius: 8
                         },
                       },
-                    },
-                  }}
-                />
-              </div>
-              {expandedCard === "source" && (
-                sourceDistribution && sourceDistribution.length > 0 ? (
-                  <ul className="mt-4 text-sm text-gray-600">
-                    {sourceDistribution.map((item, index) => (
-                      <li key={index}>
-                        {replaceText(item.applied_source)}: {item.count}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="mt-4 text-sm text-gray-600">No Data</p>
-                )
+                      scales: {
+                        y: {
+                          beginAtZero: true,
+                          grid: {
+                            color: "rgba(0,0,0,0.05)"
+                          },
+                          ticks: {
+                            color: "#4B5563"
+                          }
+                        },
+                        x: {
+                          grid: {
+                            display: false
+                          },
+                          ticks: {
+                            color: "#4B5563"
+                          }
+                        }
+                      },
+                      elements: {
+                        line: {
+                          tension: 0.3
+                        }
+                      }
+                    }}
+                  />
+                </div>
               )}
             </div>
-          )}
-        </ChartCard>
+          </div>
+        </div>
 
-        <ChartCard
-          id="rejection"
-          title="Rejected"
-          subtitle="Reason for Rejection"
-          icon={<FiPieChart className="h-4 w-4 sm:h-5 sm:w-5" />}
-          expandedCard={expandedCard}
-          setExpandedCard={setExpandedCard}
-        >
-          {loading ? (
-            <div className="w-full h-[300px] flex items-center justify-center">
-              <Skeleton className="h-[250px] w-full" />
+        {/* First row of two pie charts */}
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          {/* Applicant Sources */}
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="p-4 md:p-6 border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-800">Applicant Sources</h2>
+                  <p className="text-sm text-gray-500">Where applicants applied from</p>
+                </div>
+                <FiPieChart className="h-5 w-5 text-teal-600" />
+              </div>
             </div>
-          ) : (
-            <div>
-              <div className="h-[300px] flex justify-center">
-                <Pie
-                  data={{
-                    labels: rejection && rejection.length > 0 ? rejection.map((item) => replaceText(item.reason)) : ["No Data"],
-                    datasets: [
-                      {
-                        label: "Rejection",
-                        data: rejection && rejection.length > 0 ? rejection.map((item) => item.count) : [1],
-                        backgroundColor: COLORS.map((color) => `${color}`),
-                        borderWidth: 1,
-                      },
-                    ],
-                  }}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        display: true,
-                      },
-                      tooltip: {
-                        callbacks: {
-                          label: (context) => {
-                            const value = context.raw || 0
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0)
-                            const percentage = Math.round((value / total) * 100)
-                            return `${percentage}%`
+            <div className="p-4 md:p-6">
+              {loading ? (
+                <div className="w-full h-[250px] flex items-center justify-center">
+                  <Skeleton className="h-full w-full rounded-full" />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="h-[200px] flex justify-center">
+                    <Pie
+                      data={{
+                        labels: applicationSource?.length > 0 
+                          ? applicationSource.map((item) => replaceText(item.applied_source)) 
+                          : ["No Data"],
+                        datasets: [
+                          {
+                            data: applicationSource?.length > 0 
+                              ? applicationSource.map((item) => item.count) 
+                              : [1],
+                            backgroundColor: COLORS,
+                            borderWidth: 0,
+                          },
+                        ],
+                      }}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                          legend: {
+                            position: 'right',
+                            labels: {
+                              boxWidth: 12,
+                              padding: 12,
+                              usePointStyle: true,
+                              font: {
+                                size: 11
+                              },
+                              color: "#4B5563"
+                            }
+                          },
+                          tooltip: {
+                            backgroundColor: "rgba(0,0,0,0.8)",
+                            titleFont: { size: 12, weight: "bold" },
+                            bodyFont: { size: 11 },
+                            padding: 10,
+                            cornerRadius: 6,
+                            callbacks: {
+                              label: (context) => {
+                                const value = context.raw || 0
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0)
+                                const percentage = Math.round((value / total) * 100)
+                                return `${context.label}: ${value} (${percentage}%)`
+                              },
+                            },
                           },
                         },
-                      },
-                    },
-                  }}
-                />
-              </div>
-              {expandedCard === "rejection" && (
-                rejection && rejection.length > 0 ? (
-                  <ul className="mt-4 text-sm text-gray-600">
-                    {rejection.map((item, index) => (
-                      <li key={index}>
-                        {replaceText(item.reason)}: {item.count}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="mt-4 text-sm text-gray-600">No Data</p>
-                )
+                        cutout: expandedCard === "applicationSource" ? '50%' : '70%'
+                      }}
+                    />
+                  </div>
+                  {expandedCard === "applicationSource" && (
+                    <div className="mt-2">
+                      <ul className="space-y-2 text-sm">
+                        {applicationSource?.length > 0 ? (
+                          applicationSource.map((item, index) => (
+                            <li key={index} className="flex justify-between items-center">
+                              <div className="flex items-center">
+                                <span 
+                                  className="w-3 h-3 rounded-full mr-2" 
+                                  style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                                />
+                                <span>{replaceText(item.applied_source)}</span>
+                              </div>
+                              <span className="font-medium">{item.count}</span>
+                            </li>
+                          ))
+                        ) : (
+                          <li className="text-gray-500">No data available</li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
-          )}
-        </ChartCard>
+          </div>
 
-        <ChartCard
-          id="blacklisted"
-          title="Blacklisted"
-          subtitle="Reason for Blacklisted"
-          icon={<FiPieChart className="h-4 w-4 sm:h-5 sm:w-5" />}
-          expandedCard={expandedCard}
-          setExpandedCard={setExpandedCard}
-        >
-          {loading ? (
-            <div className="w-full h-[300px] flex items-center justify-center">
-              <Skeleton className="h-[250px] w-full" />
+          {/* Source of Application */}
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="p-4 md:p-6 border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-800">Discovery Sources</h2>
+                  <p className="text-sm text-gray-500">How applicants found us</p>
+                </div>
+                <FiPieChart className="h-5 w-5 text-teal-600" />
+              </div>
             </div>
-          ) : (
-            <div>
-              <div className="h-[300px] flex justify-center">
-                <Pie
-                  data={{
-                    labels: blacklisted && blacklisted.length > 0 ? blacklisted.map((item) => replaceText(item.reason)) : ["No Data"],
-                    datasets: [
-                      {
-                        label: "Rejection",
-                        data: blacklisted && blacklisted.length > 0 ? blacklisted.map((item) => item.count) : [1],
-                        backgroundColor: COLORS.map((color) => `${color}`),
-                        borderWidth: 1,
-                      },
-                    ],
-                  }}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        display: true,
-                      },
-                      tooltip: {
-                        callbacks: {
-                          label: (context) => {
-                            const value = context.raw || 0
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0)
-                            const percentage = Math.round((value / total) * 100)
-                            return `${percentage}%`
+            <div className="p-4 md:p-6">
+              {loading ? (
+                <div className="w-full h-[250px] flex items-center justify-center">
+                  <Skeleton className="h-full w-full rounded-full" />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="h-[200px] flex justify-center">
+                    <Pie
+                      data={{
+                        labels: sourceDistribution?.length > 0 
+                          ? sourceDistribution.map((item) => replaceText(item.applied_source)) 
+                          : ["No Data"],
+                        datasets: [
+                          {
+                            data: sourceDistribution?.length > 0 
+                              ? sourceDistribution.map((item) => item.count) 
+                              : [1],
+                            backgroundColor: COLORS,
+                            borderWidth: 0,
+                          },
+                        ],
+                      }}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                          legend: {
+                            position: 'right',
+                            labels: {
+                              boxWidth: 12,
+                              padding: 12,
+                              usePointStyle: true,
+                              font: {
+                                size: 11
+                              },
+                              color: "#4B5563"
+                            }
+                          },
+                          tooltip: {
+                            backgroundColor: "rgba(0,0,0,0.8)",
+                            titleFont: { size: 12, weight: "bold" },
+                            bodyFont: { size: 11 },
+                            padding: 10,
+                            cornerRadius: 6,
+                            callbacks: {
+                              label: (context) => {
+                                const value = context.raw || 0
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0)
+                                const percentage = Math.round((value / total) * 100)
+                                return `${context.label}: ${value} (${percentage}%)`
+                              },
+                            },
                           },
                         },
-                      },
-                    },
-                  }}
-                />
-              </div>
-              {expandedCard === "blacklisted" && (
-                blacklisted && blacklisted.length > 0 ? (
-                  <ul className="mt-4 text-sm text-gray-600">
-                    {blacklisted.map((item, index) => (
-                      <li key={index}>
-                        {replaceText(item.reason)}: {item.count}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="mt-4 text-sm text-gray-600">No Data</p>
-                )
+                        cutout: expandedCard === "source" ? '50%' : '70%'
+                      }}
+                    />
+                  </div>
+                  {expandedCard === "source" && (
+                    <div className="mt-2">
+                      <ul className="space-y-2 text-sm">
+                        {sourceDistribution?.length > 0 ? (
+                          sourceDistribution.map((item, index) => (
+                            <li key={index} className="flex justify-between items-center">
+                              <div className="flex items-center">
+                                <span 
+                                  className="w-3 h-3 rounded-full mr-2" 
+                                  style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                                />
+                                <span>{replaceText(item.applied_source)}</span>
+                              </div>
+                              <span className="font-medium">{item.count}</span>
+                            </li>
+                          ))
+                        ) : (
+                          <li className="text-gray-500">No data available</li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
-          )}
-        </ChartCard>
+          </div>
+        </div>
+
+        {/* Second row of two pie charts */}
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          {/* Rejection Reasons */}
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="p-4 md:p-6 border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-800">Rejection Reasons</h2>
+                  <p className="text-sm text-gray-500">Why candidates were rejected</p>
+                </div>
+                <FiPieChart className="h-5 w-5 text-teal-500" />
+              </div>
+            </div>
+            <div className="p-4 md:p-6">
+              {loading ? (
+                <div className="w-full h-[250px] flex items-center justify-center">
+                  <Skeleton className="h-full w-full rounded-full" />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="h-[200px] flex justify-center">
+                    <Pie
+                      data={{
+                        labels: rejection?.length > 0 
+                          ? rejection.map((item) => replaceText(item.reason)) 
+                          : ["No Data"],
+                        datasets: [
+                          {
+                            data: rejection?.length > 0 
+                              ? rejection.map((item) => item.count) 
+                              : [1],
+                            backgroundColor: COLORS,
+                            borderWidth: 0,
+                          },
+                        ],
+                      }}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                          legend: {
+                            position: 'right',
+                            labels: {
+                              boxWidth: 12,
+                              padding: 12,
+                              usePointStyle: true,
+                              font: {
+                                size: 11
+                              },
+                              color: "#4B5563"
+                            }
+                          },
+                          tooltip: {
+                            backgroundColor: "rgba(0,0,0,0.8)",
+                            titleFont: { size: 12, weight: "bold" },
+                            bodyFont: { size: 11 },
+                            padding: 10,
+                            cornerRadius: 6,
+                            callbacks: {
+                              label: (context) => {
+                                const value = context.raw || 0
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0)
+                                const percentage = Math.round((value / total) * 100)
+                                return `${context.label}: ${value} (${percentage}%)`
+                              },
+                            },
+                          },
+                        },
+                        cutout: expandedCard === "rejection" ? '50%' : '70%'
+                      }}
+                    />
+                  </div>
+                  {expandedCard === "rejection" && (
+                    <div className="mt-2">
+                      <ul className="space-y-2 text-sm">
+                        {rejection?.length > 0 ? (
+                          rejection.map((item, index) => (
+                            <li key={index} className="flex justify-between items-center">
+                              <div className="flex items-center">
+                                <span 
+                                  className="w-3 h-3 rounded-full mr-2" 
+                                  style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                                />
+                                <span>{replaceText(item.reason)}</span>
+                              </div>
+                              <span className="font-medium">{item.count}</span>
+                            </li>
+                          ))
+                        ) : (
+                          <li className="text-gray-500">No data available</li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Blacklisted Reasons */}
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="p-4 md:p-6 border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-800">Blacklist Reasons</h2>
+                  <p className="text-sm text-gray-500">Why candidates were blacklisted</p>
+                </div>
+                <FiPieChart className="h-5 w-5 text-teal-500" />
+              </div>
+            </div>
+            <div className="p-4 md:p-6">
+              {loading ? (
+                <div className="w-full h-[250px] flex items-center justify-center">
+                  <Skeleton className="h-full w-full rounded-full" />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="h-[200px] flex justify-center">
+                    <Pie
+                      data={{
+                        labels: blacklisted?.length > 0 
+                          ? blacklisted.map((item) => replaceText(item.reason)) 
+                          : ["No Data"],
+                        datasets: [
+                          {
+                            data: blacklisted?.length > 0 
+                              ? blacklisted.map((item) => item.count) 
+                              : [1],
+                            backgroundColor: COLORS,
+                            borderWidth: 0,
+                          },
+                        ],
+                      }}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                          legend: {
+                            position: 'right',
+                            labels: {
+                              boxWidth: 12,
+                              padding: 12,
+                              usePointStyle: true,
+                              font: {
+                                size: 11
+                              },
+                              color: "#4B5563"
+                            }
+                          },
+                          tooltip: {
+                            backgroundColor: "rgba(0,0,0,0.8)",
+                            titleFont: { size: 12, weight: "bold" },
+                            bodyFont: { size: 11 },
+                            padding: 10,
+                            cornerRadius: 6,
+                            callbacks: {
+                              label: (context) => {
+                                const value = context.raw || 0
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0)
+                                const percentage = Math.round((value / total) * 100)
+                                return `${context.label}: ${value} (${percentage}%)`
+                              },
+                            },
+                          },
+                        },
+                        cutout: expandedCard === "blacklisted" ? '50%' : '70%'
+                      }}
+                    />
+                  </div>
+                  {expandedCard === "blacklisted" && (
+                    <div className="mt-2">
+                      <ul className="space-y-2 text-sm">
+                        {blacklisted?.length > 0 ? (
+                          blacklisted.map((item, index) => (
+                            <li key={index} className="flex justify-between items-center">
+                              <div className="flex items-center">
+                                <span 
+                                  className="w-3 h-3 rounded-full mr-2" 
+                                  style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                                />
+                                <span>{replaceText(item.reason)}</span>
+                              </div>
+                              <span className="font-medium">{item.count}</span>
+                            </li>
+                          ))
+                        ) : (
+                          <li className="text-gray-500">No data available</li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )
