@@ -18,7 +18,7 @@ function ReviewApplicants({ applicants, currentIndex, onNext, onPrevious, onAcce
     return (
       <div className="bg-white rounded-lg w-full max-w-4xl p-6 shadow-lg">
         <div className="flex justify-between items-center mb-6 border-b border-[#d9ebeb] pb-3">
-          <h2 className="text-2xl font-bold text-[#008080]">Review Applicants</h2>
+                    <h2 className="text-2xl font-bold text-[#008080]">Review Applicants</h2>
           <button
             type="button"
             className="text-[#66b2b2] hover:text-[#008080] transition-colors"
