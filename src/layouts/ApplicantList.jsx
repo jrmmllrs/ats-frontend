@@ -10,7 +10,7 @@ import applicantDataStore from "../context/applicantDataStore";
 import { filterApplicants, searchApplicant } from "../services/applicantService";
 import positionStore from "../context/positionStore";
 import applicantFilterStore from "../context/applicantFilterStore";
-import { clearFilter } from "../utils/applicantListUtils";
+import { clearFilter } from "../utils/applicantUtils";
 import { useStages } from "../hooks/useStages";
 import { fetchCounts } from "../utils/statusCounterFunctions";
 import { initialStages } from "../utils/StagesData";
