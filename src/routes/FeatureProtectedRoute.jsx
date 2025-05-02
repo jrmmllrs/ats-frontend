@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import useUserStore from './userStore';
+import useUserStore from '../context/userStore';
 import api from '../services/api';
 
 const FeatureProtectedRoute = ({ feature, element }) => {
