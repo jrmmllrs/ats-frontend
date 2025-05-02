@@ -4,11 +4,10 @@ import { useStages, handleStageClick } from "../hooks/useStages";
 import { useCollapse } from "../hooks/useCollapse";
 import { filterCounter } from "../utils/statusCounterFunctions";
 import { initialStages } from "../utils/StagesData";
-import { filterApplicants } from "../utils/applicantDataUtils";
+import { filterApplicants } from "../services/applicantService";
 import positionStore from "../context/positionStore";
 import applicantFilterStore from "../context/applicantFilterStore";
 import applicantDataStore from "../context/applicantDataStore";
-import { searchApplicant } from "../utils/applicantDataUtils";
 import { clearSelections } from "../utils/statusCounterFunctions";
 import { MdDeselect } from "react-icons/md";
 import moment from "moment";
@@ -90,7 +89,7 @@ export default function StatusCounter() {
                 ? "bg-teal text-white"
                 : "bg-gray-light text-gray-dark"
                 } hover:bg-teal-soft mb-2 rounded-md px-2`}
-              onClick={() => {handleStageClick(stage, setSelectedStatuses, search, toggleStage, dateFilterType, dateFilter, positionFilter, setApplicantData, setStatusStage); setSearch("")}}
+              onClick={() => { handleStageClick(stage, setSelectedStatuses, search, toggleStage, dateFilterType, dateFilter, positionFilter, setApplicantData, setStatusStage); setSearch("") }}
             >
               <div className="flex flex-1 items-center justify-between">
                 <span className="body-bold">{stage.name}</span>
@@ -116,13 +115,13 @@ export default function StatusCounter() {
                   <div
                     onClick={() => {
                       setSearch(""),
-                      toggleStatus(
-                        stage.name,
-                        Status.name,
-                        Status.value,
-                        positionFilter,
-                        setApplicantData,
-                      );
+                        toggleStatus(
+                          stage.name,
+                          Status.name,
+                          Status.value,
+                          positionFilter,
+                          setApplicantData,
+                        );
                       setSelectedStatuses((prevStatuses) => {
                         const updatedStatuses = prevStatuses.includes(
                           Status.value,

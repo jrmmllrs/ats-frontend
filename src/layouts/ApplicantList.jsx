@@ -7,7 +7,7 @@ import ApplicantTable from "../components/ApplicantTable";
 import ExportToPdf from "../utils/ExportToPdf";
 import moment from "moment";
 import applicantDataStore from "../context/applicantDataStore";
-import { filterApplicants, searchApplicant } from "../utils/applicantDataUtils";
+import { filterApplicants, searchApplicant } from "../services/applicantService";
 import positionStore from "../context/positionStore";
 import applicantFilterStore from "../context/applicantFilterStore";
 import { clearFilter } from "../utils/applicantListUtils";

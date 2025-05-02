@@ -9,7 +9,7 @@ import { useStages } from '../hooks/useStages';
 import applicantFilterStore from '../context/applicantFilterStore';
 import useUserStore from '../context/userStore';
 import { useToastManager } from '../utils/toastManager';
-import { updateStatus } from '../utils/applicantDataUtils';
+import { updateStatus } from '../services/applicantService';
 import { statusMapping } from '../hooks/statusMapping';
 import api from '../services/api';
 

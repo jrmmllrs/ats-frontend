@@ -3,8 +3,7 @@ import { useEffect, useState } from "react";
 import { initialStages } from "../utils/StagesData";
 import { fetchCounts } from "../utils/statusCounterFunctions";
 import statusCounterStore from "../context/statusCounterStore";
-import { filterApplicants } from "../utils/applicantDataUtils";
-import { searchApplicant } from "../utils/applicantDataUtils";
+import { filterApplicants, searchApplicant } from "../services/applicantService";
 import moment from "moment";
 
 export const useStages = () => {
@@ -24,13 +23,13 @@ export const useStages = () => {
       stages.map((stage) =>
         stage.name === stageName
           ? {
-              ...stage,
+            ...stage,
+            selected: !stage.selected,
+            statuses: stage.statuses.map((status) => ({
+              ...status,
               selected: !stage.selected,
-              statuses: stage.statuses.map((status) => ({
-                ...status,
-                selected: !stage.selected,
-              })),
-            }
+            })),
+          }
           : stage,
       ),
     );
@@ -82,19 +81,19 @@ export const handleStageClick = (stage, setSelectedStatuses, search, toggleStage
       updatedStatuses = [
         ...prevStatuses,
         ...stageStatuses.filter((status) => !prevStatuses.includes(status)),
-      ]; 
+      ];
       //setStatusStage(stageStatuses.filter((status) => !prevStatuses.includes(status)));
     }
 
 
     setStatusStage(updatedStatuses);
-    
-    
+
+
     // Call filterApplicants with the updated statuses
     if (search === "") {
       dateFilterType === 'month' ?
-      filterApplicants(positionFilter, setApplicantData, updatedStatuses, moment(dateFilter).format("MMMM"), dateFilterType) :
-      filterApplicants(positionFilter, setApplicantData, updatedStatuses, moment(dateFilter).format("YYYY"), dateFilterType)
+        filterApplicants(positionFilter, setApplicantData, updatedStatuses, moment(dateFilter).format("MMMM"), dateFilterType) :
+        filterApplicants(positionFilter, setApplicantData, updatedStatuses, moment(dateFilter).format("YYYY"), dateFilterType)
     }
     else {
       searchApplicant(search, setApplicantData, positionFilter, updatedStatuses, dateFilterType, dateFilter);
