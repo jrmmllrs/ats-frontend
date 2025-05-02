@@ -18,7 +18,7 @@ import Cookies from "js-cookie"
 import useUserStore from "../context/userStore"
 import api from "../services/api"
 import ConfirmationModal from "../components/Modals/ConfirmationModal"
-import { fetchAppliedSources, fetchDiscoveredSources } from "../utils/sources"
+import { fetchAppliedSources, fetchDiscoveredSources } from "../services/sourcesService"
 import { formatEnumForDisplay } from "../utils/formatEnum"
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL

@@ -1,4 +1,4 @@
-import api from "../services/api";
+import api from "./api";
 
 export const fetchAppliedSources = async (setAppliedSourceData) => {
   const { data } = await api.get(`/company/sources/all`);
