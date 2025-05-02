@@ -1,6 +1,6 @@
 import api from "../services/api";
 import moment from "moment";
-import { initialStages } from "./StagesData";
+import { initialStages } from "../data/stages";
 import { filterApplicants } from "../services/applicantService";
 
 //Fetching all

@@ -1,6 +1,6 @@
 // /src/hooks/useStages.js
 import { useEffect, useState } from "react";
-import { initialStages } from "../utils/StagesData";
+import { initialStages } from "../data/stages";
 import { fetchCounts } from "../utils/statusCounterFunctions";
 import statusCounterStore from "../context/statusCounterStore";
 import { filterApplicants, searchApplicant } from "../services/applicantService";

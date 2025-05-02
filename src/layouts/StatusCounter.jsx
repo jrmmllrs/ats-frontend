@@ -3,7 +3,7 @@ import { usePositions } from "../hooks/usePositions";
 import { useStages, handleStageClick } from "../hooks/useStages";
 import { useCollapse } from "../hooks/useCollapse";
 import { filterCounter } from "../utils/statusCounterFunctions";
-import { initialStages } from "../utils/StagesData";
+import { initialStages } from "../data/stages";
 import { filterApplicants } from "../services/applicantService";
 import positionStore from "../context/positionStore";
 import applicantFilterStore from "../context/applicantFilterStore";

@@ -13,7 +13,7 @@ import applicantFilterStore from "../context/applicantFilterStore";
 import { clearFilter } from "../utils/applicantUtils";
 import { useStages } from "../hooks/useStages";
 import { fetchCounts } from "../utils/statusCounterFunctions";
-import { initialStages } from "../utils/StagesData";
+import { initialStages } from "../data/stages";
 import useUserStore from "../context/userStore"; // Import the Zustand store
 
 export default function ApplicantList({ onSelectApplicant, onAddApplicantClick }) {

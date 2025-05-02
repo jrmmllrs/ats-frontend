@@ -4,7 +4,7 @@ import api from "../services/api";
 import applicantDataStore from "../context/applicantDataStore";
 import { statusMapping } from "../hooks/statusMapping";
 import { fetchCounts } from "./statusCounterFunctions";
-import { initialStages } from "./StagesData";
+import { initialStages } from "../data/stages";
 import statusCounterStore from "../context/statusCounterStore";
 
 export const useToastManager = () => {

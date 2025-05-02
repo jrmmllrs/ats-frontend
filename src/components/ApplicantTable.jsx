@@ -4,7 +4,7 @@ import moment from 'moment';
 import Toast from '../assets/Toast';
 import { useApplicantData } from '../hooks/useApplicantData';
 import positionStore from '../context/positionStore';
-import { initialStages } from '../utils/StagesData';
+import { initialStages } from '../data/stages';
 import { useStages } from '../hooks/useStages';
 import applicantFilterStore from '../context/applicantFilterStore';
 import useUserStore from '../context/userStore';
