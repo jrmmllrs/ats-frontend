@@ -51,10 +51,10 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
         ],
         editorProps: {
             attributes: {
-                class: 'body-regular border border-gray-light rounded-lg min-h-20 max-h-[300px] p-5 mx-auto focus:outline-none overflow-y-auto',
+                class: 'ProseMirror body-regular border border-gray-light rounded-lg min-h-20 max-h-[300px] p-5 mx-auto focus:outline-none overflow-y-auto font-sans',
+                style: 'font-family: Helvetica, Arial, sans-serif;',
             },
         },
-
         content: noteBody,
         onUpdate: ({ editor }) => {
             setNoteBody(editor.getHTML());
@@ -63,22 +63,17 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
 
     useEffect(() => {
         if (showPreviewModal) {
-            // Disable scrolling on the body
             document.body.style.overflow = 'hidden';
         } else {
-            // Re-enable scrolling when modal is closed
             document.body.style.overflow = 'auto';
         }
 
-        // Cleanup function to ensure scroll is re-enabled when component unmounts
         return () => {
             document.body.style.overflow = 'auto';
         };
     }, [showPreviewModal]);
 
-
     useEffect(() => {
-        // Close dropdown when clicking outside
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setIsOpen(false);
@@ -91,7 +86,6 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
         };
     }, []);
 
-    // Clean up PDF preview URL when the modal is closed
     useEffect(() => {
         if (!showPreviewModal && pdfPreviewUrl) {
             URL.revokeObjectURL(pdfPreviewUrl);
@@ -100,6 +94,7 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
     }, [showPreviewModal]);
 
     const handleSubmit = () => {
+        console.log("HTML Content:", noteBody); // Debug output
         const slackFormattedMessage = convertToSlack(noteBody);
 
         const data = {
@@ -113,7 +108,6 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
         };
 
         api.post('/interview/note', data).then((response) => {
-            //trigger the change of the source data
             console.log('add note response: ', response);
             setNoteBody("");
             editor?.commands.clearContent();
@@ -137,17 +131,22 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
                 throw new Error("No valid interview data returned from the server");
             }
 
-            // Generate PDF but don't save it automatically
             const { pdfDoc, fileName } = generatePDF(formattedResults, applicantData[0], false);
+
+            if (!pdfDoc) {
+                throw new Error("PDF generation failed - no document was created");
+            }
+
             setPdfDocument(pdfDoc);
             setPdfFileName(fileName);
 
-            // Convert PDF to blob and create URL for preview
             const blob = pdfDoc.output('blob');
+            if (!blob) {
+                throw new Error("Failed to create PDF blob");
+            }
+
             const url = URL.createObjectURL(blob);
             setPdfPreviewUrl(url);
-
-            // Show the preview modal
             setShowPreviewModal(true);
         } catch (error) {
             console.error("Error exporting interview:", error);
@@ -166,57 +165,153 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
 
     const generatePDF = (interviews, applicantInfo, autoSave = true) => {
         try {
-            // Initialize PDF document
             const doc = new jsPDF({
                 orientation: "portrait",
                 unit: "mm"
             });
 
-            // Use standard fonts with Avenir in the font stack
-            // jsPDF has limited font support, but we can use the standard fonts with larger sizes
-            // Standard available fonts in jsPDF: helvetica, courier, times, symbol, zapfdingbats
-            const primaryFont = "helvetica"; // We'll use helvetica as fallback
+            const primaryFont = "helvetica";
             doc.setFont(primaryFont);
 
-            // Set default dimensions with increased sizes
             const pageWidth = doc.internal.pageSize.width;
             const pageHeight = doc.internal.pageSize.height;
             const margin = 20;
             const contentWidth = pageWidth - (margin * 2);
 
-            // Increase font sizes and spacing for better readability
-            const lineHeight = 8;       // Increased from 6
-            const paragraphSpacing = 10; // Increased from 8
+            const lineHeight = 8;
+            const paragraphSpacing = 10;
 
-            // ==================== HEADER SECTION ====================
-            // Applicant name at the top, large and bold
-            doc.setFontSize(22);        // Increased from 18
+            // Header Section
+            doc.setFontSize(22);
             doc.setFont(primaryFont, "bold");
             doc.setTextColor(0, 0, 0);
 
             const fullName = `${applicantInfo.first_name || ""} ${applicantInfo.middle_name ? applicantInfo.middle_name + " " : ""}${applicantInfo.last_name || ""}`.trim();
             doc.text(fullName, margin, margin);
 
-            // Add subtitle
-            doc.setFontSize(14);        // Increased from 12
+            doc.setFontSize(14);
             doc.setFont(primaryFont, "normal");
-            doc.setTextColor(80, 80, 80); // Darker gray for better readability
+            doc.setTextColor(80, 80, 80);
             doc.text("Interview Feedback Report", margin, margin + 8);
 
-            // Add horizontal line separator
-            doc.setDrawColor(180, 180, 180); // Darker line
-            doc.setLineWidth(0.5);          // Slightly thicker line
+            doc.setDrawColor(180, 180, 180);
+            doc.setLineWidth(0.5);
             doc.line(margin, margin + 12, pageWidth - margin, margin + 12);
 
             let currentY = margin + 20;
 
-            // ==================== INTERVIEWER FEEDBACK SECTIONS ====================
+            const processHtmlContent = (html, pdfDoc, startX, startY, contentWidth) => {
+                let y = startY;
+                const parser = new DOMParser();
+                const docNode = parser.parseFromString(html, 'text/html');
+
+                const processNode = (node, indent = 0, alignment = 'left') => {
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        const text = node.textContent.trim();
+                        if (text) {
+                            if (y > pageHeight - margin - 15) {
+                                pdfDoc.addPage();
+                                y = margin;
+                            }
+
+                            // Get parent styles
+                            let parent = node.parentNode;
+                            let isBold = false;
+                            let isItalic = false;
+                            let isUnderline = false;
+                            
+                            while (parent && parent.nodeType === Node.ELEMENT_NODE) {
+                                if (parent.tagName === 'STRONG' || parent.tagName === 'B') isBold = true;
+                                if (parent.tagName === 'EM' || parent.tagName === 'I') isItalic = true;
+                                if (parent.tagName === 'U') isUnderline = true;
+                                parent = parent.parentNode;
+                            }
+
+                            // Set font style
+                            if (isBold && isItalic) {
+                                pdfDoc.setFont(primaryFont, 'bolditalic');
+                            } else if (isBold) {
+                                pdfDoc.setFont(primaryFont, 'bold');
+                            } else if (isItalic) {
+                                pdfDoc.setFont(primaryFont, 'italic');
+                            } else {
+                                pdfDoc.setFont(primaryFont, 'normal');
+                            }
+
+                            const lines = pdfDoc.splitTextToSize(text, contentWidth - indent);
+
+                            lines.forEach(line => {
+                                // Handle alignment
+                                let xPos = startX + indent;
+                                if (alignment === 'center') {
+                                    xPos = pageWidth / 2;
+                                } else if (alignment === 'right') {
+                                    xPos = pageWidth - margin - indent - pdfDoc.getTextWidth(line);
+                                }
+
+                                pdfDoc.text(line, xPos, y, { align: alignment });
+                                
+                                // Handle underline
+                                if (isUnderline) {
+                                    const textWidth = pdfDoc.getTextWidth(line);
+                                    pdfDoc.line(
+                                        xPos,
+                                        y + 1,
+                                        xPos + textWidth,
+                                        y + 1
+                                    );
+                                }
+                                y += lineHeight;
+                            });
+                        }
+                    } else if (node.nodeType === Node.ELEMENT_NODE) {
+                        switch (node.tagName) {
+                            case 'P':
+                                if (y > startY) y += lineHeight / 2;
+                                const align = node.style?.textAlign || 'left';
+                                Array.from(node.childNodes).forEach(child => processNode(child, indent, align));
+                                y += lineHeight / 2; // Add extra space after paragraphs
+                                break;
+
+                            case 'DIV':
+                                if (y > startY) y += lineHeight / 2;
+                                const divAlign = node.style?.textAlign || 'left';
+                                Array.from(node.childNodes).forEach(child => processNode(child, indent, divAlign));
+                                break;
+
+                            case 'UL':
+                            case 'OL':
+                                Array.from(node.childNodes).forEach(child => processNode(child, indent + 5));
+                                break;
+
+                            case 'LI':
+                                pdfDoc.setFont(primaryFont, 'normal');
+                                const bullet = node.parentNode.tagName === 'UL' ? '•' : `${Array.from(node.parentNode.children).indexOf(node) + 1}.`;
+                                pdfDoc.text(bullet, startX + indent, y);
+                                Array.from(node.childNodes).forEach(child => processNode(child, indent + 8));
+                                break;
+
+                            case 'BR':
+                                y += lineHeight;
+                                break;
+
+                            default:
+                                Array.from(node.childNodes).forEach(child => processNode(child, indent));
+                                break;
+                        }
+                    }
+                };
+
+                Array.from(docNode.body.childNodes).forEach(node => processNode(node));
+                return y;
+            };
+
+            // Interviewer Feedback Sections
             if (interviews.length === 0) {
-                doc.setFontSize(14);        // Increased from 12
+                doc.setFontSize(14);
                 doc.text("No interview records found", margin, currentY);
                 currentY += lineHeight;
             } else {
-                // Filter interviews to only include those with valid notes
                 const validInterviews = interviews.filter(interview => {
                     const validNotes = interview.interview_notes?.filter(note =>
                         note?.note_id && note?.note_type !== "DISCUSSION" && note?.note_body) || [];
@@ -224,18 +319,15 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
                 });
 
                 validInterviews.forEach((interview, index) => {
-                    // Add section spacing between interviewers, but not before the first one
                     if (index > 0) {
                         currentY += paragraphSpacing * 2;
                     }
 
-                    // Check if we need a new page before starting a new interviewer section
                     if (currentY > pageHeight - margin - 40) {
                         doc.addPage();
                         currentY = margin;
                     }
 
-                    // Filter out DISCUSSION type notes and ensure note has valid content
                     const validNotes = interview.interview_notes?.filter(note =>
                         note?.note_id &&
                         note?.note_type !== "DISCUSSION" &&
@@ -243,7 +335,6 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
                         note.note_body.trim() !== "" &&
                         !note.note_body.includes("%Ï")) || [];
 
-                    // Skip if no valid notes
                     if (validNotes.length === 0) {
                         return;
                     }
@@ -252,119 +343,69 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
                         ? `${interview.interviewer_first_name} ${interview.interviewer_last_name || ""}`.trim()
                         : "Interviewer";
 
-                    // Interviewer name and Feedback header
-                    doc.setFontSize(18);    // Increased from 14
+                    doc.setFontSize(18);
                     doc.setFont(primaryFont, "bold");
-                    doc.setTextColor(40, 40, 40); // Darker text
+                    doc.setTextColor(40, 40, 40);
                     doc.text(`${interviewerName}'s Feedback`, margin, currentY);
 
-                    // Add interview date if available - check both possible date fields
                     const interviewDate = interview.interview_date || interview.date_of_interview;
                     if (interviewDate) {
                         const formattedDate = moment(interviewDate).format("MMMM D, YYYY");
-                        doc.setFontSize(12);    // Increased from 10
+                        doc.setFontSize(12);
                         doc.setFont(primaryFont, "italic");
                         doc.setTextColor(120, 120, 120);
                         doc.text(formattedDate, pageWidth - margin, currentY, { align: "right" });
                     }
 
-                    // Interviewer name and Feedback header
-                    doc.setFontSize(18);    // Increased from 14
-                    doc.setFont(primaryFont, "regular");
-                    doc.setTextColor(40, 40, 40); // Darker text
-
                     currentY += lineHeight + 4;
 
-                    // Process each note as a bullet point
                     validNotes.forEach((note, noteIndex) => {
-                        // Check for page break with more space reserved
-                        const estimatedContentHeight = 25; // Increased from 20
-                        if (currentY + estimatedContentHeight > pageHeight - margin) {
+                        if (currentY > pageHeight - margin - 40) {
                             doc.addPage();
                             currentY = margin;
                         }
 
                         const noteBody = note.note_body || "No content";
 
-                        // Clean the note body - remove any control characters or weird symbols
-                        const cleanNoteBody = noteBody.replace(/[^\x20-\x7E\n\r\t]/g, "");
-
-                        // Skip empty notes after cleaning
-                        if (!cleanNoteBody.trim()) {
-                            return;
-                        }
-
-                        // Split the note into paragraphs
-                        const paragraphs = cleanNoteBody.split(/\n+/);
-
-                        // Add note title if available
                         if (note.note_title) {
-                            doc.setFontSize(14);    // Increased from 11
+                            doc.setFontSize(14);
                             doc.setFont(primaryFont, "bold");
                             doc.text(`• ${note.note_title}:`, margin, currentY);
                             currentY += lineHeight;
                         }
 
-                        paragraphs.forEach(paragraph => {
-                            if (!paragraph.trim()) return;
+                        currentY = processHtmlContent(
+                            noteBody,
+                            doc,
+                            margin,
+                            currentY,
+                            contentWidth
+                        );
 
-                            // Check if we need a new page
-                            if (currentY > pageHeight - margin - 15) {
-                                doc.addPage();
-                                currentY = margin;
-                            }
-
-                            // Check for bullet points or numbered items already in the text
-                            if (paragraph.trim().match(/^[●•\-\*]\s+/) || paragraph.trim().match(/^\d+[.)]\s+/)) {
-                                // It's already formatted as a list item
-                                const splitParagraph = doc.splitTextToSize(paragraph, contentWidth - 5);
-
-                                doc.setFont(primaryFont, "normal");
-                                doc.setFontSize(12);    // Increased from 10
-                                doc.text(splitParagraph, margin + 5, currentY); // Increased indent
-                                currentY += (splitParagraph.length * lineHeight);
-                            } else if (paragraph.trim().length > 0) {
-                                // Regular paragraph - add bullet point
-                                const bulletText = `• ${paragraph.trim()}`;
-                                const splitParagraph = doc.splitTextToSize(bulletText, contentWidth - 5);
-
-                                doc.setFont(primaryFont, "normal");
-                                doc.setFontSize(12);    // Increased from 10
-                                doc.text(splitParagraph, margin + 5, currentY); // Increased indent
-                                currentY += (splitParagraph.length * lineHeight);
-                            }
-                        });
-
-                        // Add spacing after note if not the last note
                         if (noteIndex < validNotes.length - 1) {
                             currentY += paragraphSpacing;
                         }
                     });
                 });
 
-                // If no valid interviews were found after filtering
                 if (validInterviews.length === 0) {
-                    doc.setFontSize(14);    // Increased from 12
+                    doc.setFontSize(14);
                     doc.setFont(primaryFont, "normal");
                     doc.text("No feedback records available", margin, currentY);
                 }
             }
 
-            // Generate filename
             const fileName = `${fullName.replace(/\s+/g, "_")}_Interview_Report_${moment().format("YYYYMMDD")}.pdf`;
 
-            // Save PDF automatically if requested
             if (autoSave) {
                 doc.save(fileName);
             }
 
-            // Return the PDF document and filename
             return { pdfDoc: doc, fileName };
 
         } catch (error) {
             console.error("Error generating PDF:", error);
-            alert("Failed to generate PDF. Please check console for details.");
-            return { pdfDoc: null, fileName: "" };
+            throw error;
         }
     };
 
@@ -435,46 +476,46 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
                     <div className="border-t border-gray-200 rounded-b-lg p-2">
                         <div className="mb-2 flex gap-3 rounded-lg" >
                             <BoldIcon
-                                className={`h-6 w-6 cursor-pointer ${editor.isActive("bold") ? "text-teal-600" : "text-gray-600"}`}
-                                onClick={() => editor.chain().focus().toggleBold().run()}
+                                className={`h-6 w-6 cursor-pointer ${editor?.isActive("bold") ? "text-teal-600" : "text-gray-600"}`}
+                                onClick={() => editor?.chain().focus().toggleBold().run()}
                             />
                             <ItalicIcon
-                                className={`h-6 w-6 cursor-pointer ${editor.isActive("italic") ? "text-teal-600" : "text-gray-600"}`}
-                                onClick={() => editor.chain().focus().toggleItalic().run()}
+                                className={`h-6 w-6 cursor-pointer ${editor?.isActive("italic") ? "text-teal-600" : "text-gray-600"}`}
+                                onClick={() => editor?.chain().focus().toggleItalic().run()}
                             />
                             <UnderlineIcon
-                                className={`h-6 w-6 cursor-pointer ${editor.isActive("underline") ? "text-teal-600" : "text-gray-600"}`}
-                                onClick={() => editor.chain().focus().toggleUnderline().run()}
+                                className={`h-6 w-6 cursor-pointer ${editor?.isActive("underline") ? "text-teal-600" : "text-gray-600"}`}
+                                onClick={() => editor?.chain().focus().toggleUnderline().run()}
                             />
                             <ListBulletIcon
-                                className={`h-6 w-6 cursor-pointer ${editor.isActive("bulletList") ? "text-teal-600" : "text-gray-600"}`}
-                                onClick={() => editor.chain().focus().toggleBulletList().run()}
+                                className={`h-6 w-6 cursor-pointer ${editor?.isActive("bulletList") ? "text-teal-600" : "text-gray-600"}`}
+                                onClick={() => editor?.chain().focus().toggleBulletList().run()}
                             />
-                            {/* Text Align Controls */}
                             <Bars3BottomLeftIcon
-                                className={`h-6 w-6 cursor-pointer ${editor.isActive({ textAlign: "left" }) ? "text-teal-600" : "text-gray-600"}`}
-                                onClick={() => editor.chain().focus().setTextAlign("left").run()}
+                                className={`h-6 w-6 cursor-pointer ${editor?.isActive({ textAlign: "left" }) ? "text-teal-600" : "text-gray-600"}`}
+                                onClick={() => editor?.chain().focus().setTextAlign("left").run()}
                             />
                             <Bars3CenterLeftIcon
-                                className={`h-6 w-6 cursor-pointer ${editor.isActive({ textAlign: "center" }) ? "text-teal-600" : "text-gray-600"}`}
-                                onClick={() => editor.chain().focus().setTextAlign("center").run()}
+                                className={`h-6 w-6 cursor-pointer ${editor?.isActive({ textAlign: "center" }) ? "text-teal-600" : "text-gray-600"}`}
+                                onClick={() => editor?.chain().focus().setTextAlign("center").run()}
                             />
                             <Bars3BottomRightIcon
-                                className={`h-6 w-6 cursor-pointer ${editor.isActive({ textAlign: "right" }) ? "text-teal-600" : "text-gray-600"}`}
-                                onClick={() => editor.chain().focus().setTextAlign("right").run()}
+                                className={`h-6 w-6 cursor-pointer ${editor?.isActive({ textAlign: "right" }) ? "text-teal-600" : "text-gray-600"}`}
+                                onClick={() => editor?.chain().focus().setTextAlign("right").run()}
                             />
                         </div>
                         <div className="relative">
                             <EditorContent
                                 editor={editor}
-                                className="
-                                        [&_ul]:list-disc [&_ul]:pl-6
-                                        [&_ol]:list-decimal [&_ol]:pl-6
-                                        [&_em]:font-inherit
-                                        [&_strong]:font-avenir-black
-                                        [&_strong_em]:font-inherit
-                                        [&_em_strong]:font-inherit
-                                    "
+                                className="ProseMirror
+                                    [&_ul]:list-disc [&_ul]:pl-6
+                                    [&_ol]:list-decimal [&_ol]:pl-6
+                                    [&_em]:font-inherit
+                                    [&_strong]:font-avenir-black
+                                    [&_strong_em]:font-inherit
+                                    [&_em_strong]:font-inherit
+                                    font-sans
+                                "
                             />
                             <div className="absolute bottom-0 right-0 ">
                                 <button
@@ -493,7 +534,6 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
                     style={{ overflow: 'hidden' }}>
                     <div className="bg-white rounded-lg shadow-xl w-4/5 h-5/6 flex flex-col max-h-[90vh] overflow-hidden">
-                        {/* Modal Header */}
                         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-light">
                             <h2 className="text-xl font-semibold text-gray-800">PDF Preview</h2>
                             <button
@@ -504,7 +544,6 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
                             </button>
                         </div>
 
-                        {/* PDF Preview */}
                         <div className="flex-1 overflow-hidden p-4">
                             {pdfPreviewUrl ? (
                                 <iframe
@@ -519,7 +558,6 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
                             )}
                         </div>
 
-                        {/* Modal Footer */}
                         <div className="px-6 py-4 border-t border-gray-light flex justify-end">
                             <button
                                 onClick={() => setShowPreviewModal(false)}
