@@ -1,8 +1,7 @@
 import api from "../services/api";
 import moment from "moment";
 import { initialStages } from "./StagesData";
-import { filterApplicants } from "./applicantService";
-import { searchApplicant } from "./applicantService";
+import { filterApplicants } from "../services/applicantService";
 
 //Fetching all
 export const fetchCounts = async (setStages, initialStages) => {
