@@ -2,13 +2,12 @@ import React, { useEffect, useState } from "react";
 import { usePositions } from "../hooks/usePositions";
 import { useStages, handleStageClick } from "../hooks/useStages";
 import { useCollapse } from "../hooks/useCollapse";
-import { filterCounter } from "../utils/statusCounterFunctions";
+import { filterCounter, clearSelections } from "../services/statusCounterService";
 import { initialStages } from "../data/stages";
 import { filterApplicants } from "../services/applicantService";
 import positionStore from "../context/positionStore";
 import applicantFilterStore from "../context/applicantFilterStore";
 import applicantDataStore from "../context/applicantDataStore";
-import { clearSelections } from "../utils/statusCounterFunctions";
 import { MdDeselect } from "react-icons/md";
 import moment from "moment";
 

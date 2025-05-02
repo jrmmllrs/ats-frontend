@@ -1,6 +1,6 @@
 import api from "./api";
 import moment from "moment";
-import { filterCounter } from "../utils/statusCounterFunctions";
+import { filterCounter } from "./statusCounterService";
 
 export const fetchApplicants = async (setApplicantData) => {
   const { data } = await api.get(`/applicants`);
