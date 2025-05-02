@@ -5,7 +5,7 @@ import api from '../../services/api';
 import Toast from '../../assets/Toast';
 import { FaCakeCandles, FaFileLines } from 'react-icons/fa6';
 import AddApplicantForm from '../../pages/AddApplicantForm';
-import { statusMapping } from '../../hooks/statusMapping';
+import { statusMapping } from '../../data/status';
 import { useApplicantData } from '../../hooks/useApplicantData';
 import StatusHistoryModal from '../Modals/StatusHistoryModal';
 import SkipStatusWarningModal from "../Modals/SkipStatusModal";

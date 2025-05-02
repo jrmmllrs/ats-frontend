@@ -10,7 +10,7 @@ import applicantFilterStore from '../context/applicantFilterStore';
 import useUserStore from '../context/userStore';
 import { useToastManager } from '../utils/toastManager';
 import { updateStatus } from '../services/applicantService';
-import { statusMapping } from '../hooks/statusMapping';
+import { statusMapping } from '../data/status';
 import api from '../services/api';
 
 const ApplicantTable = ({ onSelectApplicant }) => {

@@ -2,7 +2,7 @@ import { useState } from "react";
 import useUserStore from "../context/userStore";
 import api from "../services/api";
 import applicantDataStore from "../context/applicantDataStore";
-import { statusMapping } from "../hooks/statusMapping";
+import { statusMapping } from "../data/status";
 import { fetchCounts } from "../services/statusCounterService";
 import { initialStages } from "../data/stages";
 import statusCounterStore from "../context/statusCounterStore";
