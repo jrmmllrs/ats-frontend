@@ -19,8 +19,9 @@ const UserTable = ({ users, loading, searchTerm, onEdit, onRefresh }) => {
     try {
       setOperationLoading(true);
       const endpoint = user.is_deactivated === 1 
-        ? `/user/activate/${user.user_id}`
-        : `/user/deactivate/${user.user_id}`;
+  
+        ? `/user/activate/${encodeURIComponent(user.user_id)}`
+        : `/user/deactivate/${encodeURIComponent(user.user_id)}`;
       await api.put(endpoint);
       onRefresh();
     } catch (error) {
