@@ -35,6 +35,7 @@ const formSchema = {
   position: "",
   source: "",
   referrer: "",
+  referrer_name: "", // Add this new field
   discovered: "",
   testResult: "",
   dateApplied: "",
@@ -74,6 +75,7 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
         position: initialData.job_id || "",
         source: initialData.applied_source || "",
         referrer: initialData.referrer || "",
+        referrer_name: initialData.referrer_name || "", // Add this line
         discovered_at: initialData.discovered_at || "",
         testResult: initialData.test_result || "",
         dateApplied: initialData.applicant_created_at
@@ -137,7 +139,8 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
         mobile_number_2: formData.additionalPhones[0] || null,
         cv_link: formData.cvLink,
         applied_source: formData.source,
-        referrer_id: formData.referrer,
+        referrer_id: null,
+        referrer_name: formData.source === "REFERRAL" ? formData.referrer_name : null, // Add this line
         created_by: user.user_id,
         updated_by: user.user_id,
         company_id: "company_id",
@@ -303,7 +306,8 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
         cv_link: formData.cvLink,
         applied_source: formData.source,
         discovered_at: formData.discovered,
-        referrer_id: formData.referrer,
+        referrer_id: null,
+        referrer_name: formData.source === "REFERRAL" ? formData.referrer_name : null, // Add this line
         created_by: user.user_id,
         updated_by: user.user_id,
         user_id: user.user_id,
@@ -642,22 +646,18 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
                   </div>
 
                   {formData.source === "REFERRAL" && (
-                    <div>
-                      <label className="mb-2 text-gray-dark body-bold flex items-center gap-2 ">Referrer</label>
-                      <select
-                        name="referrer"
-                        value={formData.referrer}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className="w-full p-2 border border-gray-light rounded-md focus:outline-none body-regular"
-                      >
-                        <option value="" disabled>Select Option</option>
-                        {users.map((user) => (
-                          <option key={user.user_id} value={user.user_id}>
-                            {`${user.first_name} ${user.last_name}`}
-                          </option>
-                        ))}
-                      </select>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="mb-2 text-gray-dark body-bold flex items-center gap-2 ">Referrer Name</label>
+                        <input
+                          type="text"
+                          name="referrer_name"
+                          value={formData.referrer_name}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          className="w-full p-2 border border-gray-light rounded-md focus:outline-none body-regular"
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
