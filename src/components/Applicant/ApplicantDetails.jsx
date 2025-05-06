@@ -538,7 +538,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
             <div className="text-teal">Applied from</div>
             <div className="col-span-2">{applicant.applied_source ? formatEnumForDisplay(applicant.applied_source) : 'Not specified'}</div>
             <div className="text-teal">Discovered Company at</div>
-            <div className="col-span-2">{applicant.discovered_at ? formatEnumForDisplay(applicant.discovered_at) : 'Not specified'}</div>
+            <div className="col-span-2">{applicant.referrer_name ? formatEnumForDisplay(applicant.referrer_name) : 'Not specified'}</div>
           </div>
 
 
