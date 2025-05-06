@@ -35,6 +35,7 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
     const [pdfPreviewUrl, setPdfPreviewUrl] = useState(null);
     const [pdfFileName, setPdfFileName] = useState("");
     const [pdfDocument, setPdfDocument] = useState(null);
+    const [isAddingNote, setIsAddingNote] = useState(false);
 
     useEffect(() => {
         if (notesContainerRef.current) {
@@ -102,6 +103,7 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
             slack_message: slackFormattedMessage,
         };
 
+        setIsAddingNote(true); // Start loading
         api.post('/interview/note', data)
             .then((response) => {
                 setNoteBody("");
@@ -110,6 +112,9 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
             })
             .catch((error) => {
                 console.log(error.message);
+            })
+            .finally(() => {
+                setIsAddingNote(false); // Stop loading regardless of success or failure
             });
     };
 
@@ -229,73 +234,73 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
                 orientation: "portrait",
                 unit: "mm"
             });
-    
+
             const primaryFont = "helvetica";
             doc.setFont(primaryFont);
-    
+
             const pageWidth = doc.internal.pageSize.width;
             const pageHeight = doc.internal.pageSize.height;
             const margin = 20;
             const contentWidth = pageWidth - (margin * 2);
-    
+
             const lineHeight = 6; // Reduced from 8
             const paragraphSpacing = 5; // Reduced from 10
-    
+
             // Header Section
             doc.setFontSize(22);
             doc.setFont(primaryFont, "bold");
             doc.setTextColor(0, 0, 0);
-    
+
             const fullName = `${applicantInfo.first_name || ""} ${applicantInfo.middle_name ? applicantInfo.middle_name + " " : ""}${applicantInfo.last_name || ""}`.trim();
             doc.text(fullName, margin, margin);
-    
+
             doc.setFontSize(14);
             doc.setFont(primaryFont, "normal");
             doc.setTextColor(80, 80, 80);
             doc.text("Interview Feedback Report", margin, margin + 7); // Reduced spacing
-    
+
             doc.setDrawColor(180, 180, 180);
             doc.setLineWidth(0.5);
             doc.line(margin, margin + 11, pageWidth - margin, margin + 11); // Reduced spacing
-    
+
             let currentY = margin + 16; // Reduced from 20
-    
+
             // Filter valid interviews with notes
             const validInterviews = interviews.filter(interview => {
                 const validNotes = interview.interview_notes?.filter(note =>
                     note?.note_id && note?.note_type !== "DISCUSSION" && note?.note_body) || [];
                 return validNotes.length > 0;
             });
-    
+
             validInterviews.forEach((interview, index) => {
                 if (index > 0) {
                     currentY += paragraphSpacing; // Reduced from paragraphSpacing * 2
                 }
-    
+
                 if (currentY > pageHeight - margin - 30) { // Adjusted threshold
                     doc.addPage();
                     currentY = margin;
                 }
-    
+
                 const validNotes = interview.interview_notes?.filter(note =>
                     note?.note_id &&
                     note?.note_type !== "DISCUSSION" &&
                     note?.note_body &&
                     note.note_body.trim() !== "") || [];
-    
+
                 if (validNotes.length === 0) {
                     return;
                 }
-    
+
                 const interviewerName = interview.interviewer_first_name
                     ? `${interview.interviewer_first_name} ${interview.interviewer_last_name || ""}`.trim()
                     : "Interviewer";
-    
+
                 doc.setFontSize(16); // Reduced from 18
                 doc.setFont(primaryFont, "bold");
                 doc.setTextColor(40, 40, 40);
                 doc.text(`${interviewerName}'s Feedback`, margin, currentY);
-    
+
                 const interviewDate = interview.interview_date || interview.date_of_interview;
                 if (interviewDate) {
                     const formattedDate = moment(interviewDate).format("MMMM D, YYYY");
@@ -304,23 +309,23 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
                     doc.setTextColor(120, 120, 120);
                     doc.text(formattedDate, pageWidth - margin, currentY, { align: "right" });
                 }
-    
+
                 currentY += lineHeight + 2; // Reduced from +4
-    
+
                 validNotes.forEach((note, noteIndex) => {
                     const estimatedContentHeight = 20; // Reduced from 25
                     if (currentY + estimatedContentHeight > pageHeight - margin) {
                         doc.addPage();
                         currentY = margin;
                     }
-    
+
                     // Parse the Tiptap content to HTML
                     const htmlContent = parseTiptapContent(note.note_body);
-    
+
                     // Create a temporary div to extract text content with formatting
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = htmlContent;
-    
+
                     // Process each node in the content
                     const processNodeForPDF = (node, x, y) => {
                         if (node.nodeType === Node.TEXT_NODE) {
@@ -332,11 +337,11 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
                             }
                             return 0;
                         }
-    
+
                         if (node.nodeType === Node.ELEMENT_NODE) {
                             let heightUsed = 0;
                             const tagName = node.tagName.toLowerCase();
-    
+
                             // Handle different HTML tags
                             switch (tagName) {
                                 case 'strong':
@@ -376,55 +381,55 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
                                 case 'br':
                                     return lineHeight / 2; // Reduced line break height
                             }
-    
+
                             // Process child nodes
                             Array.from(node.childNodes).forEach(child => {
                                 const childHeight = processNodeForPDF(child, x, y + heightUsed);
                                 heightUsed += childHeight;
                             });
-    
+
                             // Reset font to normal after formatted text
                             if (['strong', 'b', 'em', 'i', 'u'].includes(tagName)) {
                                 doc.setFont(primaryFont, 'normal');
                             }
-    
+
                             return heightUsed;
                         }
-    
+
                         return 0;
                     };
-    
+
                     if (note.note_title) {
                         doc.setFontSize(13); // Reduced from 14
                         doc.setFont(primaryFont, "bold");
                         doc.text(`• ${note.note_title}:`, margin, currentY);
                         currentY += lineHeight;
                     }
-    
+
                     // Process the entire content
                     doc.setFontSize(11); // Reduced from 12
                     doc.setFont(primaryFont, 'normal');
                     const contentHeight = processNodeForPDF(tempDiv, margin + 5, currentY);
                     currentY += contentHeight;
-    
+
                     if (noteIndex < validNotes.length - 1) {
                         currentY += (paragraphSpacing / 2); // Reduced spacing between notes
                     }
                 });
             });
-    
+
             if (validInterviews.length === 0) {
                 doc.setFontSize(13); // Reduced from 14
                 doc.setFont(primaryFont, "normal");
                 doc.text("No feedback records available", margin, currentY);
             }
-    
+
             const fileName = `${fullName.replace(/\s+/g, "_")}_Interview_Report_${moment().format("YYYYMMDD")}.pdf`;
-    
+
             if (autoSave) {
                 doc.save(fileName);
             }
-    
+
             return { pdfDoc: doc, fileName };
         } catch (error) {
             console.error("Error generating PDF:", error);
@@ -432,7 +437,7 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
             return { pdfDoc: null, fileName: "" };
         }
     };
-    
+
     return (
         <div className="border border-gray-light rounded-lg bg-white">
             {/* Box Label */}
@@ -543,9 +548,14 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
                             <div className="absolute bottom-0 right-0 ">
                                 <button
                                     onClick={handleSubmit}
+                                    disabled={isAddingNote}
                                     className="rounded-xl text-teal p-2 m-1 hover:text-teal-soft cursor-pointer flex items-center"
                                 >
-                                    <IoMdSend className="size-5" />
+                                    {isAddingNote ? (
+                                        <div className="h-5 w-5 border-2 border-teal border-t-transparent rounded-full animate-spin"></div>
+                                    ) : (
+                                        <IoMdSend className="size-5" />
+                                    )}
                                 </button>
                             </div>
                         </div>
