@@ -30,6 +30,7 @@
     "date-fns": "^4.1.0",
     "file-saver": "^2.0.5",
     "framer-motion": "^12.9.4",
+    "html-to-text": "^9.0.5",
     "js-cookie": "^3.0.5",
     "json2csv": "^6.0.0-alpha.2",
     "jspdf": "^3.0.1",
