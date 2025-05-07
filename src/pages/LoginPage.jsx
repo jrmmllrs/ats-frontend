@@ -102,7 +102,7 @@ export default function LoginPage() {
                 </p>
                 <div className="flex items-center">
                   <div className="w-10 h-10 rounded-full bg-teal-300 flex items-center justify-center text-teal-800 font-bold">
-                    JD
+                    IV
                   </div>
                   <div className="ml-3">
                     <p className="text-white font-medium">Ivan Percival Veniegas</p>
