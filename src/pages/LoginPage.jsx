@@ -78,7 +78,7 @@ export default function LoginPage() {
           {/* Header */}
           <div className="bg-gradient-to-r from-teal-500 to-teal-600 p-6 text-center">
             <div className="flex justify-center mb-3">
-              <div className="bg-white/20 p-3 rounded-full cursor-pointer">
+              <div className="bg-white/20 p-3 rounded-full">
                 <FiUser className="text-white text-2xl" />
               </div>
             </div>
