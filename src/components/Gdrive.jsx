@@ -7,6 +7,7 @@ function GdriveConfig() {
     const [jsonContent, setJsonContent] = useState(null);
     const [folderId, setFolderId] = useState('');
     const [showTooltip, setShowTooltip] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const handlePasteFolderID = async () => {
         try {
@@ -34,6 +35,7 @@ function GdriveConfig() {
     };
 
     const handleUpload = async () => {
+        setIsLoading(true);
         if (!jsonContent || !folderId) {
             alert("Missing JSON or Folder ID");
             return;
@@ -51,6 +53,9 @@ function GdriveConfig() {
             alert("Google Drive credentials successfully added!");
         } catch (error) {
             alert(`Upload failed: ${error.message}`);
+        }
+        finally {
+            setIsLoading(false);
         }
     };
 
@@ -123,9 +128,14 @@ function GdriveConfig() {
             <div className="text-right">
                 <button
                     onClick={handleUpload}
+                    disabled={isLoading}
                     className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md transition"
                 >
-                    Upload Credentials
+                    {isLoading ? (
+                        <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                        'Upload Credentials'
+                    )}
                 </button>
             </div>
         </div>

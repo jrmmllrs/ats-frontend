@@ -22,6 +22,8 @@ const JobsTable = () => {
     const responsibilitiesRef = useRef(null);
     const requirementsRef = useRef(null);
     const preferredQualificationsRef = useRef(null);
+    const [isLoading, setIsLoading] = useState(false);
+
 
 
     useEffect(() => {
@@ -60,6 +62,7 @@ const JobsTable = () => {
     ]);
 
     const handleSubmit = async (e) => {
+        setIsLoading(true);
         e.preventDefault();
         try {
             await updateJob(jobData);
@@ -75,6 +78,9 @@ const JobsTable = () => {
             setIsAddJobModalOpen(false);
         } catch (error) {
             console.error('Error updating job:', error);
+        }
+        finally {
+            setIsLoading(false);
         }
     };
 
@@ -338,8 +344,15 @@ const JobsTable = () => {
                                     >
                                         Cancel
                                     </button>
-                                    <button type="submit" className="px-4 py-2 bg-teal text-white rounded-md cursor-pointer hover:bg-teal/70">
-                                        Edit Job
+                                    <button
+                                        type="submit"
+                                        disabled={isLoading}
+                                        className="px-4 py-2 bg-teal text-white rounded-md cursor-pointer hover:bg-teal/70">
+                                        {isLoading ? (
+                                            <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        ) : (
+                                            'Edit Job'
+                                        )}
                                     </button>
                                 </div>
                             </form>
