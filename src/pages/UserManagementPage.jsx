@@ -13,11 +13,13 @@ function UserManagementPage() {
   const [editId, setEditId] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // Add refresh trigger
 
   // Fetch all data
   const fetchData = async () => {
     try {
       setLoading(true);
+      setError("");
 
       // Fetch users
       const usersRes = await api.get("/user/user-accounts");
@@ -30,8 +32,6 @@ function UserManagementPage() {
       // Fetch job titles
       const jobTitlesRes = await api.get("/user/job-titles");
       setJobTitles(jobTitlesRes.data.job_titles);
-
-      setError("");
     } catch (err) {
       setError(err.response?.data?.message || "Failed to fetch data");
     } finally {
@@ -39,9 +39,14 @@ function UserManagementPage() {
     }
   };
 
+  // Refresh data function
+  const refreshData = () => {
+    setRefreshTrigger(prev => prev + 1); // Increment to trigger refresh
+  };
+
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [refreshTrigger]); // Add refreshTrigger as dependency
 
   return (
     <div className="min-h-screen">
@@ -71,7 +76,10 @@ function UserManagementPage() {
               </div>
 
               <button
-                onClick={() => setIsFormOpen(true)}
+                onClick={() => {
+                  setEditId(null);
+                  setIsFormOpen(true);
+                }}
                 className="flex items-center justify-center gap-2 bg-[#008080] hover:bg-[#006666] text-white font-medium py-2 px-4 rounded-lg transition-all duration-150 ease-in-out shadow-sm hover:shadow-md"
               >
                 <FiPlus className="h-4 w-4" />
@@ -102,6 +110,7 @@ function UserManagementPage() {
                 setEditId(user.user_id);
                 setIsFormOpen(true);
               }}
+              onRefresh={refreshData}
             />
           </div>
         </div>
@@ -118,7 +127,7 @@ function UserManagementPage() {
             setIsFormOpen(false);
           }}
           onSuccess={() => {
-            fetchData();
+            refreshData();
             setEditId(null);
             setIsFormOpen(false);
           }}
