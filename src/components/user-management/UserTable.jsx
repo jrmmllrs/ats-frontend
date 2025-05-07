@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import DataTable from "react-data-table-component";
 import { FiEdit2, FiUsers, FiToggleLeft, FiToggleRight } from "react-icons/fi";
-import api from "../../api/axios";
+import api from "../../services/api";
 import ConfirmationModal from "../Modals/ConfirmationModal";
 
 const UserTable = ({ users, loading, searchTerm, onEdit, onRefresh }) => {
@@ -18,8 +18,8 @@ const UserTable = ({ users, loading, searchTerm, onEdit, onRefresh }) => {
   const handleToggleUserStatus = async (user) => {
     try {
       setOperationLoading(true);
-      const endpoint = user.is_deactivated === 1 
-  
+      const endpoint = user.is_deactivated === 1
+
         ? `/user/activate/${encodeURIComponent(user.user_id)}`
         : `/user/deactivate/${encodeURIComponent(user.user_id)}`;
       await api.put(endpoint);
@@ -75,18 +75,17 @@ const UserTable = ({ users, loading, searchTerm, onEdit, onRefresh }) => {
       cell: row => (
         <div className="flex items-center">
           <button
-            onClick={() => 
+            onClick={() =>
               setModalData({
                 title: row.is_deactivated === 1 ? "Activate User" : "Deactivate User",
                 message: `Are you sure you want to ${row.is_deactivated === 1 ? 'activate' : 'deactivate'} ${row.user_email}?`,
                 confirmAction: () => handleToggleUserStatus(row),
               })
             }
-            className={`flex items-center gap-2 px-3 py-1 rounded-lg text-sm transition-colors ${
-              row.is_deactivated === 1
+            className={`flex items-center gap-2 px-3 py-1 rounded-lg text-sm transition-colors ${row.is_deactivated === 1
                 ? "text-red-700 hover:text-red-700 hover:bg-gray-100"
                 : "text-green-600 hover:text-green-700 hover:bg-gray-100"
-            }`}
+              }`}
             title={row.is_deactivated === 1 ? "Activate user" : "Deactivate user"}
             disabled={operationLoading}
           >
