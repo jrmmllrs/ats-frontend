@@ -219,6 +219,7 @@ const UserForm = ({ editId, jobTitles, serviceFeatures, onClose, onSuccess }) =>
             };
 
             if (editId) {
+                setShowConfirmationModal(false);
                 await api.put(`/user/user-management/${encodeURIComponent(editId)}`, payload);
             } else {
                 await api.post("/user/create-user", payload);
