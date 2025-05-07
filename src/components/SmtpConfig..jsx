@@ -8,6 +8,8 @@ const SMTPConfiguration = () => {
     const [email] = useState(user.user_email);
     const [appPassword, setAppPassword] = useState('');
     const [showTooltip, setShowTooltip] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+
 
     const handlePastePassword = async () => {
         try {
@@ -18,21 +20,32 @@ const SMTPConfiguration = () => {
         }
     };
 
-    const handleAddLink = () => {
-        if (!appPassword) return alert("Please enter the App Password");
+    const handleAddLink = async () => {
+        if (!appPassword) {
+            alert("Please enter the App Password");
+            return;
+        }
 
-        if (window.confirm("Are you sure you want to add this password?")) {
-            api.post('/user-configuration/smtp/add-credentials', {
+        const confirmed = window.confirm("Are you sure you want to add this password?");
+        if (!confirmed) return;
+
+        setIsLoading(true);
+
+        try {
+            await api.post('/user-configuration/smtp/add-credentials', {
                 user_id: user.user_id,
                 app_pass: appPassword
-            })
-                .then(() => {
-                    alert('Password updated successfully');
-                    setAppPassword('');
-                })
-                .catch((err) => alert(`Error: ${err.message}`));
+            });
+
+            alert('Password updated successfully');
+            setAppPassword('');
+        } catch (error) {
+            alert(`Error: ${error.message}`);
+        } finally {
+            setIsLoading(false);
         }
     };
+
 
     return (
         <div className="w-full p-6 bg-white text-gray-dark border border-gray-light rounded-2xl">
@@ -97,9 +110,14 @@ const SMTPConfiguration = () => {
             <div className="text-right">
                 <button
                     onClick={handleAddLink}
+                    disabled={isLoading}
                     className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md transition"
                 >
-                    Add Password
+                    {isLoading ? (
+                        <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                        'Add '
+                    )}
                 </button>
             </div>
         </div>

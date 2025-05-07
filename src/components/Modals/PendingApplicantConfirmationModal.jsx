@@ -91,8 +91,12 @@ const PendingApplicantConfirmationModal = ({ isOpen, onClose, applicant, onActio
               onClick={handleConfirm}
               disabled={isSubmitting}
             >
-              <FiCheck className="inline mr-1" />
-              Confirm
+              {/* <FiCheck className="inline mr-1" /> */}
+              {isSubmitting ? (
+                <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                'Add'
+              )}
             </button>
           </div>
         </div>

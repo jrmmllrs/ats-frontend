@@ -4,6 +4,7 @@ import DiscussionBox from "../DiscussionBox.jsx";
 import InterviewNotes from "../InterviewNotes.jsx";
 import api from "../../services/api";
 import useUserStore from "../../context/userStore.jsx";
+import { IoMdSend } from "react-icons/io";
 
 function ApplicantDiscussionPage({ applicant }) {
   const [activeTab, setActiveTab] = useState("Discussion Box");
@@ -15,6 +16,7 @@ function ApplicantDiscussionPage({ applicant }) {
   const [discussion, setDiscussion] = useState(null);
   const [interviewsArray, setInterviewsArray] = useState([]);
   const { user } = useUserStore();
+  const [isLoading, setIsLoading] = useState(false);
 
   const fetchUsers = () => {
     api.get("/user/user-accounts")
@@ -49,12 +51,14 @@ function ApplicantDiscussionPage({ applicant }) {
         date_of_interview: interviewDate,
         note_type: noteType
       }
-
+      setIsLoading(true);
       api.post('/interview', data).then((response) => {
         fetchDiscussionInterview();
         setIsModalOpen(false);
       }).catch((error) => {
         console.error(error.message);
+      }).finally(() => {
+        setIsLoading(false);
       });
     }
   };
@@ -152,21 +156,23 @@ function ApplicantDiscussionPage({ applicant }) {
               onChange={(e) => setInterviewDate(e.target.value)}
             />
 
-            {/* <label className="block text-sm font-medium text-gray-700 mb-1">Note Type</label>
-            <select
-              className="w-full rounded-lg border border-gray-300 p-2 mb-4"
-              value={noteType}
-              onChange={(e) => setNoteType(e.target.value)}
-            >
-              <option value="FIRST INTERVIEW">First Interview</option>
-              <option value="SECOND INTERVIEW">Second Interview</option>
-              <option value="THIRD INTERVIEW">Third Interview</option>
-            </select> */}
-
             <div className="flex justify-end mt-6 space-x-2">
-              <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
-              <button onClick={handleAddInterview} className="px-4 py-2 text-sm bg-teal-600 text-white rounded-lg hover:bg-teal-700">Add</button>
+              <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">
+                Cancel
+              </button>
+              <button
+                onClick={handleAddInterview}
+                disabled={isLoading}
+                className="px-4 py-2 text-sm bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+              >
+                {isLoading ? (
+                  <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  'Add'
+                )}
+              </button>
             </div>
+
           </div>
         </div>
       )}

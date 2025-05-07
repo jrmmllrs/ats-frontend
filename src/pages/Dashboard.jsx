@@ -83,7 +83,7 @@ const SummarySection = ({ onRefresh, setActiveTab }) => {
               <FiUsers className="mr-2 h-5 w-5 text-teal" />
               <span className="body-regular text-gray-500">Total Applicants</span>
             </div>
-            
+
             {loading ? (
               <Skeleton className="h-8 w-24 mt-2" />
             ) : error ? (
@@ -105,13 +105,13 @@ const SummarySection = ({ onRefresh, setActiveTab }) => {
             <div className="flex justify-center">
               <FiUserCheck className="mr-2 h-5 w-5 text-teal" />
               <span className="body-regular text-gray-500">Hired</span>
-            </div>        
+            </div>
             {loading ? (
               <Skeleton className="h-8 w-24 mt-2" />
             ) : error ? (
               <div className="text-red-500 body-regular mt-2">Error loading data</div>
             ) : (
-              <div className="text-center mt-2">               
+              <div className="text-center mt-2">
                 <div className="text-2xl font-bold">{summaryData?.hired_applicants.toLocaleString()}</div>
               </div>
             )}
@@ -127,13 +127,13 @@ const SummarySection = ({ onRefresh, setActiveTab }) => {
           <div className="flex justify-center">
             <FiCalendar className="mr-2 h-5 w-5 text-teal" />
             <span className="body-regular text-gray-500">In Interview Process</span>
-          </div>  
+          </div>
           {loading ? (
             <Skeleton className="h-8 w-24 mt-2" />
           ) : error ? (
             <div className="text-red-500 body-regular mt-2">Error loading data</div>
           ) : (
-            <div className="text-center mt-2">             
+            <div className="text-center mt-2">
               <div className="text-2xl font-bold">{summaryData?.in_interview.toLocaleString()}</div>
             </div>
           )}
@@ -148,13 +148,13 @@ const SummarySection = ({ onRefresh, setActiveTab }) => {
             <div className="flex justify-center">
               <FiBriefcase className="mr-2 h-5 w-5 text-teal" />
               <span className="body-regular text-gray-500">Open Positions</span>
-            </div>           
+            </div>
             {loading ? (
               <Skeleton className="h-8 w-24 mt-2" />
             ) : error ? (
               <div className="text-red-500 body-regular mt-2">Error loading data</div>
             ) : (
-              <div className="text-center mt-2">        
+              <div className="text-center mt-2">
                 <div className="text-2xl font-bold">{summaryData?.open_positions.toLocaleString()}</div>
               </div>
             )}
@@ -228,7 +228,7 @@ const PendingApplicantsSection = ({ onRefresh }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [selectedApplicant, setSelectedApplicant] = useState(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchPendingApplicants = async () => {
     setLoading(true)
@@ -375,7 +375,7 @@ const InterviewsSection = ({ onRefresh }) => {
 
 export default function Dashboard() {
   // State for tracking refresh trigger
-  const [refreshCounter, setRefreshCounter] = useState(0)
+  const [refreshCounter, setRefreshCounter] = useState(0);
 
   // Active tab
   const [activeTab, setActiveTab] = useState("applicants")
