@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { FiMail, FiLock, FiEye, FiEyeOff, FiUser, FiCopy } from "react-icons/fi";
-import api from "../api/axios";
+import api from "../services/api";
 import Cookies from "js-cookie";
 import useUserStore from "../context/userStore";
 

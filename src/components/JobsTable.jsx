@@ -1,13 +1,12 @@
 import DataTable from 'react-data-table-component';
 import { useState, useEffect, useRef } from 'react';
-import Toast from '../assets/Toast';
 import jobStore from '../context/jobListingStore';
-import { fetchJobs, updateJob, fetchCloseJobsCount, fetchOpenJobsCount, getOpenJobs, getCloseJobs } from '../utils/jobListing';
+import { fetchJobs, updateJob, fetchCloseJobsCount, fetchOpenJobsCount, getOpenJobs, getCloseJobs } from '../services/jobsService';
 import JobCountStore from '../context/jobsCountStore';
 import setupStore from '../context/setupStore';
 import industriesStore from '../context/industriesStore';
-import { fetchSetups } from '../utils/setupUtils';
-import { fetchIndustries } from '../utils/industriesUtils';
+import { fetchSetups } from '../services/setupService';
+import { fetchIndustries } from '../services/industriesService';
 import { FaTrash } from "react-icons/fa";
 
 const JobsTable = () => {

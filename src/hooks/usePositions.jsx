@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getPositions } from "../services/PositionService";
+import { getPositions } from "../services/positionService";
 
 export const usePositions = () => {
     const [positions, setPositions] = useState([]);

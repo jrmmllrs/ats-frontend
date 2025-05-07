@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { FaBars } from "react-icons/fa";
 import { FaBell } from "react-icons/fa6";
-import api from "../api/axios";
+import api from "../services/api";
 import useUserStore from "../context/userStore"; // Import the Zustand store
 
 export default function Header({ onSelectView, onToggleSidebar, onToggleATSHealthcheck, selectedView }) {

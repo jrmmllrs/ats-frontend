@@ -4,7 +4,7 @@ import Sidebar from "./Sidebar.jsx";
 import Header from "./Header.jsx";
 import ATSHealthcheck from "../components/Modals/ATSHeathcheck.jsx";
 import useUserStore from "../context/userStore.jsx";
-import api from "../api/axios.js";
+import api from "../services/api";
 import Cookies from "js-cookie";
 
 export default function MainLayout() {

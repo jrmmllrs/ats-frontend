@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import api from "../api/axios";
-import { FiUsers, FiPlus, FiAlertCircle } from "react-icons/fi";
+import api from "../services/api";
+import { FiUsers, FiPlus } from "react-icons/fi";
 import UserTable from "../components/user-management/UserTable";
 import UserForm from "../components/user-management/UserForm";
 

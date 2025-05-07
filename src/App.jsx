@@ -14,9 +14,9 @@ import Jobs from "./pages/Jobs";
 import Configurations from "./pages/Configurations";
 import UserManagementPage from "./pages/UserManagementPage";
 
-import PrivateRoute from "./context/PrivateRoute";
-import PublicRoute from "./context/PublicRoute";
-import FeatureProtectedRoute from "./context/FeatureProtectedRoute";
+import PrivateRoute from "./routes/PrivateRoute";
+import PublicRoute from "./routes/PublicRoute";
+import FeatureProtectedRoute from "./routes/FeatureProtectedRoute";
 
 
 
@@ -33,7 +33,7 @@ function App() {
 
         {/* Private Routes with Layout */}
         <Route path="/" element={<PrivateRoute element={<MainLayout />} />}>
-        <Route path="/access-denied" element={<AccessDenied />} />
+          <Route path="/access-denied" element={<AccessDenied />} />
           <Route index element={<Navigate to="/dashboard" />} />
 
           {/* Feature-protected Routes */}

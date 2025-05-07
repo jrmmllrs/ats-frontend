@@ -2,12 +2,12 @@ import DataTable from 'react-data-table-component';
 import { useState, useEffect } from 'react';
 import Toast from '../assets/Toast';
 import setupStore from '../context/setupStore';
-import { fetchSetups } from '../utils/setupUtils';
+import { fetchSetups } from '../services/setupService';
 import moment from 'moment';
 import AddSetupModal from './Modals/AddSetupModal';
 
 const SetupTable = ({ onSelectApplicant }) => {
-    const { setupData, setSetupData } = setupStore(); 
+    const { setupData, setSetupData } = setupStore();
     const [setupName, setSetupName] = useState("");
     const [setupId, setSetupId] = useState("")
     const [toasts, setToasts] = useState([]);
@@ -17,7 +17,7 @@ const SetupTable = ({ onSelectApplicant }) => {
         setSetupName(row.setupName)
         setSetupId(row.setupId)
         console.log(row);
-       setIsEditSetupModalOpen(true);
+        setIsEditSetupModalOpen(true);
     };
 
     const columns = [
@@ -48,7 +48,7 @@ const SetupTable = ({ onSelectApplicant }) => {
             )}
 
             {
-                isEditSetupModalOpen ? <AddSetupModal onClose={() => setIsEditSetupModalOpen(false)} setupName={setupName} setupId={setupId}/> : null
+                isEditSetupModalOpen ? <AddSetupModal onClose={() => setIsEditSetupModalOpen(false)} setupName={setupName} setupId={setupId} /> : null
             }
 
             {/* <div className="fixed top-4 right-4 space-y-2">

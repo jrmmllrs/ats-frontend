@@ -39,7 +39,7 @@ import ChartCard from "../components/Analysis/ChartCard"
 import Overlay from "../components/Analysis/Overlay"
 import Skeleton from "../components/Analysis/Skeleton"
 
-import api from "../api/axios"
+import api from "../services/api"
 
 // Register ChartJS components
 ChartJS.register(

@@ -5,7 +5,7 @@ import { IoMdClose } from "react-icons/io";
 import { FiDownload } from "react-icons/fi";
 import MessageBox from "./MessageBox";
 import moment from "moment";
-import api from "../api/axios";
+import api from "../services/api";
 import useUserStore from "../context/userStore";
 import { jsPDF } from "jspdf";
 import { useEditor, EditorContent } from "@tiptap/react";

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
-import api from "../api/axios";
+import api from "../services/api";
 import { usePositions } from "./usePositions";
-import { fetchApplicants } from "../utils/applicantDataUtils";
+import { fetchApplicants } from "../services/applicantService";
 import applicantDataStore from "../context/applicantDataStore";
 
 export const useApplicantData = () => {

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FaPaste } from "react-icons/fa";
 import useUserStore from '../context/userStore';
-import api from '../api/axios';
+import api from '../services/api';
 
 const SMTPConfiguration = () => {
     const { user } = useUserStore();

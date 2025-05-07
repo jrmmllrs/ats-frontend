@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { FiPlus } from "react-icons/fi";
 import DiscussionBox from "../DiscussionBox.jsx";
 import InterviewNotes from "../InterviewNotes.jsx";
-import api from "../../api/axios.js";
+import api from "../../services/api";
 import useUserStore from "../../context/userStore.jsx";
 
 function ApplicantDiscussionPage({ applicant }) {

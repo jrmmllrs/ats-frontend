@@ -18,7 +18,7 @@ import {
   TrashIcon,
   PencilSquareIcon,
 } from "@heroicons/react/24/outline";
-import api from "../../api/axios";
+import api from "../../services/api";
 import ConfirmationModal from "../Modals/ConfirmationModal";
 import SendMailToast from "../../assets/SendMailToast";
 import BulletList from "@tiptap/extension-bullet-list";

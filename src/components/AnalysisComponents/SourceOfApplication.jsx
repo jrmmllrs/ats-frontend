@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip } from "chart.js";
-import api from "../../api/axios";
+import api from "../../services/api";
 
 ChartJS.register(ArcElement, Tooltip);
 
@@ -16,12 +16,12 @@ const SourceOfApplication = ({ year, month }) => { // Receive year and month pro
       const cacheKey = `sourceData_${year}_${month}`;
       const cachedDataString = sessionStorage.getItem(cacheKey);
       const cachedTimeString = sessionStorage.getItem(`${cacheKey}_timestamp`);
-      
+
       if (!forceRefresh && cachedDataString && cachedTimeString) {
         const cachedTime = parseInt(cachedTimeString);
         const currentTime = new Date().getTime();
         const cacheAge = currentTime - cachedTime;
-        
+
         // Cache valid for 5 minutes (300000 ms)
         if (cacheAge < 300000) {
           const parsedData = JSON.parse(cachedDataString);
@@ -30,7 +30,7 @@ const SourceOfApplication = ({ year, month }) => { // Receive year and month pro
           return;
         }
       }
-      
+
       // If no valid cache or force refresh, fetch from API
       let url = `/analytic/graphs/source`;
 
@@ -41,13 +41,13 @@ const SourceOfApplication = ({ year, month }) => { // Receive year and month pro
       if (month !== "all") {
         url += (url.includes("?") ? "&" : "?") + `month=${month}`;
       }
-      
+
       const response = await api.get(url);
-      
+
       // Extract the source data directly from the response
       if (response.data && response.data.source) {
         const sourceData = response.data.source;
-        
+
         // Store in session storage with timestamp
         sessionStorage.setItem(cacheKey, JSON.stringify(sourceData));
         sessionStorage.setItem(`${cacheKey}_timestamp`, new Date().getTime().toString());

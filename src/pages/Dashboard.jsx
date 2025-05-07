@@ -1,7 +1,7 @@
 import { act, useEffect, useState } from "react"
 import { FiUsers, FiUserCheck, FiCalendar, FiBriefcase, FiRefreshCw } from "react-icons/fi"
 
-import api from "../api/axios"
+import api from "../services/api"
 
 import PendingApplicantConfirmationModal from "../components/Modals/PendingApplicantConfirmationModal"
 import RecentTable from "../components/RecentTable"
