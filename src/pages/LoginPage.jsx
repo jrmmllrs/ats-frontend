@@ -5,11 +5,6 @@ import api from "../services/api";
 import Cookies from "js-cookie";
 import useUserStore from "../context/userStore";
 
-const TEST_CREDENTIALS = [
-  { email: "percy@fullsuite.ph", password: "password", label: "Test User" },
-  { email: "jun.zaragosa@fullsuite.ph", password: "password", label: "HR User" },
-];
-
 export default function LoginPage() {
   const navigate = useNavigate();
   const { setUser } = useUserStore();
@@ -19,7 +14,6 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [showTestCredentials, setShowTestCredentials] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -45,11 +39,6 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleCopyCredentials = (userEmail, userPassword) => {
-    setEmail(userEmail);
-    setPassword(userPassword);
   };
 
   const renderInputField = (label, type, value, onChange, placeholder, icon, toggleIcon) => (
@@ -89,7 +78,7 @@ export default function LoginPage() {
           {/* Header */}
           <div className="bg-gradient-to-r from-teal-500 to-teal-600 p-6 text-center">
             <div className="flex justify-center mb-3">
-              <div className="bg-white/20 p-3 rounded-full cursor-pointer" onClick={() => setShowTestCredentials(!showTestCredentials)}>
+              <div className="bg-white/20 p-3 rounded-full cursor-pointer">
                 <FiUser className="text-white text-2xl" />
               </div>
             </div>
@@ -137,29 +126,6 @@ export default function LoginPage() {
             </div>
           </div>
         </div>
-
-        {/* Test Credentials */}
-        {showTestCredentials && (
-          <div className="mt-6 bg-white rounded-xl shadow-lg p-5 space-y-4">
-            <p className="text-center text-gray-600 font-medium">Test Credentials</p>
-            {TEST_CREDENTIALS.map((cred, idx) => (
-              <div key={idx} className="bg-gray-50 p-3 rounded-lg flex justify-between items-center">
-                <div>
-                  <p className="text-sm font-medium text-gray-700">{cred.label}</p>
-                  <p className="text-xs text-gray-500">{cred.email}</p>
-                  <p className="text-xs text-gray-500">Password: {cred.password}</p>
-                </div>
-                <button
-                  onClick={() => handleCopyCredentials(cred.email, cred.password)}
-                  className="flex items-center space-x-1 bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded-lg text-sm"
-                >
-                  <FiCopy size={14} />
-                  <span>Use</span>  
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );
