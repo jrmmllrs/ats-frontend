@@ -16,9 +16,9 @@ import {
 } from "react-icons/fa"
 import Cookies from "js-cookie"
 import useUserStore from "../context/userStore"
-import api from "../api/axios"
+import api from "../services/api"
 import ConfirmationModal from "../components/Modals/ConfirmationModal"
-import { fetchAppliedSources, fetchDiscoveredSources } from "../utils/sources"
+import { fetchAppliedSources, fetchDiscoveredSources } from "../services/sourcesService"
 import { formatEnumForDisplay } from "../utils/formatEnum"
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
@@ -35,6 +35,7 @@ const formSchema = {
   position: "",
   source: "",
   referrer: "",
+  referrer_name: "",
   discovered: "",
   testResult: "",
   dateApplied: "",
@@ -50,13 +51,11 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
   const [duplicates, setDuplicates] = useState([])
   const [pendingSubmit, setPendingSubmit] = useState(false)
   const user = useUserStore((state) => state.user)
-  const [modalType, setModalType] = useState(null) // 'submit' or 'cancel'
-  const [cvAttatchement, setcvAttatchement] = useState();
-  const [appliedSource, setAppliedSource] = useState([]);
-  const [discoveredSource, setDiscoveredSource] = useState([]);
+  const [modalType, setModalType] = useState(null)
+  const [appliedSource, setAppliedSource] = useState([])
+  const [discoveredSource, setDiscoveredSource] = useState([])
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-
-  // Determine if we're editing or adding based on initialData
   const isEditing = !!initialData
 
   useEffect(() => {
@@ -74,7 +73,8 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
         position: initialData.job_id || "",
         source: initialData.applied_source || "",
         referrer: initialData.referrer || "",
-        discovered_at: initialData.discovered_at || "",
+        referrer_name: initialData.referrer_name || "",
+        discovered: initialData.discovered_at || "",
         testResult: initialData.test_result || "",
         dateApplied: initialData.applicant_created_at
           ? new Date(initialData.applicant_created_at).toISOString().split("T")[0]
@@ -115,8 +115,9 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
         console.error("Error fetching users:", error)
       }
     }
-    fetchAppliedSources(setAppliedSource);
-    fetchDiscoveredSources(setDiscoveredSource);
+
+    fetchAppliedSources(setAppliedSource)
+    fetchDiscoveredSources(setDiscoveredSource)
     fetchPositions()
     fetchUsers()
   }, [])
@@ -137,7 +138,8 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
         mobile_number_2: formData.additionalPhones[0] || null,
         cv_link: formData.cvLink,
         applied_source: formData.source,
-        referrer_id: formData.referrer,
+        referrer_id: null,
+        referrer_name: formData.source === "REFERRAL" ? formData.referrer_name : null,
         created_by: user.user_id,
         updated_by: user.user_id,
         company_id: "company_id",
@@ -149,8 +151,6 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
 
     try {
       const duplicateCheckResponse = await api.post("/applicants/add/check-duplicates", payload)
-
-      console.log("Duplicate check response:", duplicateCheckResponse.data)
       if (duplicateCheckResponse.data.isDuplicate) {
         setDuplicates(duplicateCheckResponse.data.possibleDuplicates)
       } else {
@@ -160,17 +160,16 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
       console.error("Error checking for duplicates:", error)
     }
   }
+
   const handleAddEmail = () => {
-    // Check if we already have empty fields that aren't displayed
     const visibleEmails = formData.additionalEmails.filter((email) => email !== "").length
     const totalEmails = formData.additionalEmails.length
 
     if (visibleEmails < totalEmails) {
-      // If we have hidden empty fields, just make one visible by adding a space
       const newEmails = [...formData.additionalEmails]
       for (let i = 0; i < newEmails.length; i++) {
         if (newEmails[i] === "") {
-          newEmails[i] = " " // Add a space to make it visible
+          newEmails[i] = " "
           break
         }
       }
@@ -179,7 +178,6 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
         additionalEmails: newEmails,
       }))
     } else if (totalEmails < 2) {
-      // If we have less than 2 total fields, add a new one
       setFormData((prev) => ({
         ...prev,
         additionalEmails: [...prev.additionalEmails, " "],
@@ -188,7 +186,6 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
   }
 
   const handleRemoveEmail = async (index) => {
-
     await setFormData((prev) => {
       const newEmails = [...prev.additionalEmails];
       newEmails[index] = '';
@@ -197,16 +194,14 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
   };
 
   const handleAddPhone = () => {
-    // Check if we already have empty fields that aren't displayed
     const visiblePhones = formData.additionalPhones.filter((phone) => phone !== "").length
     const totalPhones = formData.additionalPhones.length
 
     if (visiblePhones < totalPhones) {
-      // If we have hidden empty fields, just make one visible by adding a space
       const newPhones = [...formData.additionalPhones]
       for (let i = 0; i < newPhones.length; i++) {
         if (newPhones[i] === "") {
-          newPhones[i] = " " // Add a space to make it visible
+          newPhones[i] = " "
           break
         }
       }
@@ -215,7 +210,6 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
         additionalPhones: newPhones,
       }))
     } else if (totalPhones < 1) {
-      // If we have less than 1 total field, add a new one
       setFormData((prev) => ({
         ...prev,
         additionalPhones: [...prev.additionalPhones, " "],
@@ -225,11 +219,8 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
 
   const handleCVAttachementChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
-      console.log(e.target.files[0]);
       const file = e.target.files[0];
       handleUploadCV(file);
-    } else {
-      console.log('file unsuccessfully read');
     }
   }
 
@@ -238,16 +229,15 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
     formdata.append('file', file);
     formdata.append('company_id', user.company_id);
 
-    await api.post("/upload/gdrive/cv", formdata).then((response) => {
-      console.log('response', response);
-
+    try {
+      const response = await api.post("/upload/gdrive/cv", formdata);
       setFormData((prev) => ({
         ...prev,
         cvLink: response.data.fileUrl
-      }))
-    }).catch((error) => {
-      console.log(error);
-    })
+      }));
+    } catch (error) {
+      console.error("CV upload failed:", error);
+    }
   }
 
   const handleRemovePhone = async (index) => {
@@ -257,6 +247,7 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
       return { ...prev, additionalPhones: newPhones };
     });
   }
+
   const handleChange = async (e) => {
     const { name, value } = e.target
     if (name.startsWith("additionalEmail")) {
@@ -277,11 +268,11 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
       setFormData((prev) => ({ ...prev, [name]: value }))
     }
   }
+
   const handleBlur = () => {
     checkForDuplicates()
   }
 
-  // Modify handleSubmit
   const handleSubmit = async (e) => {
     e.preventDefault()
     setPendingSubmit(true)
@@ -290,7 +281,8 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
   }
 
   const confirmSubmit = async () => {
-    setShowConfirmationModal(false)
+    setShowConfirmationModal(false);
+    setIsSubmitting(true);
     const payload = {
       applicant: JSON.stringify({
         first_name: formData.firstName,
@@ -300,10 +292,11 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
         gender: formData.gender,
         email_1: formData.email,
         mobile_number_1: formData.phone,
-        cv_link: formData.cvLink,
+        cv_link: formData.cvLink || (initialData?.cv_link || ""), // Preserve existing CV link if no new one
         applied_source: formData.source,
         discovered_at: formData.discovered,
-        referrer_id: formData.referrer,
+        referrer_id: null,
+        referrer_name: formData.source === "REFERRAL" ? formData.referrer_name : null,
         created_by: user.user_id,
         updated_by: user.user_id,
         user_id: user.user_id,
@@ -318,8 +311,6 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
       }),
     }
 
-    console.log("Payload:", payload)
-
     try {
       let response
       if (isEditing) {
@@ -333,6 +324,8 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
       onClose()
     } catch (error) {
       console.error("Error submitting applicant:", error)
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -353,6 +346,18 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
 
   return (
     <>
+      {isSubmitting && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 backdrop-blur-sm bg-black/10"></div>
+          <div className="relative bg-white p-6 rounded-lg flex flex-col items-center gap-2 shadow-lg">
+            <svg className="animate-spin h-8 w-8 text-teal" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+            </svg>
+            <span className="mt-2 text-teal font-semibold">Submitting...</span>
+          </div>
+        </div>
+      )}
       <div className="bg-white">
         <div className="min-h-screen p-8">
           <div className="flex justify-between items-center mb-6 p-4">
@@ -371,7 +376,6 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
                     Applicant Name
                   </h3>
                   <div className="grid gap-4 sm:grid-cols-3">
-
                     <div>
                       <input
                         type="text"
@@ -421,7 +425,6 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
                         onBlur={handleBlur}
                         className="w-full p-2 border border-gray-light rounded-md focus:outline-none body-regular"
                       />
-                      {/* <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-dark" /> */}
                     </div>
                   </div>
 
@@ -454,15 +457,11 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
                       </label>
                     </div>
                   </div>
-
-
                 </div>
 
                 {/* contact */}
                 <div className="space-y-4">
                   <label className="body-bold text-gray-dark flex gap-2 mb-2">Contact Information</label>
-
-                  {/* Two-column layout for contact form */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <div className="flex gap-2 items-start">
@@ -613,7 +612,6 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
                       />
                     </div>
                   </div>
-
                 </div>
 
                 {/* source and referrer */}
@@ -632,32 +630,25 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
                       <option disabled value="">Select source</option>
                       {appliedSource.map((source, index) => (
                         <option key={index} value={source}>
-                          {
-                            formatEnumForDisplay(source)
-                          }
+                          {formatEnumForDisplay(source)}
                         </option>
                       ))}
                     </select>
-
                   </div>
 
                   {formData.source === "REFERRAL" && (
-                    <div>
-                      <label className="mb-2 text-gray-dark body-bold flex items-center gap-2 ">Referrer</label>
-                      <select
-                        name="referrer"
-                        value={formData.referrer}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className="w-full p-2 border border-gray-light rounded-md focus:outline-none body-regular"
-                      >
-                        <option value="" disabled>Select Option</option>
-                        {users.map((user) => (
-                          <option key={user.user_id} value={user.user_id}>
-                            {`${user.first_name} ${user.last_name}`}
-                          </option>
-                        ))}
-                      </select>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="mb-2 text-gray-dark body-bold flex items-center gap-2 ">Referrer Name</label>
+                        <input
+                          type="text"
+                          name="referrer_name"
+                          value={formData.referrer_name}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          className="w-full p-2 border border-gray-light rounded-md focus:outline-none body-regular"
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -677,13 +668,10 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
                       <option disabled value="">Select source</option>
                       {discoveredSource.map((source, index) => (
                         <option key={index} value={source}>
-                          {
-                            formatEnumForDisplay(source)
-                          }
+                          {formatEnumForDisplay(source)}
                         </option>
                       ))}
                     </select>
-
                   </div>
                 </div>
 
@@ -692,16 +680,32 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
                   <label className="mb-2 text-gray-dark body-bold flex items-center gap-2">
                     CV Link
                   </label>
+                  {formData.cvLink && (
+                    <div className="mb-2">
+                      <a
+                        href={formData.cvLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-teal underline"
+                      >
+                        View Current CV
+                      </a>
+                    </div>
+                  )}
                   <div className="relative">
                     <input
                       type="file"
                       name="cvLink"
                       onChange={handleCVAttachementChange}
-                      onBlur={handleBlur}
                       className="w-full p-2 border border-gray-light rounded-md focus:outline-none pl-10 body-regular"
                     />
                     <FaLink className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 text-gray-dark" />
                   </div>
+                  {isEditing && (
+                    <p className="text-sm text-gray-500 mt-1">
+                      Leave empty to keep current CV
+                    </p>
+                  )}
                 </div>
 
                 {/* test result */}
@@ -810,32 +814,16 @@ function AddApplicantForm({ onClose, initialData, onEditSuccess }) {
                   ? "Are you sure you want to submit this form?"
                   : "Are you sure you want to cancel? All unsaved changes will be lost."
               }
-              confirmText={modalType === 'submit' ? "Submit" : "Yes, Cancel"}
-              cancelText={modalType === 'submit' ? "Cancel" : "No, Continue Editing"}
+              confirmText={modalType === 'submit' ? "Submit" : "Confirm"}
+              cancelText={modalType === 'submit' ? "Back" : "Back"}
               onConfirm={modalType === 'submit' ? confirmSubmit : confirmCancel}
               onCancel={closeModal}
             />
           )}
-
         </div>
-        {showConfirmationModal && (
-          <ConfirmationModal
-            title={modalType === 'submit' ? "Confirm Submission" : "Cancel Form"}
-            message={
-              modalType === 'submit'
-                ? "Are you sure you want to submit this form?"
-                : "Are you sure you want to cancel? All unsaved changes will be lost."
-            }
-            confirmText={modalType === 'submit' ? "Submit" : "Confirm"}
-            cancelText={modalType === 'submit' ? "Back" : "Back"}
-            onConfirm={modalType === 'submit' ? confirmSubmit : confirmCancel}
-            onCancel={closeModal}
-          />
-        )}
       </div>
     </>
   )
 }
 
 export default AddApplicantForm
-

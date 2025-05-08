@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import * as XLSX from "xlsx";
 import { FiUpload, FiX, FiCheck, FiChevronLeft, FiChevronRight, FiAlertCircle, FiInfo, FiLoader, FiChevronUp, FiChevronDown } from "react-icons/fi";
 import useUserStore from "../context/userStore";
-import api from "../api/axios";
+import api from "../services/api";
 import ReviewApplicants from "../components/Applicant/ReviewApplicants";
 import { formatStatusForDisplay } from "../utils/formatStatus";
 

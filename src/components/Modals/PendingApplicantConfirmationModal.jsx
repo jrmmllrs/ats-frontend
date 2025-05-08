@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { FiCheck, FiX } from "react-icons/fi";
-import api from "../../api/axios";
+import api from "../../services/api";
 
 const PendingApplicantConfirmationModal = ({ isOpen, onClose, applicant, onActionComplete }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -11,7 +11,7 @@ const PendingApplicantConfirmationModal = ({ isOpen, onClose, applicant, onActio
       // Disable scrolling when modal opens
       document.body.style.overflow = 'hidden';
     }
-    
+
     // Re-enable scrolling when modal closes
     return () => {
       document.body.style.overflow = '';
@@ -63,13 +63,13 @@ const PendingApplicantConfirmationModal = ({ isOpen, onClose, applicant, onActio
         <div className="rounded-lg bg-white p-6 shadow-lg max-w-md w-full">
           <h2 className="mb-4 text-lg font-semibold">Pending Applicant Actions</h2>
           <p className="mb-4">{message}</p>
-          
+
           {error && (
             <div className="mb-4 text-sm text-red-600 bg-red-50 p-2 rounded">
               {error}
             </div>
           )}
-          
+
           <div className="flex justify-end gap-4">
             <button
               className="rounded-md bg-teal-600/10 px-4 py-2 text-teal-600 hover:bg-teal-600/20 hover:text-teal-700"
@@ -91,8 +91,12 @@ const PendingApplicantConfirmationModal = ({ isOpen, onClose, applicant, onActio
               onClick={handleConfirm}
               disabled={isSubmitting}
             >
-              <FiCheck className="inline mr-1" />
-              Confirm
+              {/* <FiCheck className="inline mr-1" /> */}
+              {isSubmitting ? (
+                <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                'Add'
+              )}
             </button>
           </div>
         </div>

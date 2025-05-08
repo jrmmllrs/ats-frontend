@@ -1,11 +1,11 @@
 import React, { useState, useEffect, Children } from 'react';
 import { FaAddressCard, FaEnvelope, FaPen, FaPhone, FaUser, FaHistory } from 'react-icons/fa';
 import useUserStore from '../../context/userStore';
-import api from '../../api/axios';
+import api from '../../services/api';
 import Toast from '../../assets/Toast';
 import { FaCakeCandles, FaFileLines } from 'react-icons/fa6';
 import AddApplicantForm from '../../pages/AddApplicantForm';
-import { statusMapping } from '../../hooks/statusMapping';
+import { statusMapping } from '../../data/status';
 import { useApplicantData } from '../../hooks/useApplicantData';
 import StatusHistoryModal from '../Modals/StatusHistoryModal';
 import SkipStatusWarningModal from "../Modals/SkipStatusModal";
@@ -536,7 +536,19 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                 : 'Not specified'}
             </div>
             <div className="text-teal">Applied from</div>
-            <div className="col-span-2">{applicant.applied_source ? formatEnumForDisplay(applicant.applied_source) : 'Not specified'}</div>
+            <div className="col-span-2">
+              {applicant.applied_source ? (
+                <>
+                  {formatEnumForDisplay(applicant.applied_source)}{' '}
+                  {applicant.applied_source === 'REFERRAL' && applicant.referrer_name && (
+                    <>({applicant.referrer_name})</>
+                  )}
+                </>
+              ) : (
+                'Not specified'
+              )}
+            </div>
+
             <div className="text-teal">Discovered Company at</div>
             <div className="col-span-2">{applicant.discovered_at ? formatEnumForDisplay(applicant.discovered_at) : 'Not specified'}</div>
           </div>

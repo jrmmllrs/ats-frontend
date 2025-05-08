@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { FaInfoCircle } from "react-icons/fa";
-import api from "../../api/axios";
+import api from "../../services/api";
 
 const InternalVsExternalHires = ({ year, month }) => {
   const [showTooltip, setShowTooltip] = useState(false);

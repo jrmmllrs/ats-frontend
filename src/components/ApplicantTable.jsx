@@ -4,14 +4,14 @@ import moment from 'moment';
 import Toast from '../assets/Toast';
 import { useApplicantData } from '../hooks/useApplicantData';
 import positionStore from '../context/positionStore';
-import { initialStages } from '../utils/StagesData';
+import { initialStages } from '../data/stages';
 import { useStages } from '../hooks/useStages';
 import applicantFilterStore from '../context/applicantFilterStore';
 import useUserStore from '../context/userStore';
 import { useToastManager } from '../utils/toastManager';
-import { updateStatus } from '../utils/applicantDataUtils';
-import { statusMapping } from '../hooks/statusMapping';
-import api from '../api/axios';
+import { updateStatus } from '../services/applicantService';
+import { statusMapping } from '../data/status';
+import api from '../services/api';
 
 const ApplicantTable = ({ onSelectApplicant }) => {
   const { applicantData, setApplicantData, statuses } = useApplicantData();

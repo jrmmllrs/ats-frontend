@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import api from "../../api/axios";
+import api from "../../services/api";
 import { FaInfoCircle } from "react-icons/fa";
 
 const ApplicationReceived = ({ year, month, isExpanded, selectedPosition }) => {

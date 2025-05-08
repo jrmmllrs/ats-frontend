@@ -1,4 +1,4 @@
-import api from "../api/axios";
+import api from "./api";
 
 export const fetchJobs = async (setJobsData) => {
     const { data } = await api.get(`/jobs`);

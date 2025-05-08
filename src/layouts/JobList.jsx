@@ -2,8 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import JobsTable from "../components/JobsTable";
 import { FaGear, FaPlus } from "react-icons/fa6";
 import IndustriesModal from "../components/Modals/IndustriesModal";
-import { set } from "date-fns";
-import { addJob, fetchCloseJobsCount, fetchOpenJobsCount, fetchJobs, searchJobs } from "../utils/jobListing";
+import { addJob, fetchCloseJobsCount, fetchOpenJobsCount, fetchJobs, searchJobs } from "../services/jobsService";
 import jobStore from "../context/jobListingStore";
 import setupStore from "../context/setupStore";
 import industriesStore from "../context/industriesStore";
@@ -20,6 +19,7 @@ const JobList = () => {
     const responsibilitiesRef = useRef(null);
     const requirementsRef = useRef(null);
     const preferredQualificationsRef = useRef(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     const [jobData, setJobData] = useState({
         title: "",
@@ -84,6 +84,7 @@ const JobList = () => {
     };
 
     const handleSubmit = async (e) => {
+        setIsLoading(true);
         e.preventDefault();
         await addJob(jobData);
         await fetchJobs(setJobsData);
@@ -91,6 +92,7 @@ const JobList = () => {
         await fetchOpenJobsCount(setOpenJobsCount);
         console.log("Job Data Submitted:", jobData);
 
+        setIsLoading(true);
         resetForm();
         setIsAddJobModalOpen(false);
     };
@@ -367,16 +369,20 @@ const JobList = () => {
                                     </button>
                                     <button
                                         type="submit"
+                                        disabled={isLoading}
                                         className="px-4 py-2 bg-teal text-white rounded-md cursor-pointer hover:bg-teal/70"
                                     >
-                                        Save Job
+                                        {isLoading ? (
+                                            <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        ) : (
+                                            'Save Job'
+                                        )}
                                     </button>
                                 </div>
                             </form>
                         </div>
                     </div >
                 </div>
-
             )}
 
             {/* Gear Modal */}

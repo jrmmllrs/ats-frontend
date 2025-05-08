@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { FaTimes } from "react-icons/fa";
 
 import useTabs from "../hooks/useTabs";
-import api from "../api/axios";
+import api from "../services/api";
 
 import ApplicantList from "../layouts/ApplicantList";
 import ApplicantDetail from "./ApplicantDetailsPage";

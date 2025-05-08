@@ -9,7 +9,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import api from "../../api/axios";
+import api from "../../services/api";
 
 ChartJS.register(
   CategoryScale,
@@ -67,7 +67,7 @@ const ApplicantStatusChart = ({ year, month, selectedPosition }) => { // Added s
       setLoading(false);
     }
   }, [year, month, selectedPosition]);
-  
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);

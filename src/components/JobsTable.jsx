@@ -1,13 +1,12 @@
 import DataTable from 'react-data-table-component';
 import { useState, useEffect, useRef } from 'react';
-import Toast from '../assets/Toast';
 import jobStore from '../context/jobListingStore';
-import { fetchJobs, updateJob, fetchCloseJobsCount, fetchOpenJobsCount, getOpenJobs, getCloseJobs } from '../utils/jobListing';
+import { fetchJobs, updateJob, fetchCloseJobsCount, fetchOpenJobsCount, getOpenJobs, getCloseJobs } from '../services/jobsService';
 import JobCountStore from '../context/jobsCountStore';
 import setupStore from '../context/setupStore';
 import industriesStore from '../context/industriesStore';
-import { fetchSetups } from '../utils/setupUtils';
-import { fetchIndustries } from '../utils/industriesUtils';
+import { fetchSetups } from '../services/setupService';
+import { fetchIndustries } from '../services/industriesService';
 import { FaTrash } from "react-icons/fa";
 
 const JobsTable = () => {
@@ -23,6 +22,8 @@ const JobsTable = () => {
     const responsibilitiesRef = useRef(null);
     const requirementsRef = useRef(null);
     const preferredQualificationsRef = useRef(null);
+    const [isLoading, setIsLoading] = useState(false);
+
 
 
     useEffect(() => {
@@ -61,6 +62,7 @@ const JobsTable = () => {
     ]);
 
     const handleSubmit = async (e) => {
+        setIsLoading(true);
         e.preventDefault();
         try {
             await updateJob(jobData);
@@ -76,6 +78,9 @@ const JobsTable = () => {
             setIsAddJobModalOpen(false);
         } catch (error) {
             console.error('Error updating job:', error);
+        }
+        finally {
+            setIsLoading(false);
         }
     };
 
@@ -339,8 +344,15 @@ const JobsTable = () => {
                                     >
                                         Cancel
                                     </button>
-                                    <button type="submit" className="px-4 py-2 bg-teal text-white rounded-md cursor-pointer hover:bg-teal/70">
-                                        Edit Job
+                                    <button
+                                        type="submit"
+                                        disabled={isLoading}
+                                        className="px-4 py-2 bg-teal text-white rounded-md cursor-pointer hover:bg-teal/70">
+                                        {isLoading ? (
+                                            <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        ) : (
+                                            'Edit Job'
+                                        )}
                                     </button>
                                 </div>
                             </form>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import getFilteredApplicants from "../services/getFilteredApplicants";
+import getFilteredApplicants from "../services/filterApplicantsService";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import moment from "moment";

@@ -1,7 +1,7 @@
 import { IoMdSend } from "react-icons/io";
 import MessageBox from "./MessageBox";
 import moment from "moment";
-import api from "../api/axios";
+import api from "../services/api";
 import useUserStore from "../context/userStore";
 import { SlOptionsVertical } from "react-icons/sl";
 import React, { useState, useEffect, useRef } from "react";
@@ -28,6 +28,7 @@ const DiscussionBox = ({ applicant, discussion, fetchDiscussionInterview }) => {
     const dropdownRef = useRef(null);
     const notesContainerRef = useRef(null);
     const [isOpen, setIsOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         if (notesContainerRef.current) {
@@ -68,6 +69,7 @@ const DiscussionBox = ({ applicant, discussion, fetchDiscussionInterview }) => {
             slack_message: slackFormattedMessage,
         };
 
+        setIsLoading(true);
         api.post('/interview/note', data).then((response) => {
             console.log('add note response: ', response);
             setNoteBody("");
@@ -75,9 +77,10 @@ const DiscussionBox = ({ applicant, discussion, fetchDiscussionInterview }) => {
             fetchDiscussionInterview();
         }).catch((error) => {
             console.log(error.message);
+        }).finally(() => {
+            setIsLoading(false);
         });
     };
-
     // Removed handleExport function
     // Removed generatePDF function
 
@@ -172,9 +175,14 @@ const DiscussionBox = ({ applicant, discussion, fetchDiscussionInterview }) => {
                         <div className="absolute bottom-0 right-0 ">
                             <button
                                 onClick={handleSubmit}
+                                disabled={isLoading}
                                 className="rounded-xl text-teal p-2 m-1 hover:text-teal-soft cursor-pointer flex items-center"
                             >
-                                <IoMdSend className="size-5" />
+                                {isLoading ? (
+                                    <div className="h-5 w-5 border-2 border-teal border-t-transparent rounded-full animate-spin"></div>
+                                ) : (
+                                    <IoMdSend className="size-5" />
+                                )}
                             </button>
                         </div>
                     </div>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip } from "chart.js";
-import api from "../../api/axios";
+import api from "../../services/api";
 import { FaInfoCircle } from "react-icons/fa";
 
 ChartJS.register(ArcElement, Tooltip);

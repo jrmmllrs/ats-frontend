@@ -7,13 +7,13 @@ import ApplicantTable from "../components/ApplicantTable";
 import ExportToPdf from "../utils/ExportToPdf";
 import moment from "moment";
 import applicantDataStore from "../context/applicantDataStore";
-import { filterApplicants, searchApplicant } from "../utils/applicantDataUtils";
+import { filterApplicants, searchApplicant } from "../services/applicantService";
 import positionStore from "../context/positionStore";
 import applicantFilterStore from "../context/applicantFilterStore";
-import { clearFilter } from "../utils/applicantListUtils";
+import { clearFilter } from "../utils/applicantUtils";
 import { useStages } from "../hooks/useStages";
-import { fetchCounts } from "../utils/statusCounterFunctions";
-import { initialStages } from "../utils/StagesData";
+import { fetchCounts } from "../services/statusCounterService";
+import { initialStages } from "../data/stages";
 import useUserStore from "../context/userStore"; // Import the Zustand store
 
 export default function ApplicantList({ onSelectApplicant, onAddApplicantClick }) {

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { initialStages } from '../utils/StagesData';
+import { initialStages } from '../data/stages';
 
 const statusCounterStore = create((set) => ({
   stages: initialStages,
