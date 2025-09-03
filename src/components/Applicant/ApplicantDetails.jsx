@@ -1,5 +1,5 @@
-import React, { useState, useEffect, Children } from 'react';
-import { FaAddressCard, FaEnvelope, FaPen, FaPhone, FaUser, FaHistory } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { FaAddressCard, FaEnvelope, FaPen, FaPhone, FaUser, FaHistory, FaTrash } from 'react-icons/fa';
 import useUserStore from '../../context/userStore';
 import api from '../../services/api';
 import Toast from '../../assets/Toast';
@@ -13,12 +13,11 @@ import { formatEnumForDisplay } from '../../utils/formatEnum';
 import Modal from '../Modals/Modal';
 import { AiFillWarning } from "react-icons/ai";
 
-
-function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate }) {
+function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate, onApplicantDelete }) {
   const { statuses } = useApplicantData();
   const [status, setStatus] = useState('');
   const [toasts, setToasts] = useState([]);
-  const { user } = useUserStore();
+  const { user, hasFeature } = useUserStore(); // Add hasFeature from userStore
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [statusHistory, setStatusHistory] = useState([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -33,7 +32,6 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   const [showSkipWarningModal, setShowSkipWarningModal] = useState(false);
   const [skippedStatuses, setSkippedStatuses] = useState([]);
 
-
   // For status history hover
   const [hoverIndex, setHoverIndex] = useState(null);
   const [skippedStatusesByHistory, setSkippedStatusesByHistory] = useState({});
@@ -43,6 +41,14 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   //blacklisted info
   const [blacklistedType, setBlacklistedType] = useState(null);
   const [reason, setReason] = useState(null);
+
+  // Delete applicant state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Check if user has required features
+  const canEditApplicant = hasFeature("Edit Applicant");
+  const canDeleteApplicant = hasFeature("Delete Applicant");
 
   useEffect(() => {
     if (applicant && applicant.status) {
@@ -90,7 +96,6 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
       console.error("Error fetching status history:", error);
     }
   };
-
 
   // Function to check if statuses are being skipped
   const checkForSkippedStatuses = (currentStatus, newStatus) => {
@@ -297,6 +302,31 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
     setHoverIndex(null);
   };
 
+  // ✅ Delete Applicant Handler
+  const handleDeleteApplicant = async () => {
+    try {
+      setIsDeleting(true);
+      await api.delete(`/applicants/delete/${applicant.applicant_id}`);
+
+      // Notify parent component
+      if (onApplicantDelete) {
+        onApplicantDelete(applicant.applicant_id);
+      }
+
+      setShowDeleteModal(false);
+
+      // If no callback provided, do a full page refresh
+      if (!onApplicantDelete) {
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error("Error deleting applicant:", error);
+      alert("Failed to delete applicant. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="border border-gray-light bg-white rounded-2xl mx-auto flex flex-col lg:flex-row overflow-hidden body-regular">
 
@@ -404,13 +434,26 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                 </button>
               )}
 
+              {/* Edit button - only show if user has "Edit Applicant" feature */}
+              {canEditApplicant && (
+                <button
+                  onClick={handleEditClick}
+                  className="ml-2 p-2.5 rounded-full bg-teal hover:bg-teal/70 cursor-pointer"
+                >
+                  <FaPen className="w-4 h-4 text-white" />
+                </button>
+              )}
 
-              <button
-                onClick={handleEditClick}
-                className="ml-2 p-2.5 rounded-full bg-teal hover:bg-teal/70 cursor-pointer"
-              >
-                <FaPen className="w-4 h-4 text-white" />
-              </button>
+              {/* Delete button - only show if user has "Delete Applicant" feature */}
+              {canDeleteApplicant && (
+                <button
+                  onClick={() => setShowDeleteModal(true)}
+                  className="ml-2 p-2.5 rounded-full bg-red-500 hover:bg-red-600 cursor-pointer"
+                  title="Delete Applicant"
+                >
+                  <FaTrash className="w-4 h-4 text-white" />
+                </button>
+              )}
             </div>
           </div>
 
@@ -450,7 +493,6 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                       </p>
                     </div>
                   )}
-
 
                   {pendingStatus === "BLACKLISTED" && (
                     <div className="space-y-4 pt-3">
@@ -553,7 +595,6 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
             <div className="col-span-2">{applicant.discovered_at ? formatEnumForDisplay(applicant.discovered_at) : 'Not specified'}</div>
           </div>
 
-
           {/* Tabs */}
           <div className="mt-auto pt-5 flex justify-end">
             <div className="flex gap-2 bg-teal-soft p-1 rounded-md">
@@ -584,8 +625,6 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
           </div>
         </div>
 
-
-
         {toasts.length > 0 && (
           <Toast toasts={toasts} onUndo={undoStatusUpdate} onDismiss={removeToast} />
         )}
@@ -603,6 +642,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
           />
         ))}
       </div>
+      
       {isEditFormOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
           <div className="bg-white w-full h-full overflow-auto lg:ml-72 pointer-events-auto">
@@ -614,6 +654,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
           </div>
         </div>
       )}
+      
       {isResumeNull && (
         <Modal onClose={() => setIsResumeNull(false)}>
           <div className="flex items-center justify-center">
@@ -635,6 +676,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
           </div>
         </Modal>
       )}
+      
       {isTestResultNull && (
         <Modal onClose={() => setIsTestResultNull(false)}>
           <div className="flex items-center justify-center">
@@ -651,6 +693,37 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                 className="px-4 py-2 bg-teal text-white rounded hover:bg-teal/80"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* 🛑 Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <Modal onClose={() => setShowDeleteModal(false)}>
+          <div className="p-6 text-center">
+            <h1 className="text-lg font-bold mb-4">Confirm Delete</h1>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete{" "}
+              <span className="font-semibold">
+                {applicant.first_name} {applicant.last_name}
+              </span>
+              ? This action cannot be undone.
+            </p>
+            <div className="flex justify-center gap-3">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteApplicant}
+                disabled={isDeleting}
+                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
+              >
+                {isDeleting ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>

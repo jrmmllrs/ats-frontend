@@ -9,6 +9,7 @@ import useUserStore from "../context/userStore"; // Import the Zustand store
 import AccessDenied from "../assets/AccessDenied.svg"; // Import the Access Denied SVG
 
 function ApplicantDetailsPage({ applicant = null, onBack = null }) {
+  const [refreshNeeded, setRefreshNeeded] = useState(false);
   const { id } = useParams(); // Get ID from URL params if available
   const { hasFeature } = useUserStore(); // Access the hasFeature function
   const canViewDiscussion = hasFeature("Interview Notes"); // Check if the user has the "Discussion" feature
@@ -24,6 +25,21 @@ function ApplicantDetailsPage({ applicant = null, onBack = null }) {
   // Determine which ID to use - from props or from URL
   const applicantId = applicant?.applicant_id || id;
 
+
+  const handleApplicantDelete = (applicantId) => {
+    // Perform any cleanup or state updates
+    setRefreshNeeded(true);
+  };
+
+  // Effect to refresh when needed
+  useEffect(() => {
+    if (refreshNeeded) {
+      // Reset the state and refetch data
+      setApplicantInfo({});
+      fetchApplicantData();
+      setRefreshNeeded(false);
+    }
+  }, [refreshNeeded]);
   // Create a reusable fetch function
   const fetchApplicantData = useCallback(async () => {
     if (!applicantId) {
@@ -121,6 +137,7 @@ function ApplicantDetailsPage({ applicant = null, onBack = null }) {
         onTabChange={setActiveTab}
         activeTab={activeTab}
         onApplicantUpdate={handleApplicantUpdate}
+        onApplicantDelete={handleApplicantDelete} // Add this prop
       />
       {/* Render tabs only if the user has access */}
       {(canViewDiscussion || canSendMail) ? (
