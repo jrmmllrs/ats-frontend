@@ -16,7 +16,6 @@ const SetupTable = ({ onSelectApplicant }) => {
     const handleJobRowClick = (row) => {
         setSetupName(row.setupName)
         setSetupId(row.setupId)
-        console.log(row);
         setIsEditSetupModalOpen(true);
     };
 

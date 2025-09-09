@@ -14,7 +14,6 @@ const RecentTable = ({ applicants, onSelectApplicant }) => {
 
 
     const handleJobRowClick = (row) => {
-        console.log("Clicked row:", row);
         if (onSelectApplicant) {
             onSelectApplicant(row);
             return;
