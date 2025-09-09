@@ -144,29 +144,9 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
       const contentWidth = pageWidth - (margin * 2);
 
       const lineHeight = 6;
-      const paragraphSpacing = 5;
+      const paragraphSpacing = 3; // Reduced from 5 to 3
 
-      const splitTextToSize = (text, maxWidth) => {
-        const cleaned = cleanText(text);
-        const words = cleaned.split(/\s+/);
-        const lines = [];
-        let currentLine = words[0] || "";
-
-        for (let i = 1; i < words.length; i++) {
-          const word = words[i];
-          const testLine = currentLine + " " + word;
-          const testWidth = doc.getTextWidth(testLine);
-
-          if (testWidth < maxWidth) {
-            currentLine = testLine;
-          } else {
-            lines.push(currentLine);
-            currentLine = word;
-          }
-        }
-        lines.push(currentLine);
-        return lines;
-      };
+      let currentY = margin;
 
       // Header Section
       doc.setFontSize(22);
@@ -174,18 +154,19 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
       doc.setTextColor(0, 0, 0);
 
       const fullName = `${applicantInfo.first_name || ""} ${applicantInfo.middle_name ? applicantInfo.middle_name + " " : ""}${applicantInfo.last_name || ""}`.trim();
-      doc.text(cleanText(fullName), margin, margin);
+      doc.text(cleanText(fullName), margin, currentY);
+      currentY += 7;
 
       doc.setFontSize(14);
       doc.setFont(primaryFont, "normal");
       doc.setTextColor(80, 80, 80);
-      doc.text("Interview Feedback Report", margin, margin + 7);
+      doc.text("Interview Feedback Report", margin, currentY);
+      currentY += 11;
 
       doc.setDrawColor(180, 180, 180);
       doc.setLineWidth(0.5);
-      doc.line(margin, margin + 11, pageWidth - margin, margin + 11);
-
-      let currentY = margin + 16;
+      doc.line(margin, currentY, pageWidth - margin, currentY);
+      currentY += 10;
 
       // Filter valid interviews
       const validInterviews = interviews.filter(interview => {
@@ -197,48 +178,123 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
         return validNotes.length > 0;
       });
 
-      const addTextWithFormatting = (text, x, y, options = {}) => {
-        const {
-          bold = false,
-          italic = false,
-          underline = false,
-          indent = 0,
-          fontSize = 11
-        } = options;
-
-        doc.setFontSize(fontSize);
+      // Function to process HTML content and add it to PDF
+      const addHtmlContentToPdf = (htmlContent, x, y) => {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlContent;
         
-        if (bold && italic) {
-          doc.setFont(primaryFont, 'bolditalic');
-        } else if (bold) {
-          doc.setFont(primaryFont, 'bold');
-        } else if (italic) {
-          doc.setFont(primaryFont, 'italic');
-        } else {
-          doc.setFont(primaryFont, 'normal');
-        }
-
-        const lines = splitTextToSize(text, contentWidth - indent);
+        let currentYPosition = y;
+        let isFirstElement = true;
         
-        lines.forEach(line => {
-          if (y + lineHeight > pageHeight - margin) {
-            doc.addPage();
-            y = margin;
+        const processNode = (node, indent = 0, isListItem = false) => {
+          if (node.nodeType === Node.TEXT_NODE) {
+            const text = cleanText(node.textContent);
+            if (text.trim()) {
+              const lines = doc.splitTextToSize(text, contentWidth - indent);
+              
+              lines.forEach(line => {
+                if (currentYPosition + lineHeight > pageHeight - margin) {
+                  doc.addPage();
+                  currentYPosition = margin;
+                }
+                
+                doc.text(line, x + indent, currentYPosition);
+                currentYPosition += lineHeight;
+              });
+            }
+          } else if (node.nodeType === Node.ELEMENT_NODE) {
+            const tagName = node.tagName.toLowerCase();
+            
+            // Handle different formatting
+            if (tagName === 'strong' || tagName === 'b') {
+              doc.setFont(primaryFont, 'bold');
+              Array.from(node.childNodes).forEach(child => processNode(child, indent, isListItem));
+              doc.setFont(primaryFont, 'normal');
+            } 
+            else if (tagName === 'em' || tagName === 'i') {
+              doc.setFont(primaryFont, 'italic');
+              Array.from(node.childNodes).forEach(child => processNode(child, indent, isListItem));
+              doc.setFont(primaryFont, 'normal');
+            }
+            else if (tagName === 'u') {
+              // Underline is not directly supported, we'll simulate it
+              const textContent = cleanText(node.textContent);
+              if (textContent.trim()) {
+                const lines = doc.splitTextToSize(textContent, contentWidth - indent);
+                
+                lines.forEach(line => {
+                  if (currentYPosition + lineHeight > pageHeight - margin) {
+                    doc.addPage();
+                    currentYPosition = margin;
+                  }
+                  
+                  const textWidth = doc.getTextWidth(line);
+                  doc.text(line, x + indent, currentYPosition);
+                  doc.line(x + indent, currentYPosition + 1, x + indent + textWidth, currentYPosition + 1);
+                  currentYPosition += lineHeight;
+                });
+              }
+            }
+            else if (tagName === 'ul' || tagName === 'ol') {
+              Array.from(node.children).forEach((li, index) => {
+                const bullet = tagName === 'ol' ? `${index + 1}.` : '•';
+                
+                if (currentYPosition + lineHeight > pageHeight - margin) {
+                  doc.addPage();
+                  currentYPosition = margin;
+                }
+                
+                doc.text(bullet, x + indent, currentYPosition);
+                
+                // Process list item content
+                Array.from(li.childNodes).forEach(child => {
+                  currentYPosition = processNode(child, indent + 8, true);
+                });
+              });
+            }
+            else if (tagName === 'li') {
+              // List items are handled by ul/ol
+              Array.from(node.childNodes).forEach(child => {
+                currentYPosition = processNode(child, indent, true);
+              });
+            }
+            else if (tagName === 'br') {
+              currentYPosition += lineHeight;
+            }
+            else if (tagName === 'p') {
+              // Add spacing only if it's not the first element and not inside a list
+              if (!isFirstElement && !isListItem) {
+                currentYPosition += lineHeight / 2;
+              }
+              
+              Array.from(node.childNodes).forEach(child => {
+                currentYPosition = processNode(child, indent, isListItem);
+              });
+              
+              // Add spacing after paragraph if not inside a list
+              if (!isListItem) {
+                currentYPosition += lineHeight / 2;
+              }
+              
+              isFirstElement = false;
+            }
+            else {
+              // Default handling for other elements
+              Array.from(node.childNodes).forEach(child => {
+                currentYPosition = processNode(child, indent, isListItem);
+              });
+            }
           }
           
-          doc.text(line, x + indent, y);
-          
-          if (underline) {
-            const textWidth = doc.getTextWidth(line);
-            doc.setDrawColor(0, 0, 0);
-            doc.line(x + indent, y + 1.5, x + indent + textWidth, y + 1.5);
-          }
-          
-          y += lineHeight;
+          return currentYPosition;
+        };
+        
+        Array.from(tempDiv.childNodes).forEach(node => {
+          currentYPosition = processNode(node);
+          isFirstElement = false;
         });
-
-        doc.setFont(primaryFont, 'normal');
-        return y;
+        
+        return currentYPosition;
       };
 
       // Process interviews
@@ -266,12 +322,10 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
           currentY = margin;
         }
 
-        currentY = addTextWithFormatting(
-          `${cleanText(interviewerName)}'s Feedback`,
-          margin,
-          currentY,
-          { bold: true, fontSize: 16 }
-        );
+        doc.setFontSize(16);
+        doc.setFont(primaryFont, "bold");
+        doc.text(`${cleanText(interviewerName)}'s Feedback`, margin, currentY);
+        currentY += 6;
 
         const interviewDate = interview.interview_date || interview.date_of_interview;
         if (interviewDate) {
@@ -279,10 +333,11 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
           doc.setFontSize(11);
           doc.setFont(primaryFont, "italic");
           doc.setTextColor(120, 120, 120);
-          doc.text(formattedDate, pageWidth - margin, currentY - lineHeight, { align: "right" });
+          doc.text(formattedDate, pageWidth - margin, currentY - 6, { align: "right" });
+          doc.setTextColor(0, 0, 0);
         }
 
-        currentY += 2;
+        currentY += 4;
 
         // Process notes
         validNotes.forEach((note, noteIndex) => {
@@ -293,50 +348,17 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
 
           // Add note title if exists
           if (note.note_title) {
-            currentY = addTextWithFormatting(
-              `• ${cleanText(note.note_title)}:`,
-              margin,
-              currentY,
-              { bold: true, fontSize: 13 }
-            );
+            doc.setFontSize(13);
+            doc.setFont(primaryFont, "bold");
+            doc.text(`• ${cleanText(note.note_title)}:`, margin, currentY);
+            currentY += 5;
           }
 
-          // Process note content
-          const htmlContent = note.note_body;
-          const tempDiv = document.createElement('div');
-          tempDiv.innerHTML = htmlContent;
-
-          // Extract text content
-          const textContent = [];
-          const processNode = (node) => {
-            if (node.nodeType === Node.TEXT_NODE) {
-              textContent.push(cleanText(node.textContent));
-            } else if (node.nodeType === Node.ELEMENT_NODE) {
-              const tagName = node.tagName.toLowerCase();
-              if (['ul', 'ol'].includes(tagName)) {
-                textContent.push('\n');
-                Array.from(node.children).forEach((li, i) => {
-                  textContent.push(`• ${cleanText(li.textContent)}\n`);
-                });
-              } else if (tagName === 'li') {
-                textContent.push(`• ${cleanText(node.textContent)}\n`);
-              } else if (tagName === 'br') {
-                textContent.push('\n');
-              } else {
-                textContent.push(cleanText(node.textContent));
-              }
-            }
-          };
-
-          Array.from(tempDiv.childNodes).forEach(processNode);
-          const finalText = textContent.join(' ').replace(/\s+/g, ' ').trim();
-
-          currentY = addTextWithFormatting(
-            finalText,
-            margin,
-            currentY,
-            { fontSize: 11 }
-          );
+          // Process note content with HTML formatting
+          doc.setFontSize(11);
+          doc.setFont(primaryFont, "normal");
+          
+          currentY = addHtmlContentToPdf(note.note_body, margin, currentY);
 
           // Add spacing between notes
           if (noteIndex < validNotes.length - 1) {
@@ -346,12 +368,8 @@ const InterviewNotes = ({ interview, applicant, fetchDiscussionInterview }) => {
       });
 
       if (validInterviews.length === 0) {
-        currentY = addTextWithFormatting(
-          "No feedback records available",
-          margin,
-          currentY,
-          { fontSize: 13 }
-        );
+        doc.setFontSize(13);
+        doc.text("No feedback records available", margin, currentY);
       }
 
       const fileName = `${fullName.replace(/\s+/g, "_")}_Interview_Report_${moment().format("YYYYMMDD")}.pdf`;
