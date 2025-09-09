@@ -12,6 +12,7 @@ import SkipStatusWarningModal from "../Modals/SkipStatusModal";
 import { formatEnumForDisplay } from '../../utils/formatEnum';
 import Modal from '../Modals/Modal';
 import { AiFillWarning } from "react-icons/ai";
+import FeatureUnderConstruction from '../../pages/FeatureUnderConstruction';
 
 function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate, onApplicantDelete }) {
   const { statuses } = useApplicantData();
@@ -48,10 +49,14 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
 
   // Push to HRIS state
   const [isPushingToHris, setIsPushingToHris] = useState(false);
+  const [showPushModal, setShowPushModal] = useState(false);
 
   // Check if user has required features
   const canEditApplicant = hasFeature("Edit Applicant");
   const canDeleteApplicant = hasFeature("Delete Applicant");
+
+
+
 
   useEffect(() => {
     if (applicant && applicant.status) {
@@ -331,32 +336,8 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   };
 
   // ✅ Push to HRIS Handler
-  const handlePushToHris = async () => {
-    setIsPushingToHris(true);
-    try {
-      // Replace with your actual API endpoint
-      const response = await api.post(`/applicant/push-to-hris/${applicant.applicant_id}`);
-
-      // Show success message
-      setToasts([...toasts, {
-        id: Date.now(),
-        message: "Applicant successfully pushed to HRIS",
-        type: "success"
-      }]);
-
-      console.log("Applicant pushed to HRIS successfully");
-    } catch (error) {
-      console.error("Error pushing to HRIS:", error);
-
-      // Show error message
-      setToasts([...toasts, {
-        id: Date.now(),
-        message: "Failed to push applicant to HRIS",
-        type: "error"
-      }]);
-    } finally {
-      setIsPushingToHris(false);
-    }
+  const handlePushToHris = () => {
+    setShowPushModal(true);
   };
 
   return (
@@ -771,6 +752,16 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
               </button>
             </div>
           </div>
+        </Modal>
+      )}
+
+      {/* 🚀 Push to HRIS Modal */}
+      {showPushModal && (
+        <Modal onClose={() => setShowPushModal(false)}>
+         
+            <FeatureUnderConstruction />
+           
+   
         </Modal>
       )}
     </div>
