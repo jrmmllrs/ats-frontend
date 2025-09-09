@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaAddressCard, FaEnvelope, FaPen, FaPhone, FaUser, FaHistory, FaTrash } from 'react-icons/fa';
+import { FaAddressCard, FaEnvelope, FaPen, FaPhone, FaUser, FaHistory, FaTrash, FaCloudUploadAlt } from 'react-icons/fa';
 import useUserStore from '../../context/userStore';
 import api from '../../services/api';
 import Toast from '../../assets/Toast';
@@ -12,6 +12,7 @@ import SkipStatusWarningModal from "../Modals/SkipStatusModal";
 import { formatEnumForDisplay } from '../../utils/formatEnum';
 import Modal from '../Modals/Modal';
 import { AiFillWarning } from "react-icons/ai";
+import FeatureUnderConstruction from '../../pages/FeatureUnderConstruction';
 
 function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate, onApplicantDelete }) {
   const { statuses } = useApplicantData();
@@ -46,9 +47,16 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Push to HRIS state
+  const [isPushingToHris, setIsPushingToHris] = useState(false);
+  const [showPushModal, setShowPushModal] = useState(false);
+
   // Check if user has required features
   const canEditApplicant = hasFeature("Edit Applicant");
   const canDeleteApplicant = hasFeature("Delete Applicant");
+
+
+
 
   useEffect(() => {
     if (applicant && applicant.status) {
@@ -327,6 +335,11 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
     }
   };
 
+  // ✅ Push to HRIS Handler
+  const handlePushToHris = () => {
+    setShowPushModal(true);
+  };
+
   return (
     <div className="border border-gray-light bg-white rounded-2xl mx-auto flex flex-col lg:flex-row overflow-hidden body-regular">
 
@@ -424,6 +437,18 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                   </option>
                 ))}
               </select>
+
+              {/* Push to HRIS button - only show when status is JOB_OFFER_ACCEPTED */}
+              {applicant.status === "JOB_OFFER_ACCEPTED" && (
+                <button
+                  onClick={handlePushToHris}
+                  disabled={isPushingToHris}
+                  className="ml-2 p-2.5 rounded-full bg-teal hover:bg-teal/70 cursor-pointer"
+                >
+                  <FaCloudUploadAlt className="w-4 h-4 text-white" />
+                </button>
+              )}
+
               {statusHistory.some(record => !record.deleted) && (
                 <button
                   onClick={toggleStatusHistoryModal}
@@ -448,7 +473,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
               {canDeleteApplicant && (
                 <button
                   onClick={() => setShowDeleteModal(true)}
-                  className="ml-2 p-2.5 rounded-full bg-red-500 hover:bg-red-600 cursor-pointer"
+                  className="ml-2 p-2.5 rounded-full bg-red-700 hover:bg-red-600 cursor-pointer"
                   title="Delete Applicant"
                 >
                   <FaTrash className="w-4 h-4 text-white" />
@@ -642,7 +667,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
           />
         ))}
       </div>
-      
+
       {isEditFormOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
           <div className="bg-white w-full h-full overflow-auto lg:ml-72 pointer-events-auto">
@@ -654,7 +679,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
           </div>
         </div>
       )}
-      
+
       {isResumeNull && (
         <Modal onClose={() => setIsResumeNull(false)}>
           <div className="flex items-center justify-center">
@@ -676,7 +701,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
           </div>
         </Modal>
       )}
-      
+
       {isTestResultNull && (
         <Modal onClose={() => setIsTestResultNull(false)}>
           <div className="flex items-center justify-center">
@@ -726,6 +751,18 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                 {isDeleting ? "Deleting..." : "Delete"}
               </button>
             </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* 🚀 Push to HRIS Modal */}
+      {showPushModal && (
+        <Modal onClose={() => setShowPushModal(false)}>
+          <div className="p-6 text-center">
+            <h1 className="text-lg font-bold mb-4">Push Applicant to HRIS</h1>
+            
+            <FeatureUnderConstruction />
+           
           </div>
         </Modal>
       )}
