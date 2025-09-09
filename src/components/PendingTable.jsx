@@ -10,7 +10,6 @@ const PendingTable = ({ applicants, onSelectApplicant }) => {
     }, [applicants]);
 
     const handleJobRowClick = (row) => {
-        console.log("Clicked row:", row);
         if (onSelectApplicant) onSelectApplicant(row); // optional callback
     };
 

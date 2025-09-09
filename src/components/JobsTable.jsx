@@ -40,7 +40,6 @@ const JobsTable = () => {
 
     const handleJobRowClick = (row) => {
         setJobData(row)
-        // console.log("Selected Job Data:", row);
         setIsAddJobModalOpen(true);
     };
 
@@ -75,7 +74,6 @@ const JobsTable = () => {
         setIsLoading(true);
         e.preventDefault();
         try {
-            // console.log("Submitting Job Data for UPDATE:", jobData);
             await updateJob(jobData);
             if (activeTab === "open") {
                 getOpenJobs(setJobsData);

@@ -12,7 +12,6 @@ const IndustriesTable = ({ onSelectApplicant }) => {
     const [toasts, setToasts] = useState([]);
 
     const handleJobRowClick = (row) => {
-        console.log(row);
         setIndustry(row);
         setIsEditIndustryModalOpen(true);
     };

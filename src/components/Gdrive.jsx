@@ -49,7 +49,6 @@ function GdriveConfig() {
 
         try {
             const response = await api.post('/user-configuration/gdrive/add-credentials', data);
-            console.log(response);
             alert("Google Drive credentials successfully added!");
         } catch (error) {
             alert(`Upload failed: ${error.message}`);

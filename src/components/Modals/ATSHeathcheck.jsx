@@ -17,7 +17,6 @@ export default function ATSHealthcheck({ onSelectApplicant }) {
         setLoading(true);
         const response = await api.get("/notification");
         const data = response.data;
-        console.log(data);
         if (!data) {
           throw new Error("No data received from server");
         }

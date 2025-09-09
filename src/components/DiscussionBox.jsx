@@ -71,7 +71,7 @@ const DiscussionBox = ({ applicant, discussion, fetchDiscussionInterview }) => {
 
         setIsLoading(true);
         api.post('/interview/note', data).then((response) => {
-            console.log('add note response: ', response);
+        
             setNoteBody("");
             editor?.commands.clearContent();
             fetchDiscussionInterview();

@@ -27,8 +27,6 @@ const exportToExcel = async (
   returnBlob = false,
 ) => {
   try {
-    console.log(position);
-    console.log(status);
 
     const applicants = await getFilteredApplicants(
       dateFilter,
@@ -36,8 +34,6 @@ const exportToExcel = async (
       position,
       status,
     );
-    console.log("applicants: ", applicants);
-    console.log("type:", typeof applicants);
 
     if (!applicants || applicants.length === 0) {
       alert("No data to export");

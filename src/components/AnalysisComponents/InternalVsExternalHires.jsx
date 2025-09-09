@@ -48,7 +48,6 @@ const InternalVsExternalHires = ({ year, month }) => {
       }
           
       const response = await api.get(url);
-      console.log(url);
       
       if (response.data && response.data.internalExternalHires) {
         const { internal, external, internalRate, externalRate } = response.data.internalExternalHires;

@@ -43,9 +43,6 @@ const ApplicantTable = ({ onSelectApplicant }) => {
       currentStatus
     });
 
-    console.log('pending', setPendingStatusChange);
-    console.log(newStatus);
-
 
     // Show date picker
     setShowDatePicker(true);
@@ -63,7 +60,7 @@ const ApplicantTable = ({ onSelectApplicant }) => {
 
     const { id, progress_id, newStatus, currentStatus } = pendingStatusChange;
 
-    console.log(id);
+
 
 
     // Close date picker
@@ -88,7 +85,7 @@ const ApplicantTable = ({ onSelectApplicant }) => {
 
       await api.put(`/applicant/update/status`, data);
 
-      console.log(data);
+
 
       // Update local state and show toast notification
       addToast(applicant, statusMapping[newStatus] || newStatus, statusMapping);

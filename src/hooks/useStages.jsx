@@ -14,7 +14,6 @@ export const useStages = () => {
     const fetchInitialCounts = async () => {
       await fetchCounts(setStages, initialStages);
     };
-    console.log("Status Counts Fetched Successfully.");
     fetchInitialCounts();
   }, []);
 
