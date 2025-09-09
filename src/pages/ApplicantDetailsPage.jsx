@@ -49,11 +49,9 @@ function ApplicantDetailsPage({ applicant = null, onBack = null }) {
 
     setLoading(true);
     try {
-      console.log("Fetching applicant data for ID:", applicantId);
       const response = await api.get(`/applicants/${applicantId}`);
 
       if (response.data && Array.isArray(response.data) && response.data.length > 0) {
-        console.log("Fetched applicant data:", response.data);
         const processedData = response.data[0] || {};
         setApplicantInfo(processedData);
       } else {

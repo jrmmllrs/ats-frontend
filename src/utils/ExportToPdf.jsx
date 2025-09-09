@@ -30,7 +30,6 @@ const ExportToPdf = ({
           status
         );
 
-        console.log("applicants: ", applicants);
         const doc = new jsPDF({
           orientation: "landscape",
           unit: "mm",

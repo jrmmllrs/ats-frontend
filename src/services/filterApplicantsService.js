@@ -16,7 +16,6 @@ const getFilteredApplicants = async (dateFilter, dateFilterValue, position, stat
     }
 
     const result = await api.get(`/applicants/filter/for-excel-export?${params.toString()}`);
-    console.log("result in get", result);
 
     return result.data;
 };

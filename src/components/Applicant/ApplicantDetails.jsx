@@ -210,7 +210,6 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
         // Refresh status history to show the new change
         fetchStatusHistory(applicant.progress_id);
 
-        console.log("Status updated successfully");
 
         // Add toast message with previous status information
         setToasts([...toasts, {
@@ -256,7 +255,6 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
 
       setStatus(toast.previousStatus);
       setToasts(toasts.filter(t => t.id !== toast.id));
-      console.log("Status reverted successfully");
     } catch (error) {
       console.error("Error reverting status:", error);
     }

@@ -7,7 +7,6 @@ const ApplicationReceived = ({ year, month, isExpanded, selectedPosition }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [lastFetch, setLastFetch] = useState(0);
   
-  console.log('pos',selectedPosition)
   // Fetch application data
   const fetchApplicationData = useCallback(async () => {
     try {

@@ -20,7 +20,6 @@ export const useApplicantData = () => {
     useEffect(() => {
         api.get(`/status`)
             .then(response => {
-                console.log("Status Fetched Successfully.",);
                 setStatuses(response.data);
             })
             .catch(error => console.error("Error fetching data:", error));

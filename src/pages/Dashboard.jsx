@@ -214,7 +214,6 @@ const RecentApplicantsSection = ({ onRefresh }) => {
         <RecentTable
           applicants={applicants}
           onRowClick={(applicant) => {
-            console.log("Clicked applicant:", applicant)
             alert(`Applicant: ${applicant.first_name} ${applicant.last_name}`)
           }}
         />
@@ -360,14 +359,6 @@ const InterviewsSection = ({ onRefresh }) => {
         <InterviewTable
           applicants={applicants}
         />
-
-        //   <RecentTable
-        //   applicants={applicants}
-        //   onRowClick={(applicant) => {
-        //     console.log("Clicked applicant:", applicant)
-        //     alert(`Applicant: ${applicant.first_name} ${applicant.last_name}`)
-        //   }}
-        // />
       )}
     </div>
   )

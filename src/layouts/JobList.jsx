@@ -98,12 +98,10 @@ const JobList = () => {
     const handleSubmit = async (e) => {
         setIsLoading(true);
         e.preventDefault();
-        // console.log("Submitting Job Data:", jobData);
         await addJob(jobData);
         await fetchJobs(setJobsData);
         await fetchCloseJobsCount(setCloseJobsCount)
         await fetchOpenJobsCount(setOpenJobsCount);
-        console.log("Job Data Submitted:", jobData);
 
         setIsLoading(true);
         resetForm();
