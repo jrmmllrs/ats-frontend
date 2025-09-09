@@ -758,10 +758,12 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
       {/* 🚀 Push to HRIS Modal */}
       {showPushModal && (
         <Modal onClose={() => setShowPushModal(false)}>
-         
+          <div className="p-6 text-center">
+            <h1 className="text-lg font-bold mb-4">Push Applicant to HRIS</h1>
+            
             <FeatureUnderConstruction />
            
-   
+          </div>
         </Modal>
       )}
     </div>
