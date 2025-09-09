@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaAddressCard, FaEnvelope, FaPen, FaPhone, FaUser, FaHistory, FaTrash } from 'react-icons/fa';
+import { FaAddressCard, FaEnvelope, FaPen, FaPhone, FaUser, FaHistory, FaTrash, FaCloudUploadAlt } from 'react-icons/fa';
 import useUserStore from '../../context/userStore';
 import api from '../../services/api';
 import Toast from '../../assets/Toast';
@@ -45,6 +45,9 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
   // Delete applicant state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Push to HRIS state
+  const [isPushingToHris, setIsPushingToHris] = useState(false);
 
   // Check if user has required features
   const canEditApplicant = hasFeature("Edit Applicant");
@@ -327,6 +330,35 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
     }
   };
 
+  // ✅ Push to HRIS Handler
+  const handlePushToHris = async () => {
+    setIsPushingToHris(true);
+    try {
+      // Replace with your actual API endpoint
+      const response = await api.post(`/applicant/push-to-hris/${applicant.applicant_id}`);
+
+      // Show success message
+      setToasts([...toasts, {
+        id: Date.now(),
+        message: "Applicant successfully pushed to HRIS",
+        type: "success"
+      }]);
+
+      console.log("Applicant pushed to HRIS successfully");
+    } catch (error) {
+      console.error("Error pushing to HRIS:", error);
+
+      // Show error message
+      setToasts([...toasts, {
+        id: Date.now(),
+        message: "Failed to push applicant to HRIS",
+        type: "error"
+      }]);
+    } finally {
+      setIsPushingToHris(false);
+    }
+  };
+
   return (
     <div className="border border-gray-light bg-white rounded-2xl mx-auto flex flex-col lg:flex-row overflow-hidden body-regular">
 
@@ -424,6 +456,18 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
                   </option>
                 ))}
               </select>
+
+              {/* Push to HRIS button - only show when status is JOB_OFFER_ACCEPTED */}
+              {applicant.status === "JOB_OFFER_ACCEPTED" && (
+                <button
+                  onClick={handlePushToHris}
+                  disabled={isPushingToHris}
+                  className="ml-2 p-2.5 rounded-full bg-teal hover:bg-teal/70 cursor-pointer"
+                >
+                  <FaCloudUploadAlt className="w-4 h-4 text-white" />
+                </button>
+              )}
+
               {statusHistory.some(record => !record.deleted) && (
                 <button
                   onClick={toggleStatusHistoryModal}
@@ -448,7 +492,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
               {canDeleteApplicant && (
                 <button
                   onClick={() => setShowDeleteModal(true)}
-                  className="ml-2 p-2.5 rounded-full bg-red-500 hover:bg-red-600 cursor-pointer"
+                  className="ml-2 p-2.5 rounded-full bg-red-700 hover:bg-red-600 cursor-pointer"
                   title="Delete Applicant"
                 >
                   <FaTrash className="w-4 h-4 text-white" />
@@ -642,7 +686,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
           />
         ))}
       </div>
-      
+
       {isEditFormOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
           <div className="bg-white w-full h-full overflow-auto lg:ml-72 pointer-events-auto">
@@ -654,7 +698,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
           </div>
         </div>
       )}
-      
+
       {isResumeNull && (
         <Modal onClose={() => setIsResumeNull(false)}>
           <div className="flex items-center justify-center">
@@ -676,7 +720,7 @@ function ApplicantDetails({ applicant, onTabChange, activeTab, onApplicantUpdate
           </div>
         </Modal>
       )}
-      
+
       {isTestResultNull && (
         <Modal onClose={() => setIsTestResultNull(false)}>
           <div className="flex items-center justify-center">
