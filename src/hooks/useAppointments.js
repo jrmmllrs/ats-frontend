@@ -6,13 +6,16 @@ export function useAppointments() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchAppointments = async () => {
+  const fetchAppointments = async (calendarId = "primary") => {
     setLoading(true);
     try {
-      const res = await fetch(`${API}/api/calendar/appointments`, {
-        method: "GET",
-        credentials: "include",
-      });
+      const res = await fetch(
+        `${API}/api/calendar/appointments?calendarId=${calendarId}`,
+        {
+          method: "GET",
+          credentials: "include",
+        },
+      );
       const data = await res.json();
       setAppointments(data.events || []);
     } catch (err) {

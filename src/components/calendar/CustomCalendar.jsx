@@ -1,24 +1,34 @@
-import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 // Mock constants - replace with your actual imports
 const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export default function CustomCalendar({ 
-  selectedDate = new Date(), 
-  onDateChange = () => {}, 
-  eventDates = ['2024-12-15', '2024-12-22', '2024-12-25', '2024-12-31'], 
-  loading = false 
+export default function CustomCalendar({
+  selectedDate = new Date(),
+  onDateChange = () => {},
+  eventDates = ["2024-12-15", "2024-12-22", "2024-12-25", "2024-12-31"],
+  loading = false,
 }) {
   const today = new Date();
 
   // ✅ Split the state: view month vs picked date
-  const [viewDate, setViewDate] = useState(selectedDate); 
+  const [viewDate, setViewDate] = useState(selectedDate);
   const [pickedDate, setPickedDate] = useState(today); // default select today
 
   const currentMonth = viewDate.getMonth();
@@ -26,7 +36,7 @@ export default function CustomCalendar({
 
   // Get days in current month
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-  
+
   // First day of the month (0=Sun, 6=Sat)
   const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
 
@@ -47,11 +57,11 @@ export default function CustomCalendar({
 
   const formatDate = (date) =>
     `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
-      date.getDate()
+      date.getDate(),
     ).padStart(2, "0")}`;
 
   const isToday = (date) => isSameDay(date, today);
-  
+
   // Navigation functions
   const goToPreviousMonth = () => {
     setViewDate(new Date(currentYear, currentMonth - 1, 1));
@@ -68,20 +78,20 @@ export default function CustomCalendar({
         <button
           onClick={goToPreviousMonth}
           disabled={loading}
-          className="p-1 hover:bg-gray-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="rounded-md p-1 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
           aria-label="Previous month"
         >
           <ChevronLeft size={20} className="text-gray-600" />
         </button>
-        
+
         <h3 className="text-lg font-semibold text-gray-900">
           {MONTH_NAMES[currentMonth]} {currentYear}
         </h3>
-        
+
         <button
           onClick={goToNextMonth}
           disabled={loading}
-          className="p-1 hover:bg-gray-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="rounded-md p-1 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
           aria-label="Next month"
         >
           <ChevronRight size={20} className="text-gray-600" />
@@ -91,7 +101,9 @@ export default function CustomCalendar({
       {/* Weekday headers */}
       <div className="grid grid-cols-7 gap-2 text-center text-xs font-medium text-gray-500">
         {WEEKDAYS.map((day) => (
-          <div key={day} className="h-10 flex items-center justify-center">{day}</div>
+          <div key={day} className="flex h-10 items-center justify-center">
+            {day}
+          </div>
         ))}
       </div>
 
@@ -104,6 +116,13 @@ export default function CustomCalendar({
           const isEventDay = eventDates.includes(formatDate(date));
           const isTodayDate = isToday(date);
 
+          // Normalize "today" to midnight for fair comparison
+          const todayStart = new Date();
+          todayStart.setHours(0, 0, 0, 0);
+
+          // ✅ Check if this event is today or future
+          const isFutureOrTodayEvent = isEventDay && date >= todayStart;
+
           return (
             <button
               key={idx}
@@ -112,19 +131,13 @@ export default function CustomCalendar({
                 onDateChange(date);
               }}
               disabled={loading}
-              className={`relative h-10 w-full rounded-full flex items-center justify-center font-medium transition-all duration-150 
-                hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed
-                ${isSelected ? 'bg-blue-600 text-white' : ''}
-                ${!isSelected && isTodayDate ? 'bg-blue-100 text-blue-600 font-semibold' : ''}
-                ${!isSelected && !isTodayDate ? 'text-gray-700' : ''}
-                ${isEventDay && !isSelected ? 'bg-blue-50' : ''}
-              `}
+              className={`relative flex h-10 w-full items-center justify-center rounded-full font-medium transition-all duration-150 hover:bg-blue-50 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 ${isSelected ? "bg-blue-600 text-white" : ""} ${!isSelected && isTodayDate ? "bg-blue-100 font-semibold text-blue-600" : ""} ${!isSelected && !isTodayDate ? "text-gray-700" : ""} ${isFutureOrTodayEvent && !isSelected ? "bg-blue-50" : ""} /* ✅ past events won't add background color */`}
             >
               {date.getDate()}
-              
-              {/* Event indicator dot */}
-              {isEventDay && !isSelected && (
-                <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+
+              {/* Event indicator dot (only for today or future events) */}
+              {isFutureOrTodayEvent && !isSelected && (
+                <div className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-blue-500"></div>
               )}
             </button>
           );
@@ -134,7 +147,7 @@ export default function CustomCalendar({
       {/* Loading indicator */}
       {loading && (
         <div className="mt-4 flex items-center justify-center">
-          <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
           <span className="ml-2 text-sm text-gray-600">Loading...</span>
         </div>
       )}
