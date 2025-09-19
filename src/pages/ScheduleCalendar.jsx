@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
-import { CalendarDays, LogOut, User } from "lucide-react";
+import {
+  CalendarDays,
+  LogOut,
+  User,
+  ChevronDown,
+  Sparkles,
+} from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { useAppointments } from "../hooks/useAppointments";
 import { useCalendars } from "../hooks/useCalendars";
@@ -60,73 +66,82 @@ export default function ScheduleCalendar({ onRefresh }) {
     setSelectedDate(appointmentDate);
   };
 
+  function emailToName(emailOrSummary) {
+    if (!emailOrSummary) return "";
+
+    // If it’s an email, take the part before @, otherwise just use summary directly
+    const raw = emailOrSummary.includes("@")
+      ? emailOrSummary.split("@")[0] // before the @
+      : emailOrSummary;
+
+    // Replace dots/underscores with spaces, then capitalize each word
+    return raw
+      .replace(/[._-]+/g, " ") // turn . or _ or - into space
+      .split(" ")
+      .filter(Boolean)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(" ");
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Top header */}
-      <div className="border-b border-gray-200 bg-white shadow-sm">
-        <div className="px-4 py-3 sm:px-6 sm:py-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            {/* LEFT SIDE: Title + Calendar Selector */}
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-              <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+      {/* Clean Top Header */}
+      <div className="border-b border-gray-100 bg-white">
+        <div className="px-6 py-5 sm:px-8 sm:py-6">
+          <div className="flex items-center justify-between">
+            {/* LEFT SIDE: Clean Title */}
+            <div className="space-y-1">
+              <h1 className="text-2xl font-light tracking-tight text-teal sm:text-3xl">
                 Calendar
               </h1>
-              {user && calendars.length > 0 && (
-                <div className="flex flex-col">
-                  <label
-                    htmlFor="calendarSelect"
-                    className="text-s mb-1 block font-bold text-gray-600"
-                  >
-                    Select Calendar
-                  </label>
-                  <div className="relative">
-                    <select
-                      id="calendarSelect"
-                      value={selectedCalendar}
-                      onChange={(e) => setSelectedCalendar(e.target.value)}
-                      className="block w-full appearance-none rounded-lg border border-gray-200 bg-white px-3 py-2 pr-8 text-sm font-medium text-gray-700 shadow-sm transition-all duration-150 ease-in-out hover:border-blue-400 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none sm:text-base"
-                    >
-                      {calendars.map((cal) => (
-                        <option key={cal.id} value={cal.id}>
-                          {cal.summary
-                            .split(/[.@]/)[0]
-                            .charAt(0)
-                            .toUpperCase() +
-                            cal.summary.split(/[.@]/)[0].slice(1).toLowerCase()}
-                        </option>
-                      ))}
-                    </select>
-                    {/* Chevron */}
-                    <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center">
-                      <svg
-                        className="h-4 w-4 text-gray-400"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        aria-hidden="true"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              )}
+              <div className="h-0.5 w-8 bg-teal"></div>
             </div>
 
-            {/* RIGHT SIDE: Notifications + User */}
+            {/* RIGHT SIDE: Calendar Selector + Notifications + User */}
             {user && (
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:space-x-4">
-                <div className="relative self-start sm:self-auto">
+              <div className="flex items-center space-x-8">
+                {/* Calendar Selector */}
+                {calendars.length > 0 && (
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="calendarSelect"
+                      className="letter-spacing-widest text-xs font-medium tracking-wide text-gray-500 uppercase"
+                    >
+                      Active Calendar
+                    </label>
+                    <div className="relative">
+                      <select
+                        id="calendarSelect"
+                        value={selectedCalendar}
+                        onChange={(e) => setSelectedCalendar(e.target.value)}
+                        className="block w-full min-w-48 appearance-none border-0 border-b-2 border-gray-200 bg-transparent px-0 py-2 pr-8 text-sm font-medium text-gray-900 transition-all duration-200 hover:border-gray-400 focus:border-gray-900 focus:ring-0 focus:outline-none"
+                      >
+                        {calendars.map((cal) => (
+                          <option
+                            key={cal.id}
+                            value={cal.id}
+                            className="bg-white text-gray-900"
+                          >
+                            {emailToName(cal.summary)}
+                          </option>
+                        ))}
+                      </select>
+
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center">
+                        <ChevronDown className="h-4 w-4 text-gray-400" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="relative">
                   <NotificationBell
                     unreadCount={unreadCount}
                     onClick={() => {
                       setShowNotifications(!showNotifications);
-                      markAllAsRead(); // clear badge when bell clicked
+                      markAllAsRead();
                     }}
+                    className="rounded-full bg-gray-50 p-2 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
                   />
                   {showNotifications && (
                     <NotificationDropdown
@@ -137,26 +152,24 @@ export default function ScheduleCalendar({ onRefresh }) {
                   )}
                 </div>
 
-                <div className="flex items-center space-x-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 shadow-sm sm:px-4 sm:py-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-xs font-medium text-white shadow sm:h-10 sm:w-10 sm:text-sm">
-                    {user.name?.charAt(0) || <User size={18} />}
+                <div className="flex items-center space-x-3 border-l border-gray-200 pl-6">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-teal text-xs font-medium text-white">
+                    {user.name?.charAt(0) || <User size={14} />}
                   </div>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-gray-900">
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-medium text-gray-900">
                       {user.name}
                     </p>
-                    <p className="truncate text-xs text-gray-500">
-                      {user.email}
-                    </p>
+                    <p className="text-xs text-gray-500">{user.email}</p>
                   </div>
                 </div>
 
                 <button
                   onClick={logout}
-                  className="flex items-center justify-center space-x-2 rounded-lg border border-red-200 px-3 py-2 text-xs font-medium text-red-600 shadow-sm transition-colors hover:bg-red-50 hover:text-red-700 sm:px-4 sm:py-2 sm:text-sm"
+                  className="flex items-center space-x-2 border-l border-gray-200 pl-6 text-sm text-gray-600 transition-colors hover:text-gray-900"
                 >
-                  <LogOut size={14} className="sm:h-4 sm:w-4" />
-                  <span>Logout</span>
+                  <LogOut size={16} />
+                  <span className="font-medium">Logout</span>
                 </button>
               </div>
             )}
@@ -213,8 +226,8 @@ export default function ScheduleCalendar({ onRefresh }) {
           </>
         ) : (
           <div className="mx-auto max-w-md py-12 text-center">
-            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 shadow-sm">
-              <CalendarDays className="h-8 w-8 text-blue-600" />
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+              <CalendarDays className="h-8 w-8 text-gray-900" />
             </div>
             <h3 className="mb-2 text-lg font-semibold text-gray-900">
               Welcome to Calendar
@@ -225,7 +238,7 @@ export default function ScheduleCalendar({ onRefresh }) {
             <button
               onClick={startAuth}
               disabled={loading}
-              className="inline-flex items-center rounded-lg border border-transparent bg-blue-600 px-6 py-3 text-base font-medium text-white shadow-md transition-all hover:bg-blue-700 hover:shadow-lg disabled:opacity-50"
+              className="inline-flex items-center border-b-2 border-gray-900 bg-transparent px-0 py-2 text-base font-medium text-gray-900 transition-colors hover:text-gray-600 disabled:opacity-50"
             >
               Get Started
             </button>
@@ -234,6 +247,12 @@ export default function ScheduleCalendar({ onRefresh }) {
       </main>
 
       {loading && <LoadingOverlay message="Loading your calendar..." />}
+
+      <style jsx>{`
+        .letter-spacing-widest {
+          letter-spacing: 0.1em;
+        }
+      `}</style>
     </div>
   );
 }

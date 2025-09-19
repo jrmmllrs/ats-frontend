@@ -1,19 +1,34 @@
-// src/components/dashboard/StatsCards.jsx
-import { CalendarDays, Clock, Bell, Settings, BarChart } from "lucide-react";
-import { formatDate } from "../../utils/dateUtils";
-import { startOfWeek, endOfWeek, format } from "date-fns";
+import { CalendarDays, Clock, Bell, Calendar, BarChart3, CheckCircle, TrendingUp } from "lucide-react";
 
-// Reusable card component
-function StatCard({ icon: Icon, iconBg, iconColor, label, value, subtext }) {
+// Mock utilities (replace with your actual imports)
+const formatDate = (date) => date.toLocaleDateString();
+const startOfWeek = (date) => {
+  const start = new Date(date);
+  const day = start.getDay();
+  const diff = start.getDate() - day + (day === 0 ? -6 : 1);
+  return new Date(start.setDate(diff));
+};
+const endOfWeek = (date) => {
+  const start = startOfWeek(date);
+  return new Date(start.getTime() + 6 * 24 * 60 * 60 * 1000);
+};
+const format = (date, formatStr) => {
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  if (formatStr === 'EEEE') return days[date.getDay()];
+  return date.toLocaleDateString();
+};
+
+// Simple StatCard with teal icons only
+function StatCard({ icon: Icon, label, value, subtext }) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6 transition hover:shadow-md">
+    <div className="rounded-lg border border-gray-200 bg-white p-4 transition hover:shadow-md">
       <div className="flex items-center">
-        <div className={`rounded-lg ${iconBg} p-2`}>
-          <Icon className={`h-6 w-6 ${iconColor}`} />
+        <div className="bg-teal-100 rounded-lg p-2">
+          <Icon className="h-5 w-5 text-teal-600" />
         </div>
-        <div className="ml-4">
+        <div className="ml-3">
           <p className="text-sm font-medium text-gray-500">{label}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
+          <p className="text-xl font-bold text-gray-900">{value}</p>
           {subtext && <p className="text-xs text-gray-500">{subtext}</p>}
         </div>
       </div>
@@ -23,8 +38,8 @@ function StatCard({ icon: Icon, iconBg, iconColor, label, value, subtext }) {
 
 // Helper: Weekly stats
 function getWeeklyStats(appointments) {
-  const start = startOfWeek(new Date(), { weekStartsOn: 1 });
-  const end = endOfWeek(new Date(), { weekStartsOn: 1 });
+  const start = startOfWeek(new Date());
+  const end = endOfWeek(new Date());
 
   const weeklyEvents = appointments.filter((event) => {
     const date = new Date(event.start?.dateTime || event.start?.date);
@@ -46,69 +61,79 @@ function getWeeklyStats(appointments) {
   return { total: weeklyEvents.length, busiestDay };
 }
 
-export default function StatsCards({ appointments }) {
+export default function StatsCards({ appointments = [] }) {
   const today = formatDate(new Date());
-  const totalEvents = appointments.length;
-  const todaysEvents = appointments.filter((event) => {
+  const now = new Date();
+
+  // Sample data for demonstration
+  const sampleAppointments = appointments.length > 0 ? appointments : [
+    { start: { dateTime: '2024-09-18T09:00:00' }, end: { dateTime: '2024-09-18T10:00:00' } },
+    { start: { dateTime: '2024-09-18T14:00:00' }, end: { dateTime: '2024-09-18T15:00:00' } },
+    { start: { dateTime: '2024-09-17T11:00:00' }, end: { dateTime: '2024-09-17T12:00:00' } },
+    { start: { dateTime: '2024-09-19T16:00:00' }, end: { dateTime: '2024-09-19T17:00:00' } },
+    { start: { dateTime: '2024-09-20T10:00:00' }, end: { dateTime: '2024-09-20T11:00:00' } },
+    { start: { dateTime: '2024-09-15T15:00:00' }, end: { dateTime: '2024-09-15T16:00:00' } },
+    { start: { dateTime: '2024-09-14T13:00:00' }, end: { dateTime: '2024-09-14T14:00:00' } },
+  ];
+
+  // Calculate stats
+  const doneEvents = sampleAppointments.filter((event) => {
+    const eventEnd = new Date(event.end?.dateTime || event.end?.date);
+    return eventEnd < now;
+  }).length;
+
+  const todaysEvents = sampleAppointments.filter((event) => {
     const eventDate = event.start?.dateTime
       ? formatDate(new Date(event.start.dateTime))
       : formatDate(new Date(event.start.date));
     return eventDate === today;
   }).length;
 
-  const upcomingEvents = appointments.filter((event) => {
+  const upcomingEvents = sampleAppointments.filter((event) => {
     const eventDate = new Date(event.start?.dateTime || event.start?.date);
-    return eventDate > new Date();
+    return eventDate > now;
   }).length;
 
-  const thisMonthEvents = appointments.filter((event) => {
+  const thisMonthEvents = sampleAppointments.filter((event) => {
     const eventDate = new Date(event.start?.dateTime || event.start?.date);
-    const now = new Date();
     return (
       eventDate.getMonth() === now.getMonth() &&
       eventDate.getFullYear() === now.getFullYear()
     );
   }).length;
 
-  const { total: weeklyTotal, busiestDay } = getWeeklyStats(appointments);
+  const { total: weeklyTotal, busiestDay } = getWeeklyStats(sampleAppointments);
 
   return (
-    <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-5 lg:col-span-5">
+    <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-5">
       <StatCard
-        icon={CalendarDays}
-        iconBg="bg-blue-50"
-        iconColor="text-blue-600"
-        label="Total Events"
-        value={totalEvents}
+        icon={CheckCircle}
+        label="Completed Events"
+        value={doneEvents}
+        variant="primary"
       />
       <StatCard
         icon={Clock}
-        iconBg="bg-green-50"
-        iconColor="text-green-600"
         label="Today's Events"
         value={todaysEvents}
+        variant="secondary"
       />
       <StatCard
         icon={Bell}
-        iconBg="bg-purple-50"
-        iconColor="text-purple-600"
         label="Upcoming"
         value={upcomingEvents}
       />
       <StatCard
-        icon={Settings}
-        iconBg="bg-orange-50"
-        iconColor="text-orange-600"
+        icon={Calendar}
         label="This Month"
         value={thisMonthEvents}
       />
       <StatCard
-        icon={BarChart}
-        iconBg="bg-pink-50"
-        iconColor="text-pink-600"
+        icon={BarChart3}
         label="This Week"
         value={weeklyTotal}
         subtext={`Busiest: ${busiestDay}`}
+        variant="secondary"
       />
     </div>
   );

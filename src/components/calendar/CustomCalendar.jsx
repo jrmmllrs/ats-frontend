@@ -131,7 +131,7 @@ export default function CustomCalendar({
                 onDateChange(date);
               }}
               disabled={loading}
-              className={`relative flex h-10 w-full items-center justify-center rounded-full font-medium transition-all duration-150 hover:bg-blue-50 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 ${isSelected ? "bg-blue-600 text-white" : ""} ${!isSelected && isTodayDate ? "bg-blue-100 font-semibold text-blue-600" : ""} ${!isSelected && !isTodayDate ? "text-gray-700" : ""} ${isFutureOrTodayEvent && !isSelected ? "bg-blue-50" : ""} /* ✅ past events won't add background color */`}
+              className={`focus:ring-teal relative flex h-10 w-full items-center justify-center rounded-full font-medium transition-all duration-150 hover:bg-blue-50 focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 ${isSelected ? "bg-teal text-white" : ""} ${!isSelected && isTodayDate ? "bg-blue-100 font-semibold text-teal" : ""} ${!isSelected && !isTodayDate ? "text-gray-700" : ""} ${isFutureOrTodayEvent && !isSelected ? "bg-blue-50" : ""} /* ✅ past events won't add background color */`}
             >
               {date.getDate()}
 
@@ -147,7 +147,7 @@ export default function CustomCalendar({
       {/* Loading indicator */}
       {loading && (
         <div className="mt-4 flex items-center justify-center">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-teal-600 border-t-transparent"></div>
           <span className="ml-2 text-sm text-gray-600">Loading...</span>
         </div>
       )}

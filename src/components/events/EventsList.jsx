@@ -1,29 +1,87 @@
 // src/components/events/EventsList.jsx
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Clock, CalendarDays } from "lucide-react";
 import { formatTime } from "../../utils/dateUtils";
 
 export default function EventsList({ events = [], loading }) {
   const [page, setPage] = useState(1);
-  const eventsPerPage = 2; // 🔹 adjust kung ilang events per page
+  const eventsPerPage = 2;
 
-  const totalPages = Math.ceil(events.length / eventsPerPage);
-  const paginatedEvents = events.slice(
-    (page - 1) * eventsPerPage,
-    page * eventsPerPage
-  );
-
+  // Helper: determine event status using end time for "past"
   const getEventStatus = (event) => {
     const now = new Date();
     const start = event.start?.dateTime
       ? new Date(event.start.dateTime)
       : new Date(event.start?.date);
+    const end = event.end?.dateTime
+      ? new Date(event.end.dateTime)
+      : new Date(event.end?.date || event.start?.date);
 
-    if (!start) return "upcoming";
+    if (end < now) return "past";
     if (start.toDateString() === now.toDateString()) return "today";
-    if (start < now) return "past";
     return "upcoming";
   };
+
+  // Helper: hide weird group calendar emails and prefer displayName
+  const getOrganizerName = (organizer) => {
+    if (!organizer) return null;
+    const displayName = organizer.displayName?.trim();
+    const email = organizer.email?.trim();
+    const isWeirdEmail =
+      email &&
+      email.startsWith("c_") &&
+      email.endsWith("@group.calendar.google.com");
+
+    if (displayName) return displayName;
+    if (email && !isWeirdEmail) return email;
+    return null;
+  };
+
+  // Memoized sorted events by start time
+  const sortedByStart = useMemo(() => {
+    return [...events].sort((a, b) => {
+      const startA = new Date(a.start?.dateTime || a.start?.date).getTime();
+      const startB = new Date(b.start?.dateTime || b.start?.date).getTime();
+      return startA - startB;
+    });
+  }, [events]);
+
+  // Order statuses: today (0), upcoming (1), past (2) -> past goes last
+  const statusOrder = { today: 0, upcoming: 1, past: 2 };
+
+  // Group/sort so today/upcoming come first, then past — preserve chronological inside groups
+  const visibleEvents = useMemo(() => {
+    return [...sortedByStart].sort((a, b) => {
+      const sa = getEventStatus(a);
+      const sb = getEventStatus(b);
+      const orderDiff = statusOrder[sa] - statusOrder[sb];
+      if (orderDiff !== 0) return orderDiff;
+
+      // same status -> order by start time
+      const startA = new Date(a.start?.dateTime || a.start?.date).getTime();
+      const startB = new Date(b.start?.dateTime || b.start?.date).getTime();
+      return startA - startB;
+    });
+  }, [sortedByStart]); // getEventStatus reads nothing external so safe
+
+  const totalPages = Math.ceil(visibleEvents.length / eventsPerPage) || 0;
+
+  // Reset page when the events prop changes (e.g. when selecting another date)
+  useEffect(() => {
+    setPage(1);
+  }, [events]);
+
+  // Clamp page if totalPages shrinks below current page
+  useEffect(() => {
+    if (totalPages > 0 && page > totalPages) {
+      setPage(Math.max(1, totalPages));
+    }
+  }, [totalPages, page]);
+
+  const paginatedEvents = visibleEvents.slice(
+    (page - 1) * eventsPerPage,
+    page * eventsPerPage
+  );
 
   const getBadgeColor = (status) => {
     switch (status) {
@@ -52,7 +110,7 @@ export default function EventsList({ events = [], loading }) {
     );
   }
 
-  if (!events.length) {
+  if (!visibleEvents.length) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center border border-gray-200 rounded-lg bg-white shadow-sm">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 shadow-inner">
@@ -67,34 +125,30 @@ export default function EventsList({ events = [], loading }) {
 
   return (
     <div className="space-y-4">
-      {/* Events */}
       <div className="space-y-3">
         {paginatedEvents.map((event) => {
           const status = getEventStatus(event);
+          const organizerText = getOrganizerName(event.organizer);
+
           return (
             <div
               key={event.id}
               className="rounded-lg border border-gray-200 bg-white shadow-sm px-6 py-4 hover:shadow-md transition cursor-pointer"
             >
               <div className="flex items-start justify-between">
-                {/* Title + Organizer */}
                 <div>
-                  <p className="font-semibold text-gray-900">
+                  <p className="font-semibold text-gray-900 break-words">
                     {(event.summary || "Untitled Event")
                       .replace(/[()]/g, "")
                       .trim()}
                   </p>
-                  {event.organizer?.displayName && (
+
+                  {organizerText && (
                     <p className="mt-0.5 text-xs text-gray-600">
                       Booked by{" "}
                       <span className="font-medium text-gray-800">
-                        {event.organizer.displayName}
+                        {organizerText}
                       </span>
-                    </p>
-                  )}
-                  {event.organizer?.email && (
-                    <p className="text-xs text-gray-500">
-                      {event.organizer.email}
                     </p>
                   )}
                 </div>
@@ -105,11 +159,7 @@ export default function EventsList({ events = [], loading }) {
                     status
                   )}`}
                 >
-                  {status === "today"
-                    ? "Today"
-                    : status === "past"
-                    ? "Past"
-                    : "Upcoming"}
+                  {status === "today" ? "Today" : status === "past" ? "Past" : "Upcoming"}
                 </span>
               </div>
 
@@ -122,9 +172,7 @@ export default function EventsList({ events = [], loading }) {
                     : "All day"}
                 </span>
                 {event.end?.dateTime && (
-                  <span className="ml-1">
-                    – {formatTime(event.end.dateTime)}
-                  </span>
+                  <span className="ml-1">– {formatTime(event.end.dateTime)}</span>
                 )}
               </div>
             </div>
@@ -132,7 +180,7 @@ export default function EventsList({ events = [], loading }) {
         })}
       </div>
 
-      {/* Pagination Controls */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between pt-4 border-t border-gray-200">
           <button
