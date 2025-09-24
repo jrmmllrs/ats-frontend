@@ -368,13 +368,6 @@ const InterviewsSection = ({ onRefresh }) => {
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="headline text-gray-900">Upcoming Interviews</h3>
-        <p className="body-tiny text-gray-400">
-          Scheduled interviews for the next 7 days
-        </p>
-      </div>
-
       {loading ? (
         <div className="space-y-2">
           {[...Array(5)].map((_, i) => (
